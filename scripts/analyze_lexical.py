@@ -38,6 +38,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 import numpy as np
 import pandas as pd
+from scipy import stats
 from stats import mcnemar_exact_p
 
 LEXICONS = ["KEEP", "PERMUTE", "SYMBOL", "PSEUDO"]
@@ -171,6 +172,55 @@ def main():
     pd_ = pd.DataFrame(pr)
     print(pd_.to_string(index=False))
     pd_.to_csv(ROOT / "results" / f"lexical_price{a.tag}.csv", index=False)
+
+    # ---- 5. does the lexicon change the graph the model BUILDS? ------------
+    ind = {}
+    for lex in LEXICONS:
+        f = ROOT / "results" / f"induction_raw_lex{lex}.csv"
+        if f.exists():
+            ind[lex] = pd.read_csv(f)
+    if len(ind) < 2:
+        print("\n(chua co ket qua induction theo tu vung - bo qua muc 5)")
+        return
+
+    print("\n" + "=" * 88)
+    print("5. CHAT LUONG DO THI MODEL TU DUNG, GHEP CAP TREN CUNG ITEM")
+    print("=" * 88)
+    print("  Muc 1-4 do viec SUY LUAN tren do thi duoc cap san.")
+    print("  Muc nay do viec TRICH XUAT do thi tu van ban - mot nang luc khac han.\n")
+    rows, base_lex = [], "KEEP"
+    for m in models:
+        for lex in [l for l in LEXICONS if l in ind]:
+            s_ = ind[lex][ind[lex].model == m]
+            b = ind[base_lex][ind[base_lex].model == m].set_index("item")
+            cur = s_.set_index("item")
+            i = b.index.intersection(cur.index)
+            # Wilcoxon on the paired per-item F1: the same item is scored under
+            # both lexicons, so the pairing is exact and a rank test on the
+            # differences is the right call for a bounded, non-normal score.
+            try:
+                p_f1 = (stats.wilcoxon(cur.loc[i, "f1"], b.loc[i, "f1"]).pvalue
+                        if lex != base_lex else np.nan)
+            except ValueError:
+                p_f1 = np.nan
+            rev = s_.n_reversed.mean()
+            rev_base = ind[base_lex][ind[base_lex].model == m].n_reversed.mean()
+            rows.append({
+                "model": m, "tu_vung": lex, "n": len(i),
+                "f1": round(s_.f1.mean(), 3),
+                "f1_vs_KEEP": round(s_.f1.mean() - rev_base * 0 - b.f1.mean(), 3),
+                "p_wilcoxon": round(p_f1, 4) if pd.notna(p_f1) else None,
+                "dung_hoan_toan": round(s_.exact_match.mean(), 3),
+                "canh_dao_chieu": round(rev, 3),
+                "gap_bao_nhieu_lan": round(rev / rev_base, 1) if rev_base else None,
+                "canh_thieu": round(s_.n_missing.mean(), 2),
+            })
+    idf = pd.DataFrame(rows)
+    print(idf.to_string(index=False))
+    idf.to_csv(ROOT / "results" / f"lexical_induction{a.tag}.csv", index=False)
+    print("\n  Prior SAI (PERMUTE) gay dao chieu nhieu gap may lan prior VANG MAT")
+    print("  (SYMBOL/PSEUDO) la phep phan ly chinh: neu chieu canh duoc doc tu van")
+    print("  ban thi hai truong hop phai giong nhau.")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,82 @@
+items=174  families=['IV', 'arrowhead', 'chain', 'collision', 'confounding', 'diamond', 'diamondcut', 'fork', 'frontdoor', 'mediation']
+
+>>> gpt-4.1-nano step 1 INDUCE: 174 calls
+    25/174
+    50/174
+    75/174
+    100/174
+    125/174
+    150/174
+    {'calls': 174, 'cached': 14, 'errors': 0, 'in_tok': 36940, 'out_tok': 97202}
+>>> gpt-4.1-nano step 2 INDUCED: 174 calls
+    25/174
+    50/174
+    75/174
+    100/174
+    125/174
+    150/174
+    {'calls': 174, 'cached': 41, 'errors': 0, 'in_tok': 24956, 'out_tok': 54554}
+
+>>> gpt-4.1-mini step 1 INDUCE: 174 calls
+    25/174
+    50/174
+    75/174
+    100/174
+    125/174
+    150/174
+    {'calls': 174, 'cached': 14, 'errors': 0, 'in_tok': 36940, 'out_tok': 109972}
+>>> gpt-4.1-mini step 2 INDUCED: 174 calls
+    25/174
+    50/174
+    75/174
+    100/174
+    125/174
+    150/174
+    {'calls': 174, 'cached': 51, 'errors': 0, 'in_tok': 24848, 'out_tok': 46520}
+
+>>> gpt-4.1 step 1 INDUCE: 174 calls
+    25/174
+    50/174
+    75/174
+    100/174
+    125/174
+    150/174
+    {'calls': 174, 'cached': 12, 'errors': 0, 'in_tok': 36940, 'out_tok': 80465}
+>>> gpt-4.1 step 2 INDUCED: 174 calls
+    25/174
+    50/174
+    75/174
+    100/174
+    125/174
+    150/174
+    {'calls': 174, 'cached': 48, 'errors': 0, 'in_tok': 24821, 'out_tok': 43874}
+
+==============================================================================
+CHAT LUONG DO THI TU DUNG (doi chieu Table 3 cua NoisyCausal)
+==============================================================================
+                n  parse_graph  precision  recall     f1  exact  canh_sai  dao_chieu   thua  thieu
+model                                                                                             
+gpt-4.1       174        0.971      0.694   0.436  0.502  0.161     2.276      0.126  0.391  1.759
+gpt-4.1-mini  174        0.966      0.688   0.440  0.508  0.184     2.282      0.092  0.402  1.787
+gpt-4.1-nano  174        0.977      0.687   0.447  0.509  0.138     2.276      0.155  0.420  1.701
+
+==============================================================================
+INDUCED ROI VAO DAU TREN DUONG CONG?
+==============================================================================
+cond            RAW  ORACLE  DR_k1  INDUCED
+model                                      
+gpt-4.1       67.24   77.59  67.82    70.11
+gpt-4.1-mini  70.11   80.46  66.09    71.84
+gpt-4.1-nano  63.79   66.09  62.64    58.05
+
+  INDUCED so voi cac moc:
+    gpt-4.1        INDUCED=70.11  vs RAW +2.87  vs ORACLE -7.47  vs DR_k1 +2.30
+    gpt-4.1-mini   INDUCED=71.84  vs RAW +1.72  vs ORACLE -8.62  vs DR_k1 +5.75
+    gpt-4.1-nano   INDUCED=58.05  vs RAW -5.75  vs ORACLE -8.05  vs DR_k1 -4.60
+
+==============================================================================
+McNEMAR: INDUCED co khac RAW khong? (paired)
+==============================================================================
+  gpt-4.1-nano   n=174  b= 17 c= 27  p=0.1742
+  gpt-4.1-mini   n=174  b= 18 c= 15  p=0.7283
+  gpt-4.1        n=174  b= 17 c= 12  p=0.4583

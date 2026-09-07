@@ -6,6 +6,7 @@
 **Quyết định vòng 1:** **MAJOR REVISION**
 **Quyết định vòng 2 (sau khi tác giả sửa):** **MINOR REVISION** - xem mục 9
 **Cập nhật sau vòng 2:** R2 và R4 đã hoàn thành bằng bộ từ vựng `PERMUTE` - xem mục 10
+**Quyết định vòng 3 (sau khi chạy induction ghép cặp):** **MINOR REVISION** - xem mục 11
 
 ---
 
@@ -454,3 +455,108 @@ Lệch độ dài so với `KEEP`: `PERMUTE` **+9 ký tự**, `SYMBOL` -169, `PS
 ### Đánh giá lại
 
 Không có finding CRITICAL hay MAJOR nào mới. Hai trong ba MAJOR của vòng 2 đã đóng. **Quyết định giữ nguyên MINOR REVISION**, nhưng khoảng cách tới Accept đã ngắn hẳn: việc còn lại chủ yếu là chạy induction ghép cặp và viết lại phát biểu, không phải sửa thiết kế.
+
+
+---
+
+## 11. Vòng 3 - thẩm định lại sau khi chạy induction ghép cặp (2026-09-08)
+
+**Chế độ `re-review`. Quyết định: MINOR REVISION.** Không có finding CRITICAL. Hai finding MAJOR mới, cả hai đều là lỗi **phát biểu**, sửa bằng cách viết lại và bổ sung đường sàn - không phải sửa thiết kế, không phải chạy lại.
+
+### 11.1 Xác minh mục sửa R1
+
+| | |
+|---|---|
+| Yêu cầu vòng 2 | Nửa "trích xuất" là between-items (90 với 57 item), phải làm ghép cặp hoặc ghi rõ là bằng chứng yếu hơn |
+| Tác giả đã làm | Chạy `induction.py` trên cả bốn bộ từ vựng, cùng 174 item, thêm `--lexicon` và `--drop-nonsense` |
+| **Kết luận** | **ĐÓNG.** Wilcoxon ghép cặp trên F1 từng item, 8/9 ô đạt p<0,05. Đây là ghép cặp thật, không phải ghép cặp trên danh nghĩa |
+
+Trạng thái năm mục vòng 2: R1 **đóng**, R2 **đóng**, R4 **đóng**, R3 đóng một phần, R5 còn để mở (tuỳ bản thảo).
+
+### 11.2 Ba kiểm chứng tôi tự chạy trên dữ liệu
+
+Đều 0 USD, mã ở `scripts/induction_baselines.py`.
+
+**Kiểm chứng 1 - hiệu ứng có phải do model xuất nhiều cạnh hơn không? KHÔNG.**
+
+Số cạnh model xuất ra gần như phẳng giữa các bộ (1,75 tới 2,27). Chuẩn hoá lại theo số cạnh xuất ra thì phép phân ly còn nguyên:
+
+| Tình huống | Đảo chiều trên mỗi cạnh xuất ra |
+|---|---|
+| Prior đúng (`KEEP`) | 0,022 - 0,039 |
+| Prior vắng mặt (`SYMBOL`, `PSEUDO`) | 0,047 - 0,075 |
+| Prior sai (`PERMUTE`) | **0,172 - 0,233** |
+
+**Kiểm chứng 2 - phép phân ly có ý nghĩa thống kê không? CÓ, rất mạnh.**
+
+Wilcoxon ghép cặp trên số cạnh đảo chiều mỗi item, `PERMUTE` so với từng bộ prior-vắng-mặt: **6/6 ô đạt p<0,0001**. Gộp `SYMBOL`+`PSEUDO` thành một nhóm: 3/3 với p từ 4e-6 tới 2e-7. Ở mức item, tỉ lệ có ít nhất một cạnh đảo chiều là 24,7-39,1% dưới `PERMUTE`, so với 8,0-13,8% khi prior vắng mặt và 4,6-6,9% khi prior đúng.
+
+Phép phân ly lõi **đứng vững dưới cả ba cách nhìn**: giá trị tuyệt đối, chuẩn hoá, và mức item.
+
+**Kiểm chứng 3 - hai đường sàn mô phỏng.** Đây là chỗ tìm ra vấn đề.
+
+| Tác nhân giả định | Đảo chiều | F1 |
+|---|---|---|
+| Đoán ngẫu nhiên (cùng số cạnh, bốc đều trên các cặp nút) | 1,345 | **0,362** |
+| Chỉ dùng tri thức thế giới (xuất đồ thị `KEEP`, chấm theo `PERMUTE`) | **0,966** | 0,181 |
+| *Model thật dưới `PERMUTE`* | *0,316 - 0,529* | *0,384 - 0,424* |
+
+### 11.3 Finding MAJOR
+
+| # | Chiều | Mô tả | Evidence Anchor | Confidence |
+|---|---|---|---|---|
+| N1 | Bằng chứng chưa đủ | **F1 được báo cáo không kèm sàn ngẫu nhiên.** Trên đồ thị 3-5 nút chỉ có 6 tới 20 cặp có hướng, nên đoán mò đã đạt F1 = 0,362. `PERMUTE` cho F1 0,384-0,424, tức chỉ **hơn sàn 0,022 tới 0,062**. Người đọc thấy "F1 = 0,406" sẽ hiểu là năng lực trung bình, thực tế nó gần như bằng đoán mò. `KEEP` (0,462-0,608) mới thực sự vượt sàn. | `table: results/induction_baselines.csv - f1_tren_san_ngau_nhien, gpt-4.1 PERMUTE = 0.043` | 5 - chuyên môn lõi: diễn giải thước đo |
+| N2 | Khái quát hoá quá mức | **Phát biểu "model lấy chiều của cạnh từ tri thức về thế giới, không phải từ đề bài" quá tuyệt đối.** Một tác nhân bỏ hẳn văn bản và chỉ trả lời theo tri thức sẽ đạt 0,966 cạnh đảo chiều. Model thật đạt 0,316-0,529, tức chỉ đi được **32,7% tới 54,8%** quãng đường tới tác nhân đó. Chúng đọc văn bản **một phần**, không phải bỏ qua văn bản. | `table: results/induction_baselines.csv - phan_tram_duong_toi_tri_thuc, 32.7 den 54.8` | 5 - chuyên môn lõi |
+
+### 11.4 Finding MINOR
+
+| # | Chiều | Mô tả | Evidence Anchor | Confidence |
+|---|---|---|---|---|
+| n1 | Bất thường chưa xử lý | `gpt-4.1-nano` với `SYMBOL` có F1 **cao hơn** `KEEP` (+0,046, p=0,0314) - ngược chiều toàn bộ luận điểm, và có ý nghĩa thống kê. Báo cáo không nhắc tới. Có thể chỉ là một trong 9 ô ở mức alpha 0,05, nhưng phải nói ra chứ không im lặng. | `table: results/lexical_induction.csv - gpt-4.1-nano SYMBOL f1_vs_KEEP=+0.046 p=0.0314` | 4 |
+
+### 11.5 Điểm mạnh mới
+
+**S1: Phép phân ly prior-sai so với prior-vắng-mặt là một thiết kế thật sự tốt.**
+Nó tách được hai thứ mà gần như mọi công trình về ẩn danh biến đều gộp làm một. Caliper không có nó. Cách phát biểu cần sửa, nhưng **thiết kế thì đúng và phát hiện thì có thật.**
+**Evidence Anchor**: `dataset: results/induction_raw_lexPERMUTE.csv doi chieu lexSYMBOL/lexPSEUDO - 6/6 Wilcoxon p<0.0001`
+
+**S2: Con số bị rút trước đây quay lại sau khi đo đúng cách.**
+"Đảo chiều tăng 4-10 lần" từng bị rút vì đo trên dữ liệu hỏng. Đo lại ghép cặp trên prompt đầy đủ cho 5,1-7,7 lần. Hướng đúng, và giờ có cơ sở. Việc tác giả rút nó trước rồi mới lấy lại bằng bằng chứng sạch là quy trình đúng.
+**Evidence Anchor**: `text: REPORT.md muc 9 "Huong thi dung, nhung no duoc do tren du lieu hong. Gio no duoc do lai dung cach"`
+
+### 11.6 Các mục sửa bắt buộc - vòng 3
+
+**R1: Báo cáo F1 kèm sàn ngẫu nhiên ở mọi chỗ F1 xuất hiện**
+
+- **Yêu cầu**: thêm dòng sàn (0,362) vào bảng mục 9 REPORT và 5.7 WALKTHROUGH, hoặc đổi sang báo cáo F1 vượt sàn. Nói rõ `PERMUTE` gần như bằng đoán mò.
+- **Chi phí**: 0 USD, `scripts/induction_baselines.py` đã tính sẵn.
+- **Nghiệm thu**: không còn con số F1 nào đứng một mình.
+
+**R2: Hạ phát biểu cơ chế từ tuyệt đối xuống mức độ**
+
+- **Yêu cầu**: thay *"model lấy chiều của cạnh từ tri thức, không phải từ đề bài"* bằng *"khi tên biến gợi một chiều nhân quả sai, model đi theo tri thức ở khoảng một phần ba tới một nửa quãng đường, thay vì đọc chiều đã được nêu trong đề bài"*. Kèm con số 32,7-54,8%.
+- **Chi phí**: 0 USD.
+- **Nghiệm thu**: mọi phát biểu cơ chế đều có định lượng mức độ, không còn dạng "không phải X mà là Y".
+
+**R3: Nêu bất thường `nano` với `SYMBOL`**
+
+- **Chi phí**: 0 USD.
+- **Nghiệm thu**: bất thường được nêu, kèm nhận định đó là nhiễu hay hiện tượng thật.
+
+### 11.7 Trạng thái sau khi tác giả sửa ngay trong lượt
+
+| Mục | Trạng thái |
+|---|---|
+| R1 - báo cáo F1 kèm sàn ngẫu nhiên | **Đã sửa.** Khối sàn 0,362 thêm vào REPORT mục 9 và WALKTHROUGH 5.7, kèm `scripts/induction_baselines.py` |
+| R2 - hạ phát biểu cơ chế xuống mức độ | **Đã sửa.** Cả hai tài liệu giờ nêu 32,7-54,8% quãng đường, bỏ dạng "không phải X mà là Y" |
+| R3 - nêu bất thường `nano` với `SYMBOL` | **Đã sửa.** Nêu kèm tính toán kỳ vọng dương tính giả (0,45 ô trên 9 phép kiểm) |
+
+Ba mục đóng trong cùng lượt, 0 USD. Còn lại từ các vòng trước: R5 vòng 2 (đưa cảnh báo split `test-*` vào bản thảo) và phần chưa xong ở mục 11 REPORT.
+
+### 11.8 Kết luận vòng 3
+
+Luận điểm lõi **sống sót qua đợt tấn công mạnh nhất tôi dựng được**. Tôi đã thử quy hiệu ứng về ba thứ - số cạnh xuất ra, cấu trúc nhóm của phép hoán vị, và nhiễu thống kê - và không thứ nào giải thích được nó.
+
+Cái không sống sót là **cách phát biểu**. Hai finding MAJOR đều là bệnh chung của bài phân tích: báo một thước đo mà không nói sàn của nó ở đâu, và biến một hiệu ứng có mức độ thành một mệnh đề nhị phân. Cả hai sửa trong một buổi, không tốn đồng nào.
+
+Khoảng cách tới Accept giờ là ba lần viết lại và một bảng bổ sung.

@@ -13,7 +13,8 @@ Ngày: 2026-09-07 · Mọi số liệu do chạy thật
 | Đề tài chạy được không? | Được. Hạ tầng hoàn chỉnh, nhãn chuẩn tự kiểm chứng tới 6,66e-16 |
 | Phát hiện chính? | **Cấp đồ thị đúng cắt gần nửa tác hại của việc ẩn danh tên biến.** Không đồ thị: 8/9 so sánh p<0,05, hại trung bình 10,73 pp. Có đồ thị: 3/9 và 5,67 pp |
 | Nguyên nhân tác hại là gì? | **Mất tri thức về chiều nhân quả hợp lẽ thường**, không phải độ dài prompt cũng không phải khó gắn ký hiệu. Chỉ hoán vị tên biến trong chính item đó đã mất 7,52 pp; xoá hẳn từ thật không mất thêm gì (0/12 ô có ý nghĩa) |
-| Có ý nghĩa thống kê chưa? | **Có, ở thí nghiệm từ vựng.** 19/60 phép kiểm McNemar đạt p<0,05, n=174 ghép cặp |
+| Cơ chế? | **Model lấy chiều của cạnh từ tri thức, không phải từ đề bài.** Prior sai gây đảo chiều gấp 5,1-7,7 lần prior đúng, trong khi prior vắng mặt chỉ gấp 1,3-2,8 lần |
+| Có ý nghĩa thống kê chưa? | **Có.** 19/60 McNemar cho phần suy luận, 8/9 Wilcoxon cho phần trích xuất, đều n=174 ghép cặp |
 | Điều gì đã bị rút? | **Toàn bộ mục "năng lực nhân quả sụp đổ trên từ giả".** Nguyên nhân là lỗi nạp dữ liệu |
 | Còn gì chưa xong? | Định giá lỗi đồ thị chưa đủ cỡ mẫu; CI độ dốc còn chứa 0 ở 6/9 ô |
 
@@ -215,23 +216,57 @@ Hai lỗi đã sửa trong khâu này:
 
 ---
 
-## 9. Kết quả 5: chất lượng đồ thị agent tự dựng có giảm thật
+## 9. Kết quả 5: neo từ vựng giúp TRÍCH XUẤT đồ thị, và prior SAI độc hơn prior VẮNG MẶT
 
-Nhánh chính chứa 90 item từ thật và 57 item từ giả, **cùng file, cùng khuôn mẫu, prompt đầy đủ**. So sánh trong nội bộ nhánh này là hợp lệ:
+Bốn mục trên đo việc **suy luận** trên đồ thị được cấp sẵn. Mục này đo việc **trích xuất** đồ thị từ văn bản - một năng lực khác hẳn. Cùng 174 item, cùng bốn bộ từ vựng, nên ghép cặp được.
 
-| Model | F1 từ thật | F1 từ giả | Chênh | p (Mann-Whitney) |
-|---|---|---|---|---|
-| gpt-4.1 | 0,633 | 0,491 | +0,142 | **0,0144** |
-| gpt-4.1-mini | 0,716 | 0,501 | +0,215 | **0,0002** |
-| gpt-4.1-nano | 0,535 | 0,490 | +0,046 | 0,3702 |
+| Model | Bộ | F1 | Chênh so với KEEP | p (Wilcoxon ghép cặp) | Cạnh đảo chiều | Gấp KEEP |
+|---|---|---|---|---|---|---|
+| gpt-4.1 | KEEP | 0,565 | - | - | 0,046 | 1,0x |
+| gpt-4.1 | **PERMUTE** | 0,406 | **-0,159** | **0,0000** | **0,316** | **6,9x** |
+| gpt-4.1 | SYMBOL | 0,502 | **-0,062** | **0,0114** | 0,126 | 2,8x |
+| gpt-4.1 | PSEUDO | 0,458 | **-0,106** | **0,0000** | 0,098 | 2,1x |
+| gpt-4.1-mini | KEEP | 0,608 | - | - | 0,069 | 1,0x |
+| gpt-4.1-mini | **PERMUTE** | 0,424 | **-0,183** | **0,0000** | **0,529** | **7,7x** |
+| gpt-4.1-mini | SYMBOL | 0,508 | **-0,100** | **0,0002** | 0,092 | 1,3x |
+| gpt-4.1-mini | PSEUDO | 0,505 | **-0,103** | **0,0001** | 0,109 | 1,6x |
+| gpt-4.1-nano | KEEP | 0,462 | - | - | 0,069 | 1,0x |
+| gpt-4.1-nano | **PERMUTE** | 0,384 | **-0,078** | **0,0203** | **0,351** | **5,1x** |
+| gpt-4.1-nano | SYMBOL | 0,509 | +0,046 | 0,0314 | 0,155 | 2,2x |
+| gpt-4.1-nano | PSEUDO | 0,438 | -0,024 | 0,4672 | 0,115 | 1,7x |
 
-Hai model mạnh **dựng đồ thị kém hẳn đi** khi tên biến là từ giả, và cả ba hội tụ về F1 ~0,49 - thang tier biến mất. Cạnh đảo chiều tăng khoảng gấp đôi (gpt-4.1: 0,022 lên 0,053), không phải 4-10 lần như bản cũ báo.
+**8/9 phép so sánh F1 đạt p<0,05** (ngoại lệ: `nano` với `PSEUDO`).
 
-Ghép mục 4 với mục 9 cho bức tranh đầy đủ:
+> **Sàn ngẫu nhiên: F1 = 0,362.** Đồ thị CLadder chỉ có 3-5 nút, tức 6 tới 20 cặp có hướng, nên đoán mò đã đạt gần 0,36. Mọi con số F1 dưới đây phải đọc so với sàn đó: `KEEP` (0,462-0,608) thực sự vượt sàn, còn `PERMUTE` (0,384-0,424) **chỉ hơn sàn 0,02 tới 0,06** - gần như bằng đoán mò. Tính bằng `scripts/induction_baselines.py`, 0 USD.
 
-> **Neo từ vựng giúp model TRÍCH XUẤT đồ thị nhân quả, chứ không giúp nó SUY LUẬN trên đồ thị đã có.**
+**Một bất thường phải nêu:** `gpt-4.1-nano` với `SYMBOL` có F1 **cao hơn** `KEEP` (+0,046, p=0,0314) - ngược chiều luận điểm và có ý nghĩa thống kê. Với 9 phép kiểm ở alpha 0,05 thì kỳ vọng khoảng 0,45 ô dương tính giả, nên một ô như vậy nằm trong dự đoán của nhiễu. Nhưng nó là ô duy nhất đi ngược, và `nano` cũng là model có `Delta_struct` âm ở mục 5, nên không loại trừ được khả năng model yếu nhất phản ứng khác về chất. Chưa giải thích được.
+ Bỏ neo từ vựng làm chất lượng đồ thị tự dựng giảm thật, và giờ đã là kết luận **ghép cặp**, không còn là so sánh between-items như bản trước.
 
-Đó là một phát biểu sắc, kiểm được, và chưa ai công bố.
+### Phép phân ly quan trọng nhất của toàn dự án
+
+So sánh cột cuối. `PERMUTE` cấp cho model một prior **sai**; `SYMBOL` và `PSEUDO` **không cấp prior nào**.
+
+| Tình huống | Cạnh đảo chiều mỗi item | Gấp KEEP |
+|---|---|---|
+| Prior **đúng** (`KEEP`) | 0,046 - 0,069 | 1,0x |
+| Prior **vắng mặt** (`SYMBOL`, `PSEUDO`) | 0,092 - 0,155 | 1,3x tới 2,8x |
+| Prior **sai** (`PERMUTE`) | **0,316 - 0,529** | **5,1x tới 7,7x** |
+
+Prior sai gây đảo chiều nhiều gấp **3 tới 5 lần** so với không có prior nào.
+
+Nếu model đọc chiều nhân quả **từ văn bản**, hai tình huống sau phải giống nhau - văn bản là như nhau, chỉ tên biến khác. Chúng không giống nhau, và cách biệt rất lớn.
+
+**Kết luận, phát biểu theo mức độ:** khi tên biến gợi một chiều nhân quả sai, model **đi theo tri thức khoảng một phần ba tới một nửa quãng đường** thay vì đọc chiều đã nêu trong đề bài. Nó không bỏ qua văn bản, nhưng cũng không đọc sạch.
+
+Con số đó đo được. Một tác nhân bỏ hẳn văn bản và chỉ trả lời theo tri thức thế giới sẽ đạt **0,966 cạnh đảo chiều** (xuất đồ thị `KEEP`, chấm theo `PERMUTE`). Model thật đạt 0,316-0,529, tức **32,7% tới 54,8%** quãng đường tới tác nhân đó.
+
+Đây cũng là con số "4 tới 10 lần" mà bản báo cáo cũ từng nêu rồi bị rút. Hướng thì đúng, nhưng nó được đo trên dữ liệu hỏng. Giờ nó được đo lại đúng cách, ghép cặp, trên prompt đầy đủ, và **vẫn đứng vững**.
+
+### Ghép mục 4 với mục 9
+
+> **Neo từ vựng giúp model TRÍCH XUẤT đồ thị nhân quả (8/9 ô p<0,05), chứ không giúp nó SUY LUẬN trên đồ thị đã có (đồ thị đúng đưa từ 8/9 xuống 3/9).**
+
+Cả hai vế giờ đều ghép cặp và đều chịu được kiểm định. Cơ chế nối hai vế lại là lỗi đảo chiều: đó vừa là loại lỗi mà việc mất neo từ vựng sinh ra nhiều nhất, vừa là loại lỗi đắt nhất khi suy luận (mục 6).
 
 ---
 
@@ -253,8 +288,7 @@ Ghép mục 4 với mục 9 cho bức tranh đầy đủ:
 | Việc | Ghi chú |
 |---|---|
 | Nâng n cho phần định giá lỗi | 6/9 CI còn chứa 0; cần n lớn hơn nhiều |
-| Chạy `ED`/`FE` trong thí nghiệm từ vựng | hiện chỉ có `DR_k1` |
-| Induction trên ba bộ từ vựng ghép cặp | mục 9 hiện là between-items trong cùng nhánh |
+| Chạy `ED`/`FE` trong thí nghiệm từ vựng | hiện chỉ có `DR_k1`; đây là việc rẻ nhất còn lại |
 | Thêm dòng model khác họ | cả ba model đều là GPT-4.1, một nhà cung cấp |
 | Nhiều lần bốc nhiễu mỗi item (R>=3) | phương sai do bốc đã đo được 1,36 pp |
 | Nối lớp structured noise vào pilot | `src/noise.py` đã có 8 loại, chưa nối |

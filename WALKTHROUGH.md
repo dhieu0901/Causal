@@ -2,7 +2,7 @@
 
 > **Đề tài:** Chi phí của các loại lỗi đồ thị nhân quả trong suy luận LLM, và mức độ phụ thuộc của năng lực đó vào từ vựng đời thường.  
 > **Repository:** Noisy Causal  
-> **Cập nhật:** 2026-09-08 (19.901 lượt gọi mô hình, 19,98 USD. Bản này **rút lại** phát hiện tiêu đề của bản trước sau khi phát hiện một lỗi nạp dữ liệu - xem mục 5.1)  
+> **Cập nhật:** 2026-09-08 (23.448 lượt gọi mô hình, 23,4 USD. Bản này **rút lại** phát hiện tiêu đề của bản trước sau khi phát hiện một lỗi nạp dữ liệu - xem mục 5.1)  
 
 Tài liệu này được biên soạn đầy đủ và trực quan bằng định dạng thuần (Markdown chuẩn, hiển thị tốt 100% trên mọi trình xem không cần plugin LaTeX) để bất kỳ ai khi đọc cũng hiểu rõ: **Đề tài làm về gì? Đã triển khai như thế nào? Kết quả cụ thể ra sao? Những bài học kỹ thuật nào đã rút ra? Và hướng phát triển tiếp theo là gì?**
 
@@ -156,7 +156,7 @@ Vì cùng item nên **McNemar ghép cặp áp dụng trực tiếp**.
 
 ## PHẦN 5: KẾT QUẢ THỰC NGHIỆM & CÁC PHÁT HIỆN CỐT LÕI
 
-Dữ liệu chạy thực tế: **19.901 lượt gọi API**, tổng chi phí **19,98 USD**.  
+Dữ liệu chạy thực tế: **23.448 lượt gọi API**, tổng chi phí **23,4 USD**.  
 *(Toàn bộ bảng dưới đây được tính trên các câu parse được thành công để tránh thiên vị chống lại RAW).*
 
 ---
@@ -298,22 +298,52 @@ Thứ model mất khi bị ẩn danh là **tri thức về chiều nhân quả n
 
 ---
 
-### 5.7. KẾT QUẢ 5: Chất lượng đồ thị Agent tự dựng có giảm thật
+### 5.7. KẾT QUẢ 5: Neo từ vựng giúp TRÍCH XUẤT đồ thị, và prior SAI độc hơn prior VẮNG MẶT
 
-Nhánh chính chứa 90 item từ thật và 57 item từ giả, **cùng file, cùng khuôn mẫu, prompt đầy đủ**:
+Các mục trên đo việc **suy luận** trên đồ thị được cấp. Mục này đo việc **trích xuất** đồ thị từ văn bản. Cùng 174 item, cùng bốn bộ từ vựng, ghép cặp.
 
-| Model | F1 từ thật | F1 từ giả | Chênh | p (Mann-Whitney) |
-|---|:---:|:---:|:---:|:---:|
-| **gpt-4.1** | 0,633 | 0,491 | +0,142 | **0,0144** |
-| **gpt-4.1-mini** | 0,716 | 0,501 | +0,215 | **0,0002** |
-| gpt-4.1-nano | 0,535 | 0,490 | +0,046 | 0,3702 |
+| Model | Bộ | F1 | Chênh KEEP | p (Wilcoxon) | Cạnh đảo chiều | Gấp KEEP |
+|---|---|:---:|:---:|:---:|:---:|:---:|
+| **gpt-4.1** | KEEP | 0,565 | - | - | 0,046 | 1,0x |
+| **gpt-4.1** | **PERMUTE** | 0,406 | **-0,159** | **0,0000** | **0,316** | **6,9x** |
+| **gpt-4.1** | SYMBOL | 0,502 | **-0,062** | **0,0114** | 0,126 | 2,8x |
+| **gpt-4.1** | PSEUDO | 0,458 | **-0,106** | **0,0000** | 0,098 | 2,1x |
+| **gpt-4.1-mini** | KEEP | 0,608 | - | - | 0,069 | 1,0x |
+| **gpt-4.1-mini** | **PERMUTE** | 0,424 | **-0,183** | **0,0000** | **0,529** | **7,7x** |
+| **gpt-4.1-mini** | SYMBOL | 0,508 | **-0,100** | **0,0002** | 0,092 | 1,3x |
+| **gpt-4.1-mini** | PSEUDO | 0,505 | **-0,103** | **0,0001** | 0,109 | 1,6x |
+| **gpt-4.1-nano** | KEEP | 0,462 | - | - | 0,069 | 1,0x |
+| **gpt-4.1-nano** | **PERMUTE** | 0,384 | **-0,078** | **0,0203** | **0,351** | **5,1x** |
+| **gpt-4.1-nano** | SYMBOL | 0,509 | +0,046 | 0,0314 | 0,155 | 2,2x |
+| **gpt-4.1-nano** | PSEUDO | 0,438 | -0,024 | 0,4672 | 0,115 | 1,7x |
 
-Hai model mạnh dựng đồ thị kém hẳn khi tên biến là từ giả, và cả ba hội tụ về F1 khoảng 0,49. Cạnh đảo chiều tăng khoảng gấp đôi (gpt-4.1: 0,022 lên 0,053), **không phải 4-10 lần** như bản cũ báo.
+**8/9 phép so sánh F1 đạt p<0,05.**
+
+> **Sàn ngẫu nhiên: F1 = 0,362.** Đồ thị CLadder chỉ có 3-5 nút, tức 6 tới 20 cặp có hướng, nên đoán mò đã đạt gần 0,36. Mọi con số F1 dưới đây phải đọc so với sàn đó: `KEEP` (0,462-0,608) thực sự vượt sàn, còn `PERMUTE` (0,384-0,424) **chỉ hơn sàn 0,02 tới 0,06** - gần như bằng đoán mò. Tính bằng `scripts/induction_baselines.py`, 0 USD.
+
+**Một bất thường phải nêu:** `gpt-4.1-nano` với `SYMBOL` có F1 **cao hơn** `KEEP` (+0,046, p=0,0314) - ngược chiều luận điểm và có ý nghĩa thống kê. Với 9 phép kiểm ở alpha 0,05 thì kỳ vọng khoảng 0,45 ô dương tính giả, nên một ô như vậy nằm trong dự đoán của nhiễu. Nhưng nó là ô duy nhất đi ngược, và `nano` cũng là model có `Delta_struct` âm ở mục 5, nên không loại trừ được khả năng model yếu nhất phản ứng khác về chất. Chưa giải thích được.
+
+
+#### Phép phân ly quan trọng nhất của toàn dự án
+
+`PERMUTE` cấp prior **sai**. `SYMBOL` và `PSEUDO` **không cấp prior nào**.
+
+| Tình huống | Cạnh đảo chiều | Gấp KEEP |
+|---|:---:|:---:|
+| Prior **đúng** (`KEEP`) | 0,046 - 0,069 | 1,0x |
+| Prior **vắng mặt** (`SYMBOL`, `PSEUDO`) | 0,092 - 0,155 | 1,3x - 2,8x |
+| Prior **sai** (`PERMUTE`) | **0,316 - 0,529** | **5,1x - 7,7x** |
+
+> Nếu model đọc chiều nhân quả **từ văn bản** thì hai dòng cuối phải giống nhau - văn bản là như nhau, chỉ tên biến khác. Chúng cách nhau 3 tới 5 lần.
+>
+> **Phát biểu theo mức độ:** khi tên biến gợi chiều sai, model đi theo tri thức khoảng **một phần ba tới một nửa quãng đường** (32,7-54,8% so với tác nhân bỏ hẳn văn bản, vốn đạt 0,966 cạnh đảo chiều). Nó không bỏ qua đề bài, nhưng cũng không đọc sạch.
+
+Con số "4 tới 10 lần" của bản báo cáo cũ từng bị rút vì đo trên dữ liệu hỏng. Đo lại đúng cách, ghép cặp, prompt đầy đủ - nó **vẫn đứng vững**.
 
 > **GHÉP 5.3 VỚI 5.7 - luận điểm của đề tài:**
-> **Neo từ vựng giúp model TRÍCH XUẤT đồ thị nhân quả, chứ không giúp nó SUY LUẬN trên đồ thị đã có.**
+> **Neo từ vựng giúp model TRÍCH XUẤT đồ thị nhân quả (8/9 ô p<0,05), chứ không giúp nó SUY LUẬN trên đồ thị đã có (đồ thị đúng đưa từ 8/9 xuống 3/9).**
 >
-> *Lưu ý về mức độ tin cậy: nửa "suy luận" (5.3) là ghép cặp nên McNemar áp dụng trực tiếp. Nửa "trích xuất" (5.7) là so sánh between-items 90 với 57 item trong cùng nhánh, nên yếu hơn. Muốn khoá chặt thì phải chạy `induction.py` trên cả bốn bộ từ vựng ghép cặp.*
+> Cả hai vế đều ghép cặp. Cơ chế nối chúng lại là lỗi đảo chiều: vừa là loại lỗi mà mất neo từ vựng sinh ra nhiều nhất, vừa là loại lỗi đắt nhất khi suy luận (5.5).
 
 ---
 
