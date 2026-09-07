@@ -113,6 +113,9 @@ Noisy Causal/
 │   ├── pilot.py               # Chạy thử nghiệm pilot thật (147 items x 6 điều kiện x 3 models)
 │   ├── induction.py           # Chạy thí nghiệm Agent tự dựng đồ thị (147 items x 3 models)
 │   ├── analyze_lexical.py     # Phan tich thi nghiem tu vung ghep cap (ket qua chinh)
+│   ├── analyze_prior_strength.py  # Phan tang theo question_property cua CLadder
+│   ├── compare_price_lexicon.py   # Gia loi co doi theo che do tu vung khong
+│   ├── induction_baselines.py     # Hai duong san mo phong cho F1 va dao chieu
 │   ├── analyze_pilot.py       # Phân tích kết quả pilot_raw.csv
 │   └── analyze_types.py       # Định giá từng loại lỗi (ED, FE, DR) & kiểm chứng mô hình cộng tính
 │
@@ -360,7 +363,45 @@ Con số "4 tới 10 lần" của bản báo cáo cũ từng bị rút vì đo t
 
 ---
 
-### 5.8. KẾT QUẢ 6: Định giá từng loại lỗi đồ thị - CHƯA XÁC LẬP ĐƯỢC
+### 5.8. KẾT QUẢ 6: Giá một cạnh sai không đổi theo miền - phần còn lại CHƯA XÁC LẬP
+
+Thang lỗi đầy đủ `DR`/`ED`/`FE` k=1,2,3 chạy **hai lần ở n=400 trên cùng 399 item** - một lần tên gốc, một lần từ giả. Tách được hai thứ mà `k*` gộp làm một:
+
+* **giá** = pp mất trên mỗi cạnh sai (độ dốc)
+* **ngân sách** = `ORACLE - RAW` (chiều cao độ dốc phải ăn hết)
+
+#### Giá KHÔNG đổi - phần vững
+
+> **Cảnh báo phương pháp:** bản đầu lập luận bằng "9/9 cặp CI chồng nhau". **Đó là lỗi thống kê** - CI chồng nhau không chứng minh bằng nhau. Vì cùng item nên phải bootstrap thẳng **hiệu**.
+
+| Model | Loại | Hiệu giá (KEEP - PSEUDO) | CI 95% của **hiệu** |
+|---|---|:---:|:---:|
+| **gpt-4.1** | **DR** | **-0,11** | **[-1,62 ; 1,42]** |
+| **gpt-4.1-mini** | **DR** | **+0,18** | **[-1,53 ; 2,09]** |
+| gpt-4.1 | ED | -0,91 | [-2,56 ; 0,67] |
+| gpt-4.1-mini | ED | -0,10 | [-1,80 ; 1,66] |
+
+9/9 CI của hiệu chứa 0, và với `DR` chúng bám sát 0. Phát biểu đúng là một **cận tương đương**: nếu giá có phụ thuộc miền, mức đó dưới khoảng **1,6 pp mỗi cạnh** - tức ~40% của giá 4,09.
+
+#### Ngân sách: hướng đúng nhưng CHƯA XÁC LẬP
+
+| Model | NS `KEEP` | NS `PSEUDO` | Hiệu | CI 95% | Ý nghĩa? |
+|---|:---:|:---:|:---:|:---:|:---:|
+| gpt-4.1 | 4,36 | 9,28 | +4,92 | [-0,40 ; 10,30] | **không** |
+| gpt-4.1-mini | 7,07 | 9,95 | +2,88 | [-2,61 ; 8,43] | **không** |
+| **gpt-4.1-nano** | 3,23 | 0,83 | **-2,41** | [-9,02 ; 3,85] | không |
+
+**Cả ba CI chứa 0, và `nano` đi ngược hướng.** Cần n≈514 (gpt-4.1) và n≈935 (mini) mới đạt p<0,05.
+
+> **Kết luận được:** giá một cạnh sai không đổi rõ rệt theo miền từ vựng, cận tương đương ~1,6 pp. `DR` vẫn đắt nhất ở cả hai chế độ.
+>
+> **Chưa kết luận được:** "ngân sách tăng gấp đôi" và "k\* dịch từ 0,74 lên 1,93" đều **chưa xác lập**. Câu *"đồ thị bền vững hơn ở nơi nó cần thiết hơn"* là **giả thuyết phù hợp số liệu**, không phải kết luận.
+
+Tính bằng `scripts/compare_price_lexicon.py`, 0 USD.
+
+---
+
+### 5.9. PHỤ LỤC (n=147, giữ để đối chiếu): Định giá từng loại lỗi đồ thị - CHƯA XÁC LẬP ĐƯỢC
 
 Đây là câu hỏi nghiên cứu gốc. Bản cũ báo giá tới hai chữ số thập phân. Kiểm lại bằng bootstrap 600 lần, bốc lại theo item:
 

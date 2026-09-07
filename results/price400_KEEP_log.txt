@@ -1,4 +1,4 @@
-items=399  jobs/model=4104  lexicon=PSEUDO  paired_to=None  families=['IV', 'arrowhead', 'confounding', 'diamond', 'diamondcut', 'frontdoor', 'mediation']
+items=399  jobs/model=4104  lexicon=KEEP  paired_to=None  families=['IV', 'arrowhead', 'confounding', 'diamond', 'diamondcut', 'frontdoor', 'mediation']
 
 >>> gpt-4.1-nano: 4104 calls
     25/4104
@@ -165,7 +165,7 @@ items=399  jobs/model=4104  lexicon=PSEUDO  paired_to=None  families=['IV', 'arr
     4050/4104
     4075/4104
     4100/4104
-    done: {'calls': 4104, 'cached': 44, 'errors': 0, 'in_tok': 688780, 'out_tok': 1677233}
+    done: {'calls': 4104, 'cached': 273, 'errors': 0, 'in_tok': 680946, 'out_tok': 1541507}
 
 >>> gpt-4.1-mini: 4104 calls
     25/4104
@@ -332,7 +332,7 @@ items=399  jobs/model=4104  lexicon=PSEUDO  paired_to=None  families=['IV', 'arr
     4050/4104
     4075/4104
     4100/4104
-    done: {'calls': 4104, 'cached': 44, 'errors': 0, 'in_tok': 688780, 'out_tok': 1517983}
+    done: {'calls': 4104, 'cached': 261, 'errors': 0, 'in_tok': 680946, 'out_tok': 1489577}
 
 >>> gpt-4.1: 4104 calls
     25/4104
@@ -499,9 +499,9 @@ items=399  jobs/model=4104  lexicon=PSEUDO  paired_to=None  families=['IV', 'arr
     4050/4104
     4075/4104
     4100/4104
-    done: {'calls': 4104, 'cached': 44, 'errors': 0, 'in_tok': 688780, 'out_tok': 1159350}
+    done: {'calls': 4104, 'cached': 262, 'errors': 0, 'in_tok': 680946, 'out_tok': 1073328}
 
-saved D:\code\Noisy Causal\results\pilot_raw_price400PSEUDO.csv  (12312 rows)
+saved D:\code\Noisy Causal\results\pilot_raw_price400KEEP.csv  (12312 rows)
 
 ======================================================================
 PILOT: DO CHINH XAC THEO DIEU KIEN
@@ -510,78 +510,78 @@ PILOT: DO CHINH XAC THEO DIEU KIEN
 --- gpt-4.1-nano ---
           n    acc  parse
 cond                     
-PROSE   399  66.42   95.2
-RAW     399  69.17   97.2
-ORACLE  399  67.92   93.0
-DR_k1   399  65.91   96.5
-DR_k2   399  61.15   91.5
-DR_k3   399  62.91   94.7
-ED_k1   399  65.41   95.7
-ED_k2   399  66.42   97.0
-ED_k3   399  64.66   97.2
-FE_k1   285  63.51   95.4
-FE_k2   228  61.84   94.3
-  Delta_struct = ORACLE - RAW = -1.25 pp
-  Cost of stripping prose (PROSE - RAW) = -2.75 pp
-  DR_k1: 65.91  (vs RAW -3.26 pp)
-  DR_k2: 61.15  (vs RAW -8.02 pp)
-  DR_k3: 62.91  (vs RAW -6.26 pp)
+PROSE   399  73.68   97.5
+RAW     399  72.93   97.7
+ORACLE  399  73.43   93.5
+DR_k1   399  67.17   95.0
+DR_k2   399  68.17   94.5
+DR_k3   399  70.93   95.2
+ED_k1   399  72.18   94.7
+ED_k2   399  68.92   95.5
+ED_k3   399  69.42   94.5
+FE_k1   285  70.18   93.7
+FE_k2   228  65.79   90.8
+  Delta_struct = ORACLE - RAW = +0.50 pp
+  Cost of stripping prose (PROSE - RAW) = +0.75 pp
+  DR_k1: 67.17  (vs RAW -5.76 pp)
+  DR_k2: 68.17  (vs RAW -4.76 pp)
+  DR_k3: 70.93  (vs RAW -2.00 pp)
 
 --- gpt-4.1-mini ---
           n    acc  parse
 cond                     
-PROSE   399  78.70   98.5
-RAW     399  67.92   99.2
-ORACLE  399  76.19   96.2
-DR_k1   399  69.42   96.2
-DR_k2   399  64.91   97.2
-DR_k3   399  63.41   97.0
-ED_k1   399  76.44   98.5
-ED_k2   399  71.93   99.2
-ED_k3   399  70.68   98.2
-FE_k1   285  77.19   98.2
-FE_k2   228  75.00   98.2
-  Delta_struct = ORACLE - RAW = +8.27 pp
-  Cost of stripping prose (PROSE - RAW) = +10.78 pp
-  DR_k1: 69.42  (vs RAW +1.50 pp)
-  DR_k2: 64.91  (vs RAW -3.01 pp)
-  DR_k3: 63.41  (vs RAW -4.51 pp)
+PROSE   399  86.47   99.0
+RAW     399  79.20   98.7
+ORACLE  399  84.21   96.0
+DR_k1   399  72.93   93.5
+DR_k2   399  71.68   96.0
+DR_k3   399  67.67   93.2
+ED_k1   399  81.70   98.7
+ED_k2   399  79.70   98.2
+ED_k3   399  77.44   97.2
+FE_k1   285  78.25   96.8
+FE_k2   228  78.07   96.1
+  Delta_struct = ORACLE - RAW = +5.01 pp
+  Cost of stripping prose (PROSE - RAW) = +7.27 pp
+  DR_k1: 72.93  (vs RAW -6.27 pp)
+  DR_k2: 71.68  (vs RAW -7.52 pp)
+  DR_k3: 67.67  (vs RAW -11.53 pp)
 
 --- gpt-4.1 ---
           n    acc  parse
 cond                     
-PROSE   399  71.18   99.7
-RAW     399  68.17   98.5
-ORACLE  399  77.69   98.2
-DR_k1   399  68.92   98.0
-DR_k2   399  67.67   98.0
-DR_k3   399  63.91   97.5
-ED_k1   399  71.18   98.2
-ED_k2   399  68.17   98.5
-ED_k3   399  66.92   97.5
-FE_k1   285  76.14   97.9
-FE_k2   228  73.25   98.7
-  Delta_struct = ORACLE - RAW = +9.52 pp
-  Cost of stripping prose (PROSE - RAW) = +3.01 pp
-  DR_k1: 68.92  (vs RAW +0.75 pp)
-  DR_k2: 67.67  (vs RAW -0.50 pp)
-  DR_k3: 63.91  (vs RAW -4.26 pp)
+PROSE   399  81.70   98.7
+RAW     399  81.45   99.2
+ORACLE  399  85.71   98.5
+DR_k1   399  77.94   99.0
+DR_k2   399  74.69   98.7
+DR_k3   399  73.68   99.0
+ED_k1   399  82.21   97.7
+ED_k2   399  78.95   98.7
+ED_k3   399  76.69   96.0
+FE_k1   285  81.75   99.3
+FE_k2   228  82.02   98.2
+  Delta_struct = ORACLE - RAW = +4.26 pp
+  Cost of stripping prose (PROSE - RAW) = +0.25 pp
+  DR_k1: 77.94  (vs RAW -3.51 pp)
+  DR_k2: 74.69  (vs RAW -6.76 pp)
+  DR_k3: 73.68  (vs RAW -7.77 pp)
 
 ======================================================================
 McNEMAR EXACT (paired, tren cung item)
 ======================================================================
-  gpt-4.1-nano     ORACLE   vs RAW       b= 60 c= 65  p=0.7207
-  gpt-4.1-nano     DR_k1    vs RAW       b= 61 c= 74  p=0.3017
-  gpt-4.1-nano     DR_k2    vs RAW       b= 44 c= 76  p=0.0045
-  gpt-4.1-nano     DR_k3    vs RAW       b= 45 c= 70  p=0.0248
-  gpt-4.1-nano     ORACLE   vs DR_k1     b= 49 c= 41  p=0.4608
-  gpt-4.1-mini     ORACLE   vs RAW       b= 71 c= 38  p=0.0020
-  gpt-4.1-mini     DR_k1    vs RAW       b= 58 c= 52  p=0.6338
-  gpt-4.1-mini     DR_k2    vs RAW       b= 38 c= 50  p=0.2408
-  gpt-4.1-mini     DR_k3    vs RAW       b= 41 c= 59  p=0.0886
-  gpt-4.1-mini     ORACLE   vs DR_k1     b= 60 c= 33  p=0.0067
-  gpt-4.1          ORACLE   vs RAW       b= 66 c= 28  p=0.0001
-  gpt-4.1          DR_k1    vs RAW       b= 46 c= 43  p=0.8323
-  gpt-4.1          DR_k2    vs RAW       b= 43 c= 45  p=0.9152
-  gpt-4.1          DR_k3    vs RAW       b= 33 c= 50  p=0.0784
-  gpt-4.1          ORACLE   vs DR_k1     b= 59 c= 24  p=0.0002
+  gpt-4.1-nano     ORACLE   vs RAW       b= 50 c= 48  p=0.9196
+  gpt-4.1-nano     DR_k1    vs RAW       b= 39 c= 62  p=0.0281
+  gpt-4.1-nano     DR_k2    vs RAW       b= 42 c= 61  p=0.0756
+  gpt-4.1-nano     DR_k3    vs RAW       b= 36 c= 44  p=0.4340
+  gpt-4.1-nano     ORACLE   vs DR_k1     b= 50 c= 25  p=0.0052
+  gpt-4.1-mini     ORACLE   vs RAW       b= 51 c= 31  p=0.0352
+  gpt-4.1-mini     DR_k1    vs RAW       b= 38 c= 63  p=0.0165
+  gpt-4.1-mini     DR_k2    vs RAW       b= 33 c= 63  p=0.0029
+  gpt-4.1-mini     DR_k3    vs RAW       b= 30 c= 76  p=0.0000
+  gpt-4.1-mini     ORACLE   vs DR_k1     b= 63 c= 18  p=0.0000
+  gpt-4.1          ORACLE   vs RAW       b= 40 c= 23  p=0.0430
+  gpt-4.1          DR_k1    vs RAW       b= 34 c= 48  p=0.1507
+  gpt-4.1          DR_k2    vs RAW       b= 26 c= 53  p=0.0032
+  gpt-4.1          DR_k3    vs RAW       b= 27 c= 58  p=0.0010
+  gpt-4.1          ORACLE   vs DR_k1     b= 41 c= 10  p=0.0000

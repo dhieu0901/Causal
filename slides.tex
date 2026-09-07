@@ -1,0 +1,604 @@
+\documentclass{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{mathabx}
+\usepackage{mathpazo}
+\usepackage{eulervm}
+\usepackage{natbib}
+\usepackage{graphicx}
+\usepackage{grffile}
+\usepackage{booktabs}
+
+\usetheme{Dresden}
+\usefonttheme{serif}
+\usecolortheme{rose}
+
+\title{When Does a Causal Graph Help an LLM?}
+\subtitle{Pricing graph errors, and what lexical anchors are really doing}
+\author{Nguyen Duong Hieu}
+\date{Pilot study}
+
+% Remove top navigation
+\setbeamertemplate{headline}{}
+\setbeamertemplate{navigation symbols}{}
+
+\begin{document}
+
+\maketitle
+
+\begin{frame}{Contents}
+  \begin{itemize}
+    \item Motivation: the question NoisyCausal left open
+    \item Method: why CLadder, and the paired design
+    \item Result 1: what each graph error costs, and the break-even point
+    \item Result 2: graphs substitute for world knowledge
+    \item A methodological lesson (and a retraction)
+    \item Limitations and a plan for four people
+  \end{itemize}
+\end{frame}
+
+% =====================================================================
+\section{Motivation}
+\begin{frame}
+  \sectionpage
+\end{frame}
+
+\begin{frame}{Graph-guided causal reasoning}
+  LLMs confuse correlation with causation. The standard fix in agent design is
+  \textbf{graph-guided reasoning}: make the model extract a causal DAG, then
+  reason over it.
+
+  \vspace{0.4cm}
+  \textbf{NoisyCausal} (arXiv:2605.04313, May 2026) tested this directly:
+
+  \begin{center}
+  \begin{tabular}{lc}
+    \toprule
+    Condition & Accuracy \\
+    \midrule
+    Oracle graph (100\% correct)      & 85.00\% \\
+    Full graph-guided                 & 80.68\% \\
+    No graph                          & 65.32\% \\
+    \textbf{Random graph}             & \textbf{60.87\%} \\
+    \textbf{Oracle $+$ 1 reversed edge} & \textbf{73.20\%} \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.3cm}
+  A wrong graph is \textbf{not neutral}. It is worse than no graph at all.
+\end{frame}
+
+\begin{frame}{The gap in that paper}
+  NoisyCausal reports the numbers and stops. It never asks:
+
+  \begin{block}{Where is the tolerance boundary?}
+    A real agent must \textbf{build the graph itself}, and it will make mistakes.
+    If the tolerance is small enough, forcing an agent to construct a causal
+    graph may be actively damaging its own accuracy.
+  \end{block}
+
+  \vspace{0.4cm}
+  \textbf{Two research questions:}
+
+  \begin{enumerate}
+    \item[\textbf{Q1}] What does each error type (reversal, deletion, false edge)
+      cost per edge, and how many wrong edges erase the benefit entirely?
+      (\emph{break-even point} $k^*$)
+    \item[\textbf{Q2}] Is measured causal ability structural reasoning, or
+      familiarity with the vocabulary?
+  \end{enumerate}
+\end{frame}
+
+% =====================================================================
+\section{Method}
+\begin{frame}
+  \sectionpage
+\end{frame}
+
+\begin{frame}{Why CLadder, not NoisyCausal}
+  \begin{itemize}
+    \item NoisyCausal releases \textbf{no code and no data}. All five of its
+      generation steps are LLM prompts.
+    \item \textbf{CLadder} (Jin et al., NeurIPS 2023) is fully open: 10{,}112
+      questions, labels derived from formal SCMs and do-calculus.
+    \item We \textbf{re-derived the ground truth ourselves}: an analytic SCM
+      solver over 2{,}184 models, maximum absolute deviation
+      $\mathbf{6.66 \times 10^{-16}}$ -- machine floating-point error.
+    \item No LLM writes any label. Only deterministic transformations:
+      reverse an edge, delete an edge, rename a variable.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Paired experimental conditions}
+  Every question is presented under all conditions, \textbf{on the same item},
+  so McNemar's exact test applies directly.
+
+  \begin{center}
+  \small
+  \begin{tabular}{ll}
+    \toprule
+    Condition & Role \\
+    \midrule
+    \texttt{PROSE}  & untouched CLadder prompt \\
+    \texttt{RAW}    & structure sentences stripped -- the \textbf{no-graph floor} \\
+    \texttt{ORACLE} & stripped, true DAG re-attached -- the \textbf{ceiling} \\
+    \texttt{DR\_k}  & DAG with $k$ edge directions reversed \\
+    \texttt{ED\_k}  & DAG with $k$ edges deleted \\
+    \texttt{FE\_k}  & DAG with $k$ false edges added \\
+    \texttt{INDUCED}& the graph the model builds for itself \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.3cm}
+  Models: \texttt{gpt-4.1-nano}, \texttt{gpt-4.1-mini}, \texttt{gpt-4.1}.
+  \textbf{40{,}354 API calls}, all cached, so replication is free.
+\end{frame}
+
+\begin{frame}{The lexical ladder: four vocabularies, one item}
+  To answer Q2 we rename the variables \textbf{inside the same question},
+  leaving the graph, the probabilities, the question and the gold label
+  untouched. Each rung removes exactly one thing.
+
+  \begin{center}
+  \begin{tabular}{llc}
+    \toprule
+    Lexicon & Example & Length vs \texttt{KEEP} \\
+    \midrule
+    \texttt{KEEP}    & \emph{Poverty affects water quality} & $0$ \\
+    \texttt{PERMUTE} & \emph{Cholera affects poverty}       & $+9$ chars \\
+    \texttt{SYMBOL}  & \emph{B affects A}                   & $-169$ chars \\
+    \texttt{PSEUDO}  & \emph{Glimx affects muvq}            & $-127$ chars \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.3cm}
+  \texttt{PERMUTE} shuffles the item's \textbf{own} variable names to different
+  graph positions using a derangement. Identical vocabulary, identical length,
+  identical tokenisation -- only \textbf{causal plausibility} is destroyed.
+
+  \vspace{0.2cm}
+  \textbf{Verification:} $174/174$ items keep the correct edge and node counts.
+\end{frame}
+
+% =====================================================================
+\section{Result 1: pricing graph errors}
+\begin{frame}
+  \sectionpage
+\end{frame}
+
+\begin{frame}{Q1 answered: cost per erroneous edge}
+  $n = 400$ paired items, bootstrap CIs resampled at item level.
+
+  \begin{center}
+  \small
+  \begin{tabular}{lccc}
+    \toprule
+    Model & ED (deletion) & FE (false edge) & DR (reversal) \\
+    \midrule
+    \texttt{gpt-4.1}      & \textbf{3.46} [1.89, 4.74] & unresolved & \textbf{4.19} [2.68, 5.82] \\
+    \texttt{gpt-4.1-mini} & \textbf{2.68} [0.72, 3.82] & unresolved & \textbf{4.68} [3.41, 6.79] \\
+    \texttt{gpt-4.1-nano} & \textbf{1.95} [0.49, 3.50] & \textbf{3.74} [0.73, 6.59] & \textbf{2.14} [0.69, 3.93] \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.3cm}
+  \begin{itemize}
+    \item \textbf{7 of 9} prices now have a CI clear of zero
+      (at $n{=}147$ it was only 3 of 9). $R^2 = 0.81$ to $0.93$.
+    \item \textbf{Reversal is the most expensive error} for both strong models:
+      $\mathrm{DR} > \mathrm{ED}$, with non-overlapping evidence.
+    \item False edges remain unresolved -- only $k = 1, 2$ are reachable on
+      CLadder's small graphs.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{The break-even point}
+  How many wrong edges erase the entire benefit of supplying a graph?
+
+  \begin{center}
+  \begin{tabular}{llc}
+    \toprule
+    Model & Error type & $k^*$ (95\% CI) \\
+    \midrule
+    \texttt{gpt-4.1}      & reversal & \textbf{1.93} [0.74, 2.71] \\
+    \texttt{gpt-4.1-mini} & reversal & \textbf{2.02} [1.00, 2.66] \\
+    \texttt{gpt-4.1}      & deletion & 2.41 [1.12, 3.53] \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \begin{block}{Answer to Q1}
+    About \textbf{two reversed edges} wipe out the benefit of graph guidance
+    entirely. This is the number NoisyCausal left unmeasured.
+  \end{block}
+
+  \vspace{0.2cm}
+  $k^*$ is solved against the fitted degradation line itself, not against a
+  mixture of two different lines -- an earlier version conflated them and moved
+  $k^*$ by a factor of two.
+\end{frame}
+
+% =====================================================================
+\section{Result 2: substitution}
+\begin{frame}
+  \sectionpage
+\end{frame}
+
+\begin{frame}{Q2 answered: graphs substitute for world knowledge}
+  Harm caused by anonymising variable names, pooled over 3 lexicons $\times$ 3
+  models. Items split by whether CLadder's own \texttt{question\_property}
+  label gives them a \textbf{correct causal prior}.
+
+  \begin{center}
+  \small
+  \begin{tabular}{lcc}
+    \toprule
+    Condition & Correct prior & Prior already wrong \\
+    \midrule
+    \texttt{RAW} (no graph)      & $\mathbf{-12.23}$ pp, \textbf{8/9} sig. & $-8.91$ pp, 2/9 \\
+    \texttt{ORACLE} (true graph) & $\mathbf{-3.84}$ pp, \textbf{0/9} sig.  & $-7.91$ pp, 1/9 \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \begin{block}{The claim}
+    On exactly the items where the model \emph{had} a correct prior to lose,
+    supplying the true graph takes the damage from \textbf{8 of 9 significant
+    cells to 0 of 9}. The graph does not add to world knowledge --
+    it \textbf{replaces} it.
+  \end{block}
+\end{frame}
+
+\begin{frame}{Where the cost is actually paid}
+  Each rung of the ladder removes one thing.
+  12 comparisons per rung.
+
+  \begin{center}
+  \small
+  \begin{tabular}{lcc}
+    \toprule
+    Rung & What it removes & Effect \\
+    \midrule
+    \texttt{PERMUTE} $-$ \texttt{KEEP}   & plausible direction & $\mathbf{-7.52}$ pp, \textbf{5/12} \\
+    \texttt{SYMBOL} $-$ \texttt{PERMUTE} & real words entirely & $+0.73$ pp, \textbf{0/12} \\
+    \texttt{PSEUDO} $-$ \texttt{SYMBOL}  & distinguishable symbols & $+0.13$ pp, 2/12 \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.3cm}
+  \textbf{The whole cost is paid on the first rung.} Deleting real words
+  afterwards costs nothing more. This rules out two rival explanations:
+
+  \begin{itemize}
+    \item \textbf{Not prompt length:} the \emph{longest} variant loses the most.
+    \item \textbf{Not symbol binding:} multi-syllable pseudowords are no worse
+      than single letters.
+    \item Rung one is a \textbf{positive control}: the design does detect
+      7.52 pp, so the two nulls are informative.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Mechanism: a wrong prior is worse than no prior}
+  When the model builds the graph itself, we can see \emph{which} error it makes.
+
+  \begin{center}
+  \small
+  \begin{tabular}{lcc}
+    \toprule
+    Situation & Reversed edges / item & vs \texttt{KEEP} \\
+    \midrule
+    Correct prior (\texttt{KEEP})        & 0.046 -- 0.069 & $1.0\times$ \\
+    No prior (\texttt{SYMBOL}, \texttt{PSEUDO}) & 0.092 -- 0.155 & $1.3$ -- $2.8\times$ \\
+    \textbf{Wrong prior} (\texttt{PERMUTE}) & \textbf{0.316 -- 0.529} & $\mathbf{5.1}$ -- $\mathbf{7.7\times}$ \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.2cm}
+  If edge direction were read \textbf{from the text}, the last two rows would
+  match -- the text is identical, only the names differ. They differ by
+  3 to 5 times. All $6/6$ paired tests, $p < 0.0001$.
+
+  \vspace{0.2cm}
+  \textbf{Stated as a degree, not an absolute:} an agent that ignored the text
+  entirely would score 0.966 reversals. Real models reach 0.316--0.529, i.e.
+  they travel \textbf{33\% to 55\%} of the way toward pure prior-following.
+\end{frame}
+
+\begin{frame}{An unplanned independent replication}
+  CLadder's own \texttt{anticommonsense} items perform \textbf{the same
+  manipulation} as \texttt{PERMUTE}: real words, implausible causal direction.
+  Different authors, different method, different items.
+
+  \begin{center}
+  \begin{tabular}{lcc}
+    \toprule
+    Model & CLadder \texttt{anticommonsense} & our \texttt{PERMUTE} \\
+    \midrule
+    \texttt{gpt-4.1}      & $-11.6$ pp & $-14.1$ pp \\
+    \texttt{gpt-4.1-mini} & $-11.7$ pp & $-13.8$ pp \\
+    \texttt{gpt-4.1-nano} & $-3.6$ pp  & $-4.6$ pp \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.3cm}
+  Three pairs, three agreements -- including on the outlier model.
+  \texttt{PERMUTE} is not a home-made manipulation producing a home-made
+  effect: it reproduces something the benchmark's own authors built in.
+\end{frame}
+
+% =====================================================================
+\section{A methodological lesson}
+\begin{frame}
+  \sectionpage
+\end{frame}
+
+\begin{frame}{A finding I had to retract}
+  For several days this project reported a headline result:
+
+  \begin{block}{The retracted claim}
+    \emph{``Remove meaningful variable names and all three models fall to
+    chance (50\%), even when handed the correct causal graph. A 28--40 pp
+    drop.''}
+  \end{block}
+
+  \vspace{0.3cm}
+  It was wrong. The cause:
+
+  \begin{center}
+  \begin{tabular}{lc}
+    \toprule
+    File & Prompts containing ``\texttt{?}'' \\
+    \midrule
+    \texttt{full\_v1.5\_default.csv}      & \textbf{100.00\%} \\
+    \texttt{test-commonsense-v1.5.csv}    & \textbf{0.00\%} \\
+    \texttt{test-anticommonsense-v1.5.csv}& \textbf{0.00\%} \\
+    \texttt{test-noncommonsense-v1.5.csv} & \textbf{0.00\%} \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.2cm}
+  \textbf{0 of 31{,}024 rows} in those three files contain a question.
+\end{frame}
+
+\begin{frame}{What the model actually did}
+  The prompt ended with \emph{``Answer the question\dots''} but posed no
+  question. So the model invented one:
+
+  \begin{block}{Real cached response, \texttt{gpt-4.1}}
+    \emph{``Given the information, let's analyze whether \texttt{yupt} and
+    \texttt{muvq} are independent\dots''}
+  \end{block}
+  \begin{block}{Another one}
+    \emph{``\dots let's analyze whether \texttt{Qwiu} is a confounder for the
+    relationship between \texttt{Jyka} and \texttt{Kwox}\dots''}
+  \end{block}
+
+  \vspace{0.2cm}
+  Neither is the actual CLadder question. Scoring an answer to a
+  self-invented question against CLadder's label is a coin flip -- hence
+  exactly 50\%.
+
+  \vspace{0.2cm}
+  \textbf{Not a discovery about cognition. A data-loading bug.}
+\end{frame}
+
+\begin{frame}{Why every internal check missed it}
+  The project had verified: ground truth to $6.66\times10^{-16}$, edge counts
+  $3000/3000$, parse rates, answer balance, response-side bias, RNG stability.
+
+  \vspace{0.3cm}
+  \begin{block}{Every one of them checked what the program computed.}
+    None of them checked \textbf{what the model actually saw.}
+  \end{block}
+
+  \vspace{0.3cm}
+  \textbf{Fixes applied:}
+  \begin{itemize}
+    \item \texttt{make\_items} now refuses any file where $<99\%$ of prompts
+      contain a question, with an error naming the correct file.
+    \item Broken outputs renamed \texttt{INVALID\_no\_question\_*} with a README,
+      kept rather than deleted.
+    \item The lexical contrast was redesigned to work \emph{within} item, which
+      is also the stronger design.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{The retracted number came back}
+  The old claim ``reversal errors rise 4--10$\times$'' was withdrawn along with
+  the bug.
+
+  \vspace{0.3cm}
+  Re-measured properly -- paired, within item, on complete prompts:
+
+  \begin{center}
+    \Large $\mathbf{5.1\times}$ to $\mathbf{7.7\times}$
+  \end{center}
+
+  \vspace{0.3cm}
+  The direction was right; the evidence was not. Withdrawing it first and
+  earning it back with a clean design is the part worth keeping.
+
+  \vspace{0.3cm}
+  Four rounds of adversarial review are logged in \texttt{REVIEW.md}, including
+  one round where the review retracted \emph{its own} critical finding.
+\end{frame}
+
+% =====================================================================
+\section{Limitations and plan}
+\begin{frame}
+  \sectionpage
+\end{frame}
+
+\begin{frame}{Is the cost of a wrong edge domain-dependent?}
+  The full ladder was run twice at $n{=}400$ \textbf{on the same 399 items}.
+  Since $k^* = \text{budget}/\text{price}$, a shift in $k^*$ could come from
+  either the slope or the height it must eat through.
+
+  \begin{center}
+  \small
+  \begin{tabular}{llcc}
+    \toprule
+    Quantity & Model & Difference & 95\% CI \textbf{of the difference} \\
+    \midrule
+    Price (DR) & \texttt{gpt-4.1}      & $-0.11$ & $[-1.62,\ 1.42]$ \\
+    Price (DR) & \texttt{gpt-4.1-mini} & $+0.18$ & $[-1.53,\ 2.09]$ \\
+    \midrule
+    Budget & \texttt{gpt-4.1}      & $+4.92$ & $[-0.40,\ 10.30]$ \\
+    Budget & \texttt{gpt-4.1-mini} & $+2.88$ & $[-2.61,\ 8.43]$ \\
+    Budget & \texttt{gpt-4.1-nano} & $\mathbf{-2.41}$ & $[-9.02,\ 3.85]$ \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \textbf{Price: an equivalence bound} -- if lexicon-dependent at all, by under
+  $\approx 1.6$ pp/edge, some 40\% of the price.
+
+  \textbf{Budget: not established.} All three CIs contain zero and
+  \texttt{nano} moves the other way, so the tempting headline stays a
+  hypothesis. Closing it needs $n \approx 514$.
+\end{frame}
+
+\begin{frame}{Positioning against Caliper}
+  \textbf{Caliper} (arXiv:2606.04915, June 2026) already reports 7.6--29.6 pp
+  drops from anonymising variable names.
+
+  \vspace{0.2cm}
+  Our 10--14 pp sits inside that range: we \textbf{replicate} them with an
+  independent design. That is a strength, not overlap.
+
+  \vspace{0.3cm}
+  \begin{block}{What Caliper does not have}
+    \begin{enumerate}
+      \item It \textbf{never supplies the graph} to the model. The
+        \texttt{ORACLE} condition is where our claim lives.
+      \item It does not score \textbf{induced graph quality} with
+        direction sensitivity.
+      \item It does not \textbf{decompose cost by error type}.
+    \end{enumerate}
+  \end{block}
+
+  \vspace{0.2cm}
+  Caliper is a \textbf{premise}, not a competitor.
+\end{frame}
+
+\begin{frame}{Honest limitations}
+  \begin{itemize}
+    \item \textbf{One model family.} All three models are GPT-4.1: one vendor,
+      one generation. Caliper used nine models from 3.8B to 671B.
+      \emph{This is the largest gap.}
+    \item \textbf{False-edge cost unresolved} for both strong models. CLadder's
+      graphs have 2--5 edges, and \texttt{confounding} and \texttt{mediation}
+      admit no added edge at all -- they are already complete on 3 nodes.
+    \item \textbf{F1 needs its floor quoted.} Random guessing scores
+      $\mathrm{F1} = 0.362$ on these small graphs; \texttt{PERMUTE} reaches
+      0.384--0.424, barely above it.
+    \item \textbf{Structured noise not yet wired in.} Eight injectors exist in
+      \texttt{src/noise.py} but are not connected to the pilot.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{If approved: work for four people}
+  The project splits cleanly, with little cross-dependency.
+
+  \vspace{0.2cm}
+  \begin{enumerate}
+    \item \textbf{Model coverage.} Wire other vendors into \texttt{runner.py}.
+      Closes the largest gap; fully independent of the rest.
+    \item \textbf{Finish the pricing.} False edges at $k{=}3$, larger $n$,
+      plus the structured-noise layer already written but not connected.
+    \item \textbf{A genuinely unfamiliar domain.} Test substitution outside
+      CLadder: rare drug interactions, engineering logs.
+    \item \textbf{Self-gating.} Gate on \emph{reversal risk} rather than on
+      overall F1 -- the old design failed, and the new results say exactly
+      where a new one can work.
+  \end{enumerate}
+
+  \vspace{0.3cm}
+  Infrastructure is already in place: full caching (re-runs cost nothing),
+  guards against malformed data, and three documents covering the project.
+\end{frame}
+
+\begin{frame}{Summary}
+  \begin{block}{Q1 -- answered}
+    Reversal is the costliest error (4.19--4.68 pp/edge). About
+    \textbf{two reversed edges} erase the benefit: $k^* \approx 1.93$--$2.02$.
+  \end{block}
+
+  \begin{block}{Q2 -- answered}
+    Graph guidance \textbf{substitutes} for world knowledge rather than adding
+    to it. With a correct prior available, supplying the true graph is nearly
+    useless; remove the prior and it takes the damage from 8/9 significant
+    cells to \textbf{0/9}.
+  \end{block}
+
+  \begin{block}{Practical consequence}
+    Building a causal graph is \textbf{wasted effort in familiar domains} and
+    \textbf{essential in unfamiliar ones} -- where benchmarks rarely look.
+  \end{block}
+\end{frame}
+
+\begin{frame}[plain]
+    \centering
+    \vfill
+    {\Huge \textbf{Thanks for Listening!}} \\[1em]
+    {\large Questions are welcome.}
+    \vfill
+\end{frame}
+
+% =====================================================================
+\appendix
+
+\begin{frame}{Backup: anticipated questions}
+  \begin{itemize}
+    \item \textbf{``How is this different from Caliper?''} They never supply the
+      graph. No induced-graph scoring. No error-type decomposition.
+    \item \textbf{``Why only GPT-4.1?''} Self-funded pilot, \$40 total.
+      Model coverage is task 1 of the full project.
+    \item \textbf{``Is $n$ adequate?''} Simulated power analysis:
+      $n{=}400$ gives power 0.90 at an 8 pp effect, 1.00 at 12 pp.
+    \item \textbf{``Can the labels be trusted?''} We re-derived them with our own
+      SCM solver over 2{,}184 models; max deviation $6.66\times10^{-16}$.
+    \item \textbf{``Why not use the test splits?''} They contain no questions.
+      See the retraction slides.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Backup: the diluted baseline}
+  \texttt{full\_v1.5\_default.csv} carries a \texttt{question\_property} column
+  that the three \texttt{test-*} files drop:
+
+  \begin{center}
+  \begin{tabular}{lr}
+    \toprule
+    Label & Rows \\
+    \midrule
+    \texttt{nonsense}        & 3{,}842 \\
+    \texttt{anticommonsense} & 3{,}129 \\
+    \texttt{easy} + \texttt{hard} + \texttt{commonsense} & 3{,}141 \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.1cm}
+  Keeping every real-word row sounds like ``commonsense naming'', but
+  \textbf{45\% of the sample is CLadder's own anticommonsense}, so the
+  \texttt{KEEP} baseline had its correct prior removed on nearly half its items.
+
+  \vspace{0.1cm}
+  Stratifying, \texttt{PERMUTE} $-$ \texttt{KEEP} at \texttt{RAW} for
+  \texttt{gpt-4.1} goes from $-7.52$ pp pooled to $\mathbf{-14.13}$ pp
+  ($p = 0.0146$) on correct-prior items.
+
+  \vspace{0.1cm}
+  \emph{Lesson: the metadata column you never opened is usually the important one.}
+\end{frame}
+
+\end{document}

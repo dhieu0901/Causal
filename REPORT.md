@@ -13,7 +13,8 @@ Ngày: 2026-09-07 · Mọi số liệu do chạy thật
 | Đề tài chạy được không? | Được. Hạ tầng hoàn chỉnh, nhãn chuẩn tự kiểm chứng tới 6,66e-16 |
 | Phát hiện chính? | **Cấp đồ thị đúng cắt gần nửa tác hại của việc ẩn danh tên biến.** Không đồ thị: 8/9 so sánh p<0,05, hại trung bình 10,73 pp. Có đồ thị: 3/9 và 5,67 pp |
 | Nguyên nhân tác hại là gì? | **Mất tri thức về chiều nhân quả hợp lẽ thường**, không phải độ dài prompt cũng không phải khó gắn ký hiệu. Chỉ hoán vị tên biến trong chính item đó đã mất 7,52 pp; xoá hẳn từ thật không mất thêm gì (0/12 ô có ý nghĩa) |
-| Cơ chế? | **Model lấy chiều của cạnh từ tri thức, không phải từ đề bài.** Prior sai gây đảo chiều gấp 5,1-7,7 lần prior đúng, trong khi prior vắng mặt chỉ gấp 1,3-2,8 lần |
+| Cơ chế? | **Model lấy chiều của cạnh từ tri thức nhiều hơn từ đề bài** - đi được 33-55% quãng đường tới một tác nhân bỏ hẳn văn bản. Prior sai gây đảo chiều gấp 5,1-7,7 lần prior đúng, prior vắng mặt chỉ 1,3-2,8 lần |
+| Giá một cạnh sai có đổi theo miền không? | **Không rõ rệt.** CI trên hiệu ghép cặp: -0,11 [-1,62 ; 1,42] pp. Nhưng khẳng định ngân sách tăng thì **chưa xác lập** - xem mục 8 |
 | Có ý nghĩa thống kê chưa? | **Có.** 19/60 McNemar cho phần suy luận, 8/9 Wilcoxon cho phần trích xuất, đều n=174 ghép cặp |
 | Điều gì đã bị rút? | **Toàn bộ mục "năng lực nhân quả sụp đổ trên từ giả".** Nguyên nhân là lỗi nạp dữ liệu |
 | Còn gì chưa xong? | Định giá lỗi đồ thị chưa đủ cỡ mẫu; CI độ dốc còn chứa 0 ở 6/9 ô |
@@ -231,7 +232,67 @@ Hai ô `PSEUDO` - `SYMBOL` đạt p<0,05 đều nằm ở `PROSE` và **ngược
 
 ---
 
-## 8. Định giá từng loại lỗi đồ thị: chưa đủ cỡ mẫu
+## 8. Kết quả 6: giá một cạnh sai không đổi theo miền - nhưng phần còn lại chưa xác lập
+
+Thang lỗi đầy đủ `DR`/`ED`/`FE` với k=1,2,3 chạy **hai lần ở n=400 trên cùng bộ item** - một lần với tên biến gốc, một lần thay bằng từ giả. Điều đó tách được hai thứ mà điểm hoà vốn gộp làm một:
+
+- **giá** - pp mất đi trên mỗi cạnh sai, tức độ dốc đường suy giảm
+- **ngân sách** - `ORACLE - RAW`, tức chiều cao mà độ dốc đó phải ăn hết
+
+Vì `k* = ngân sách / giá`, k\* đổi có thể do bất kỳ vế nào. Kết quả: **vế giá đứng vững, vế ngân sách thì chưa.**
+
+### 8.1 Giá KHÔNG đổi - và đây là phần vững
+
+Bản đầu của mục này lập luận bằng "9/9 cặp CI chồng nhau". **Đó là một lỗi thống kê**: hai khoảng tin cậy chồng nhau không chứng minh hai đại lượng bằng nhau, nó chỉ nói phép so sánh chưa đủ sức tách chúng ra.
+
+Vì hai nhánh chạy trên **cùng 399 item**, cách đúng là bootstrap thẳng **hiệu**, bốc cùng bộ item cho cả hai nhánh:
+
+| Model | Loại | Hiệu giá (KEEP - PSEUDO) | CI 95% của **hiệu** |
+|---|---|---|---|
+| gpt-4.1 | **DR** | **-0,11** | **[-1,62 ; 1,42]** |
+| gpt-4.1 | ED | -0,91 | [-2,56 ; 0,67] |
+| gpt-4.1-mini | **DR** | **+0,18** | **[-1,53 ; 2,09]** |
+| gpt-4.1-mini | ED | -0,10 | [-1,80 ; 1,66] |
+| gpt-4.1-nano | DR | -1,11 | [-2,87 ; 0,70] |
+
+**9/9 CI của hiệu đều chứa 0**, và với `DR` ở hai model mạnh chúng bám rất sát 0.
+
+Phát biểu đúng không phải "giá bằng nhau" mà là một **cận tương đương**: nếu giá có phụ thuộc miền từ vựng, mức phụ thuộc đó **nhỏ hơn khoảng 1,6 pp mỗi cạnh** với `DR` trên `gpt-4.1`. So với giá 4,09 pp thì cận này là khoảng 40% - hẹp đủ để có ích, chưa đủ để nói "bất biến".
+
+### 8.2 Ngân sách: hướng đúng nhưng CHƯA XÁC LẬP
+
+Đây là chỗ luận điểm hụt hơi, và phải nói thẳng.
+
+| Model | Ngân sách `KEEP` | Ngân sách `PSEUDO` | Hiệu | CI 95% của hiệu | Có ý nghĩa? |
+|---|---|---|---|---|---|
+| gpt-4.1 | 4,36 | 9,28 | +4,92 | [-0,40 ; 10,30] | **không** |
+| gpt-4.1-mini | 7,07 | 9,95 | +2,88 | [-2,61 ; 8,43] | **không** |
+| gpt-4.1-nano | 3,23 | 0,83 | **-2,41** | [-9,02 ; 3,85] | không |
+
+**Cả ba CI đều chứa 0.** Và `gpt-4.1-nano` đi **ngược hướng**: ngân sách của nó giảm chứ không tăng.
+
+Cỡ mẫu cần để hiệu ngân sách đạt p<0,05: **n≈514** cho `gpt-4.1` (hiện có 382) và **n≈935** cho `mini` (hiện có 371). Hiệu ứng có thật hay không thì n=400 chưa trả lời được.
+
+### 8.3 Vậy kết luận được gì
+
+**Được:**
+
+- Giá một cạnh sai **không thay đổi rõ rệt** theo miền từ vựng, với cận tương đương khoảng 1,6 pp mỗi cạnh. Đây là kết quả ghép cặp, CI trên hiệu, không phải suy từ CI chồng nhau.
+- `DR` vẫn là loại lỗi đắt nhất ở cả hai chế độ từ vựng, cho cả hai model mạnh.
+
+**Chưa được:**
+
+- Khẳng định "ngân sách tăng gấp đôi khi bỏ neo từ vựng" **chưa xác lập** - cả ba CI chứa 0.
+- Do đó khẳng định "điểm hoà vốn dịch từ 0,74 lên 1,93 cạnh" cũng **chưa xác lập**, vì k\* = ngân sách / giá và tử số chưa vững.
+- Câu *"hướng dẫn bằng đồ thị bền vững hơn ở đúng nơi nó cần thiết hơn"* là **giả thuyết phù hợp với số liệu, không phải kết luận**. Hai model mạnh đi đúng hướng, `nano` đi ngược.
+
+**Việc phải làm để chốt:** nâng lên n≈600 cho hai model mạnh. Đó là phép kiểm rẻ nhất còn lại và nó có thể thất bại.
+
+> **Ghi chú quy trình:** mục này ban đầu được viết như một kết luận chắc chắn. Vòng phản biện thứ năm bác nó trong cùng phiên, bằng đúng ba phép kiểm mà người phản biện chỉ định: CI trên hiệu thay vì CI chồng nhau, kiểm định riêng cho ngân sách, và soi `nano`. Hai trong ba đòn trúng.
+
+---
+
+## 8b. Định giá ở n=147 (bản cũ, giữ để đối chiếu)
 
 Đây là câu hỏi nghiên cứu gốc, và câu trả lời trung thực là **chưa xác lập được**.
 

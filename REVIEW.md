@@ -8,6 +8,7 @@
 **Cập nhật sau vòng 2:** R2 và R4 đã hoàn thành bằng bộ từ vựng `PERMUTE` - xem mục 10
 **Quyết định vòng 3 (sau khi chạy induction ghép cặp):** **MINOR REVISION** - xem mục 11
 **Vòng 4 (kiểm dữ liệu theo yêu cầu, đối chiếu bài CLadder gốc):** **MINOR REVISION** - một finding MAJOR mới, xem mục 12
+**Vòng 5 (thang lỗi n=400 trên hai bộ từ vựng):** **MAJOR REVISION** - luận điểm mới bị bác một nửa, xem mục 13
 
 ---
 
@@ -629,3 +630,73 @@ Ba cặp, ba lần khớp, kể cả ở model lệch chuẩn là `nano`. `PERMU
 Bốn vòng phản biện, và vòng này là vòng đầu tiên mà finding lớn nhất đến từ **yêu cầu của tác giả** chứ không phải từ hội đồng. Điều đó nên được ghi lại: ba vòng trước đều đọc cột `question_property` mà không ai mở nó ra.
 
 Luận điểm không đổi, nhưng mọi con số của nó đều mạnh lên. Quyết định giữ **MINOR REVISION**.
+
+
+---
+
+## 13. Vòng 5 - thang lỗi n=400 trên hai bộ từ vựng (2026-09-08)
+
+**Quyết định: MAJOR REVISION.** Lần đầu tiên sau ba vòng, mức nghiêm trọng **tăng trở lại**. Không phải vì dữ liệu xấu, mà vì mục 8 REPORT được viết như một kết luận chắc chắn trong khi một nửa của nó không được dữ liệu đỡ.
+
+### 13.1 Ba đòn tấn công, hai đòn trúng
+
+Tác giả chỉ định đúng ba chỗ cần đánh. Tôi chạy cả ba.
+
+**Đòn 1 - dùng CI chồng nhau để lập luận tương đương. TRÚNG, nhưng sửa xong thì luận điểm MẠNH HƠN.**
+
+Bản đầu viết *"9/9 cặp CI chồng nhau"* để kết luận giá không đổi. Đó là lỗi thống kê kinh điển: hai CI chồng nhau không chứng minh hai đại lượng bằng nhau.
+
+Nhưng hai nhánh chạy trên **cùng 399 item**, nên có cách đúng và mạnh hơn: bootstrap thẳng **hiệu**, bốc cùng bộ item cho cả hai nhánh.
+
+| Model | Loại | Hiệu giá | CI 95% của hiệu |
+|---|---|---|---|
+| gpt-4.1 | DR | -0,11 | [-1,62 ; 1,42] |
+| gpt-4.1-mini | DR | +0,18 | [-1,53 ; 2,09] |
+
+9/9 CI của hiệu chứa 0, và với `DR` chúng bám rất sát. Đây là **cận tương đương** thật sự, không phải suy luận từ CI chồng nhau. Phần này của luận điểm giờ vững hơn lúc đầu.
+
+**Đòn 2 - hiệu ngân sách có ý nghĩa không? TRÚNG. Không có.**
+
+| Model | Hiệu ngân sách | CI 95% |
+|---|---|---|
+| gpt-4.1 | +4,92 | **[-0,40 ; 10,30]** |
+| gpt-4.1-mini | +2,88 | **[-2,61 ; 8,43]** |
+| gpt-4.1-nano | **-2,41** | [-9,02 ; 3,85] |
+
+**Cả ba CI chứa 0.** Toàn bộ câu chuyện "đồ thị bền vững hơn ở nơi nó cần thiết hơn" đứng trên vế ngân sách, và vế đó chưa xác lập ở n=400.
+
+**Đòn 3 - `nano` có mâu thuẫn không? TRÚNG. Có.**
+
+Ngân sách của `nano` **giảm** (3,23 xuống 0,83) trong khi hai model mạnh tăng. 1/3 model đi ngược hướng câu chuyện, và báo cáo không nhắc.
+
+### 13.2 Finding MAJOR
+
+| # | Chiều | Mô tả | Evidence Anchor | Confidence |
+|---|---|---|---|---|
+| N4 | Kết luận vượt bằng chứng | Mục 8 REPORT phát biểu "ngân sách tăng gấp đôi" và "k\* dịch từ 0,74 lên 1,93 cạnh" như kết luận. Cả hai CI của hiệu ngân sách đều chứa 0, và model thứ ba đi ngược hướng. Vì k\* = ngân sách / giá, tử số chưa vững thì k\* cũng không. | `dataset: results/pilot_raw_price400KEEP.csv doi chieu PSEUDO - bootstrap ghep cap hieu ngan sach, 3/3 CI chua 0` | 5 - chuyên môn lõi |
+| N5 | Lỗi thống kê | Dùng CI chồng nhau để lập luận tương đương, trong khi thiết kế ghép cặp cho phép tính CI trên chính hiệu. | `text: REPORT.md muc 8.1 ban dau "9/9 cap CI chong nhau -> khong cap nao tach ra duoc"` | 5 |
+
+### 13.3 Điểm mạnh
+
+**S1: Cận tương đương cho giá lỗi là kết quả thật và hiếm.**
+Phần lớn bài phân tích chỉ báo "không tìm thấy khác biệt". Ở đây có con số: nếu giá phụ thuộc miền từ vựng, mức phụ thuộc dưới ~1,6 pp mỗi cạnh, tức ~40% của giá. Đó là phát biểu kiểm được và có thể sai.
+**Evidence Anchor**: `dataset: bootstrap ghep cap 2000 lan tren hieu, gpt-4.1 DR = -0.11 [-1.62, 1.42]`
+
+**S2: Thiết kế hai-nhánh-cùng-item là thứ làm được cả ba phép kiểm trên.**
+Nếu hai nhánh chạy trên hai mẫu khác nhau thì không có phép kiểm nào trong ba phép này thực hiện được.
+
+### 13.4 Mục sửa bắt buộc
+
+**R1: Viết lại mục 8 tách rõ phần vững khỏi phần chưa vững** - **đã sửa trong lượt.** Mục 8 REPORT và 5.8 WALKTHROUGH giờ có ba tiểu mục: giá (vững, kèm CI trên hiệu), ngân sách (chưa xác lập, kèm cả ba CI), và "kết luận được gì / chưa được gì". Bảng tóm tắt mục 1 cũng đã sửa.
+
+**R2: Nêu `nano` đi ngược hướng** - **đã sửa.** Bảng ngân sách in cả ba model, `nano` được in đậm ở cột hiệu.
+
+**R3: Nêu cỡ mẫu cần để chốt** - **đã sửa.** n≈514 cho `gpt-4.1`, n≈935 cho `mini`. Đây là phép kiểm rẻ nhất còn lại và **nó có thể thất bại**.
+
+### 13.5 Kết luận vòng 5
+
+Đây là vòng đầu tiên mức nghiêm trọng tăng lên, và điều đó lành mạnh: nó có nghĩa dự án đang tạo ra luận điểm mới đủ nhanh để phản biện phải chạy theo.
+
+Cần ghi nhận một điều về quy trình. Mục 8 được viết, rồi bị bác, rồi được viết lại **trong cùng một phiên**, bằng đúng ba phép kiểm mà người đọc chỉ định trước khi biết kết quả. Đó là cách một luận điểm nên được kiểm - đặt ra phép kiểm trước, chấp nhận kết quả sau.
+
+Luận điểm chính của đề tài (mục 4 tới 7 và mục 9) **không bị ảnh hưởng**. Chỉ mục 8 phải hạ giọng.
