@@ -1,0 +1,143 @@
+items=174  jobs/model=696  lexicon=SYMBOL  paired_to=None  families=['IV', 'arrowhead', 'chain', 'collision', 'confounding', 'diamond', 'diamondcut', 'fork', 'frontdoor', 'mediation']
+
+>>> gpt-4.1-nano: 696 calls
+    25/696
+    50/696
+    75/696
+    100/696
+    125/696
+    150/696
+    175/696
+    200/696
+    225/696
+    250/696
+    275/696
+    300/696
+    325/696
+    350/696
+    375/696
+    400/696
+    425/696
+    450/696
+    475/696
+    500/696
+    525/696
+    550/696
+    575/696
+    600/696
+    625/696
+    650/696
+    675/696
+    done: {'calls': 696, 'cached': 696, 'errors': 0, 'in_tok': 96316, 'out_tok': 231050}
+
+>>> gpt-4.1-mini: 696 calls
+    25/696
+    50/696
+    75/696
+    100/696
+    125/696
+    150/696
+    175/696
+    200/696
+    225/696
+    250/696
+    275/696
+    300/696
+    325/696
+    350/696
+    375/696
+    400/696
+    425/696
+    450/696
+    475/696
+    500/696
+    525/696
+    550/696
+    575/696
+    600/696
+    625/696
+    650/696
+    675/696
+    done: {'calls': 696, 'cached': 682, 'errors': 0, 'in_tok': 96316, 'out_tok': 204195}
+
+>>> gpt-4.1: 696 calls
+    25/696
+    50/696
+    75/696
+    100/696
+    125/696
+    150/696
+    175/696
+    200/696
+    225/696
+    250/696
+    275/696
+    300/696
+    325/696
+    350/696
+    375/696
+    400/696
+    425/696
+    450/696
+    475/696
+    500/696
+    525/696
+    550/696
+    575/696
+    600/696
+    625/696
+    650/696
+    675/696
+    done: {'calls': 696, 'cached': 696, 'errors': 0, 'in_tok': 96316, 'out_tok': 167007}
+
+saved D:\code\Noisy Causal\results\pilot_raw_lexSYMBOL.csv  (2088 rows)
+
+======================================================================
+PILOT: DO CHINH XAC THEO DIEU KIEN
+======================================================================
+
+--- gpt-4.1-nano ---
+          n    acc  parse
+cond                     
+PROSE   174  63.22   94.8
+RAW     174  63.79   99.4
+ORACLE  174  66.09   96.6
+DR_k1   174  62.64   97.1
+  Delta_struct = ORACLE - RAW = +2.30 pp
+  Cost of stripping prose (PROSE - RAW) = -0.57 pp
+  DR_k1: 62.64  (vs RAW -1.15 pp)
+
+--- gpt-4.1-mini ---
+          n    acc  parse
+cond                     
+PROSE   174  75.29   96.6
+RAW     174  70.11   99.4
+ORACLE  174  80.46   97.7
+DR_k1   174  66.09   98.3
+  Delta_struct = ORACLE - RAW = +10.35 pp
+  Cost of stripping prose (PROSE - RAW) = +5.18 pp
+  DR_k1: 66.09  (vs RAW -4.02 pp)
+
+--- gpt-4.1 ---
+          n    acc  parse
+cond                     
+PROSE   174  79.89   98.9
+RAW     174  67.24  100.0
+ORACLE  174  77.59   98.3
+DR_k1   174  67.82   99.4
+  Delta_struct = ORACLE - RAW = +10.35 pp
+  Cost of stripping prose (PROSE - RAW) = +12.65 pp
+  DR_k1: 67.82  (vs RAW +0.58 pp)
+
+======================================================================
+McNEMAR EXACT (paired, tren cung item)
+======================================================================
+  gpt-4.1-nano     ORACLE   vs RAW       b= 30 c= 26  p=0.6889
+  gpt-4.1-nano     DR_k1    vs RAW       b= 24 c= 26  p=0.8877
+  gpt-4.1-nano     ORACLE   vs DR_k1     b= 20 c= 14  p=0.3915
+  gpt-4.1-mini     ORACLE   vs RAW       b= 35 c= 17  p=0.0175
+  gpt-4.1-mini     DR_k1    vs RAW       b= 19 c= 26  p=0.3713
+  gpt-4.1-mini     ORACLE   vs DR_k1     b= 32 c=  7  p=0.0001
+  gpt-4.1          ORACLE   vs RAW       b= 34 c= 16  p=0.0153
+  gpt-4.1          DR_k1    vs RAW       b= 16 c= 15  p=1.0000
+  gpt-4.1          ORACLE   vs DR_k1     b= 30 c= 13  p=0.0137

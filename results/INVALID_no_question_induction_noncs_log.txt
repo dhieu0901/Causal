@@ -1,0 +1,60 @@
+items=147  families=['IV', 'arrowhead', 'confounding', 'diamond', 'diamondcut', 'frontdoor', 'mediation']
+
+>>> gpt-4.1-nano step 1 INDUCE: 147 calls
+    25/147
+    50/147
+    75/147
+    100/147
+    125/147
+    {'calls': 147, 'cached': 2, 'errors': 0, 'in_tok': 31679, 'out_tok': 68209}
+>>> gpt-4.1-nano step 2 INDUCED: 147 calls
+    25/147
+    50/147
+    75/147
+    100/147
+    125/147
+    {'calls': 147, 'cached': 2, 'errors': 0, 'in_tok': 21438, 'out_tok': 51250}
+
+>>> gpt-4.1-mini step 1 INDUCE: 147 calls
+    25/147
+    50/147
+    75/147
+    100/147
+    125/147
+    {'calls': 147, 'cached': 2, 'errors': 0, 'in_tok': 31679, 'out_tok': 69728}
+>>> gpt-4.1-mini step 2 INDUCED: 147 calls
+    25/147
+    50/147
+    75/147
+    100/147
+    125/147
+    {'calls': 147, 'cached': 2, 'errors': 0, 'in_tok': 21418, 'out_tok': 44563}
+
+>>> gpt-4.1 step 1 INDUCE: 147 calls
+    25/147
+    50/147
+    75/147
+    100/147
+    125/147
+    {'calls': 147, 'cached': 2, 'errors': 0, 'in_tok': 31679, 'out_tok': 61055}
+>>> gpt-4.1 step 2 INDUCED: 147 calls
+    25/147
+    50/147
+    75/147
+    100/147
+    125/147
+    {'calls': 147, 'cached': 2, 'errors': 0, 'in_tok': 21440, 'out_tok': 31467}
+
+==============================================================================
+CHAT LUONG DO THI TU DUNG (doi chieu Table 3 cua NoisyCausal)
+==============================================================================
+                n  parse_graph  precision  recall     f1  exact  canh_sai  dao_chieu   thua  thieu
+model                                                                                             
+gpt-4.1       147        0.993      0.694   0.417  0.491  0.170     2.667      0.136  0.333  2.197
+gpt-4.1-mini  147        0.973      0.703   0.423  0.497  0.177     2.592      0.116  0.320  2.156
+gpt-4.1-nano  147        0.986      0.687   0.420  0.493  0.170     2.605      0.129  0.327  2.150
+
+==============================================================================
+INDUCED ROI VAO DAU TREN DUONG CONG?
+==============================================================================
+  chua co results/pilot_raw.csv - chay scripts/pilot.py truoc

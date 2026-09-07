@@ -1,0 +1,307 @@
+# BÁO CÁO KẾT QUẢ - Chi phí của cấu trúc nhân quả trong suy luận LLM
+
+**Kết luận: đề tài khả thi và giờ đã có một luận điểm được dữ liệu ghép cặp ủng hộ. Nhưng bản báo cáo trước đó có một lỗi nạp dữ liệu làm hỏng phát hiện tiêu đề, và toàn bộ mục đó đã bị rút.**
+
+Ngày: 2026-09-07 · Mọi số liệu do chạy thật
+
+---
+
+## 1. Tóm tắt cho người đọc vội
+
+| Câu hỏi | Trả lời |
+|---|---|
+| Đề tài chạy được không? | Được. Hạ tầng hoàn chỉnh, nhãn chuẩn tự kiểm chứng tới 6,66e-16 |
+| Phát hiện chính? | **Cấp đồ thị đúng cắt gần nửa tác hại của việc ẩn danh tên biến.** Không đồ thị: 8/9 so sánh p<0,05, hại trung bình 10,73 pp. Có đồ thị: 3/9 và 5,67 pp |
+| Nguyên nhân tác hại là gì? | **Mất tri thức về chiều nhân quả hợp lẽ thường**, không phải độ dài prompt cũng không phải khó gắn ký hiệu. Chỉ hoán vị tên biến trong chính item đó đã mất 7,52 pp; xoá hẳn từ thật không mất thêm gì (0/12 ô có ý nghĩa) |
+| Có ý nghĩa thống kê chưa? | **Có, ở thí nghiệm từ vựng.** 19/60 phép kiểm McNemar đạt p<0,05, n=174 ghép cặp |
+| Điều gì đã bị rút? | **Toàn bộ mục "năng lực nhân quả sụp đổ trên từ giả".** Nguyên nhân là lỗi nạp dữ liệu |
+| Còn gì chưa xong? | Định giá lỗi đồ thị chưa đủ cỡ mẫu; CI độ dốc còn chứa 0 ở 6/9 ô |
+
+---
+
+## 2. Đính chính: phát hiện tiêu đề cũ đã bị rút hoàn toàn
+
+Bản báo cáo trước đặt phát hiện lớn nhất ở chỗ này:
+
+> *"Bỏ tên biến có nghĩa thì cả ba model rơi về mức đoán mò, rơi 28-40 pp, ngay cả khi được đưa đồ thị nhân quả đúng."*
+
+**Phát biểu đó sai, và nguyên nhân nằm ở tầng nạp dữ liệu.**
+
+Ba file `test-commonsense-v1.5.csv`, `test-anticommonsense-v1.5.csv` và `test-noncommonsense-v1.5.csv` chỉ chứa **bối cảnh và dữ kiện, không chứa câu hỏi**:
+
+| File | Tỉ lệ prompt có dấu `?` |
+|---|---|
+| `full_v1.5_default.csv` | **100,00%** |
+| `test-commonsense-v1.5.csv` | **0,00%** |
+| `test-anticommonsense-v1.5.csv` | **0,00%** |
+| `test-noncommonsense-v1.5.csv` | **0,00%** |
+
+Ví dụ, cùng một item, cùng story `nonsense`, cùng `query_type=correlation`:
+
+```
+full_v1.5_default.csv :  ... The probability of rixq and xevu is 31%.
+                         Is the chance of xevu smaller when observing rixq?
+test-noncommonsense   :  ... The probability of rixq and xevu is 31%.
+                         [het - khong co cau hoi]
+```
+
+Nhánh pseudoword đã bắt model trả lời `yes`/`no` cho một prompt **không hỏi gì cả**. Mức 50% không phải phát hiện về nhận thức của LLM, nó là hệ quả tất yếu của việc buộc đoán. Toàn bộ mục 2 và mục 2.2 của bản cũ, cùng file `pilot_raw_noncs.csv` và cột `correct` của `induction_raw_noncs.csv`, **không dùng được**.
+
+Đã sửa: `make_items` giờ từ chối chạy nếu dưới 99% prompt có dấu `?`.
+
+```
+test-noncommonsense-v1.5.csv: chi 0.0% prompt co cau hoi. File nay bi cat mat
+phan cau hoi nen khong cham diem duoc. Dung full_v1.5_default.csv va doi tu
+vung bang --lexicon.
+```
+
+### Lỗi thứ hai: nhánh "commonsense" chưa bao giờ là commonsense
+
+Nhánh chính lấy mẫu từ `full_v1.5_default.csv`, và file đó **trộn cả ba loại từ vựng**: 6.270 dòng story từ thật và 3.842 dòng story `nonsense`. Trong 147 item của nhánh chính có **57 item (38,8%) là item từ giả**. Bản báo cáo cũ gọi đây là nhánh commonsense ở khắp nơi.
+
+Việc này không làm hỏng các kết quả perturbation (chúng ghép cặp trong cùng item), nhưng làm sai mô tả, và làm phép so sánh từ vựng cũ càng vô nghĩa.
+
+---
+
+## 3. Thí nghiệm thay thế: đổi từ vựng ngay trong cùng một item
+
+Cách đo đúng không phải so hai file, mà là **đổi tên biến trên chính item đó** rồi giữ nguyên đồ thị, các con số, câu hỏi và nhãn chuẩn. Mỗi model CLadder có sẵn `variable_mapping`, và `background` ánh xạ 1:1 tới nó (209 background, 0 trường hợp nhập nhằng), nên phép đổi là tất định. Module `src/lexical.py`.
+
+**Bốn** bộ từ vựng trên **cùng 174 item**, chỉ lấy story từ thật. Mỗi bậc bỏ đi đúng một thứ:
+
+| Bộ | Ví dụ | Bỏ đi thêm cái gì | Lệch độ dài so với KEEP |
+|---|---|---|---|
+| `KEEP` | *Poverty has a direct effect on water quality and cholera* | không bỏ gì | 0 |
+| `PERMUTE` | *Cholera has a direct effect on poverty and water quality* | **chiều nhân quả hợp lẽ thường** | **+9 ký tự** |
+| `SYMBOL` | *B has a direct effect on A and D* | từ thật | -169 ký tự |
+| `PSEUDO` | *Glimx has a direct effect on muvq and xyfo* | ký hiệu dễ phân biệt | -127 ký tự |
+
+Kiểm chứng phép đổi: **0/174 item hỏng, 174/174 giữ đúng số cạnh và số nút** cho cả bốn bộ.
+
+`PERMUTE` là bộ quan trọng nhất và nó **hoán vị chính tên biến của item đó** sang vị trí khác trong đồ thị của chính nó, dùng một derangement nên không biến nào giữ tên cũ. Bộ từ vựng giống hệt, độ dài giống hệt, cách tách token giống hệt - thứ duy nhất bị phá là *chiều nhân quả có hợp lẽ thường hay không*.
+
+Không có `PERMUTE` thì mọi khoảng cách `KEEP` tới `PSEUDO` đều lẫn với việc prompt ngắn đi 127 ký tự và tách token khác đi. `SYMBOL` rồi `PSEUDO` bổ sung hai bậc còn lại: mất hẳn từ thật, rồi ký hiệu khó phân biệt.
+
+---
+
+## 4. Kết quả 1: đồ thị đúng làm tác hại của ẩn danh giảm quá nửa
+
+Độ chính xác, chỉ tính câu parse được, cùng 174 item:
+
+| Model | Điều kiện | KEEP | PERMUTE | SYMBOL | PSEUDO |
+|---|---|---|---|---|---|
+| gpt-4.1 | RAW (không đồ thị) | 75,58 | 65,50 | 67,24 | 66,28 |
+| gpt-4.1 | **ORACLE (đồ thị đúng)** | **87,13** | **78,61** | **78,95** | **79,77** |
+| gpt-4.1-mini | RAW | 77,91 | 64,91 | 70,52 | 64,37 |
+| gpt-4.1-mini | **ORACLE** | **84,80** | **83,64** | **82,35** | **81,98** |
+| gpt-4.1-nano | RAW | 79,19 | 71,08 | 64,16 | 67,24 |
+| gpt-4.1-nano | **ORACLE** | **74,25** | **61,88** | **68,45** | **68,86** |
+
+McNemar ghép cặp trên cùng item. Gộp 3 bộ ẩn danh x 3 model = **9 phép so sánh mỗi điều kiện**:
+
+| Điều kiện | Số ô đạt p<0,05 | Tác hại trung bình | Tác hại lớn nhất |
+|---|---|---|---|
+| **RAW** (không đồ thị) | **8/9** | **-10,73 pp** | -15,12 |
+| **ORACLE** (đồ thị đúng) | **3/9** | **-5,67 pp** | -9,15 |
+| PROSE (đồ thị nằm trong lời văn) | 2/9 | -4,95 pp | -10,53 |
+| DR_k1 (đồ thị sai 1 cạnh) | 4/9 | -7,61 pp | -11,63 |
+
+Tách theo từng bộ từ vựng:
+
+| Bộ | RAW: tác hại TB | p<0,05 | ORACLE: tác hại TB | p<0,05 |
+|---|---|---|---|---|
+| `PERMUTE` | -9,89 | 2/3 | -6,61 | 2/3 |
+| `SYMBOL` | -10,47 | **3/3** | -5,41 | 1/3 |
+| `PSEUDO` | -11,84 | **3/3** | -5,00 | **0/3** |
+
+Cấp đồ thị đúng **cắt gần một nửa** tác hại của việc ẩn danh (10,73 xuống 5,67 pp) và làm nó mất ý nghĩa thống kê ở phần lớn các ô. Với `PSEUDO` - bộ khắc nghiệt nhất - đồ thị đưa từ 3/3 xuống **0/3**.
+
+Ngoại lệ trung thực: `PERMUTE` là bộ mà đồ thị cứu **kém nhất** (2/3 vẫn còn ý nghĩa ở ORACLE). Điều đó hợp lý về cơ chế: `PERMUTE` không chỉ lấy đi tri thức đúng, nó cấp cho model một tri thức **sai lệch** đang cạnh tranh trực tiếp với đồ thị được cấp. Đây là dạng nhiễu duy nhất trong bốn bộ có tính đối kháng.
+
+Đây chính là điều kiện Caliper (arXiv:2606.04915) không có. Caliper chứng minh model mất năng lực khi bỏ neo từ vựng; kết quả ở đây chỉ ra **phần lớn thứ bị mất là cái mà đồ thị nhân quả bù lại được**.
+
+---
+
+## 5. Kết quả 2: bỏ neo từ vựng làm cấu trúc có giá trị hơn
+
+`Delta_struct = ORACLE - RAW`, tức lợi ích của việc được cấp đồ thị đúng:
+
+| Model | KEEP | PERMUTE | SYMBOL | PSEUDO |
+|---|---|---|---|---|
+| gpt-4.1 | +11,55 | +13,12 | +11,71 | **+13,49** |
+| gpt-4.1-mini | +6,89 | **+18,72** | +11,83 | +17,61 |
+| gpt-4.1-nano | **-4,94** | **-9,21** | +4,29 | +1,62 |
+
+Với hai model mạnh, lợi ích của cấu trúc **tăng** khi từ vựng bị bóc: đồ thị thay thế cho tri thức nền đã mất. `gpt-4.1-mini` là ví dụ rõ nhất, từ +6,89 lên +18,72 dưới `PERMUTE`.
+
+`gpt-4.1-nano` đi ngược lại và đi ngược mạnh nhất ở `PERMUTE` (-9,21). Model yếu nhất làm **tệ đi** khi được đưa đồ thị đúng, và tệ nhất đúng lúc nó vừa có tri thức sai lệch vừa có đồ thị đúng - hai nguồn thông tin mâu thuẫn mà nó không đủ sức phân xử. Đây là bằng chứng cụ thể cho luận điểm gốc của đề tài: **cấu trúc không miễn phí, và với model yếu nó có thể gây hại**.
+
+---
+
+## 6. Kết quả 3: đồ thị sai đắt hơn khi mất neo từ vựng
+
+Giá của một cạnh đảo chiều, tính bằng `ORACLE - DR_k1`:
+
+| Model | KEEP | PERMUTE | SYMBOL | PSEUDO |
+|---|---|---|---|---|
+| gpt-4.1 | 10,70 | 9,61 | 10,74 | **14,65** |
+| gpt-4.1-mini | 7,02 | **11,61** | **15,10** | **14,71** |
+| gpt-4.1-nano | 1,90 | -0,47 | 3,96 | -2,14 |
+
+Tác hại của việc đưa đồ thị sai, so với `KEEP`, cũng lớn lên có ý nghĩa:
+
+| Model | PERMUTE - KEEP tại DR_k1 | p | SYMBOL - KEEP | p | PSEUDO - KEEP | p |
+|---|---|---|---|---|---|---|
+| gpt-4.1 | -7,43 | 0,0574 | **-8,67** | **0,0107** | **-11,63** | **0,0012** |
+| gpt-4.1-mini | -6,06 | 0,1102 | **-9,52** | **0,0090** | **-10,24** | **0,0046** |
+| gpt-4.1-nano | -7,55 | 0,0884 | -6,59 | 0,1173 | -1,21 | 0,8776 |
+
+Ba mảnh khớp nhau và cùng chỉ về một cơ chế: **khi còn tri thức đời thường, model dùng nó thay cho đồ thị - nên đồ thị đúng ít giúp và đồ thị sai ít hại. Bỏ tri thức đó đi, model buộc phải thực sự dùng cấu trúc - nên đồ thị đúng giúp nhiều hơn và đồ thị sai hại nặng hơn.**
+
+---
+
+## 7. Kết quả 4: toàn bộ chi phí nằm ở bậc đầu tiên, không phải ở độ dài hay việc gắn ký hiệu
+
+Đây là phép loại trừ quan trọng nhất, và bốn bộ từ vựng tạo thành một bậc thang mà mỗi bậc chỉ bỏ đi một thứ. Gộp cả 4 điều kiện x 3 model = **12 phép so sánh mỗi bậc**:
+
+| Bậc | Bỏ đi thêm cái gì | Chênh lệch TB | Số ô p<0,05 |
+|---|---|---|---|
+| `PERMUTE` - `KEEP` | **chiều nhân quả hợp lẽ thường** (vẫn là từ thật, cùng độ dài) | **-7,52 pp** | **5/12** |
+| `SYMBOL` - `PERMUTE` | mất hẳn từ thật, prompt ngắn đi 169 ký tự | +0,73 pp | **0/12** |
+| `PSEUDO` - `SYMBOL` | ký hiệu khó phân biệt, nhiều âm tiết | +0,13 pp | 2/12 |
+
+**Toàn bộ chi phí của việc ẩn danh được trả ở bậc đầu tiên.** Chỉ cần hoán vị xem tên nào ứng với vị trí nào trong đồ thị - giữ nguyên từng chữ cái của bộ từ vựng, giữ nguyên độ dài - đã mất 7,52 pp. Sau đó xoá sạch từ thật thì **không mất thêm gì** (+0,73 pp, 0/12 ô có ý nghĩa), và làm ký hiệu khó phân biệt cũng không (+0,13 pp).
+
+Ba hệ quả:
+
+1. **Loại trừ được confound độ dài prompt.** `PERMUTE` dài hơn `KEEP` 9 ký tự mà vẫn mất 7,52 pp; `SYMBOL` ngắn hơn 169 ký tự mà không mất thêm gì. Độ dài không phải nguyên nhân.
+2. **Loại trừ được gánh nặng gắn ký hiệu.** Nếu vấn đề là phải giữ bốn chuỗi vô nghĩa trông giống nhau qua nhiều bước, `PSEUDO` phải tệ hơn `SYMBOL` rõ rệt. Nó không tệ hơn.
+3. **Đây không còn là luận cứ từ việc không bác bỏ được.** Cùng một thiết kế, cùng n=174, phát hiện được hiệu ứng 7,52 pp ở bậc một. Vậy khi nó không phát hiện được gì ở bậc hai và bậc ba, đó là bằng chứng về độ lớn hiệu ứng, không phải chuyện thiếu sức mạnh thống kê. Bậc một chính là **đối chứng dương** cho hai bậc còn lại.
+
+Thứ model thực sự mất khi bị ẩn danh là **tri thức về chiều nhân quả nào hợp lẽ trong thế giới thật**, chứ không phải từ vựng, không phải độ dài ngữ cảnh, không phải khả năng theo dõi ký hiệu lạ.
+
+Hai ô `PSEUDO` - `SYMBOL` đạt p<0,05 đều nằm ở `PROSE` và **ngược chiều nhau** (`nano` +9,43 và `gpt-4.1` -10,47), nên không tạo thành tín hiệu nhất quán.
+
+---
+
+## 8. Định giá từng loại lỗi đồ thị: chưa đủ cỡ mẫu
+
+Đây là câu hỏi nghiên cứu gốc, và câu trả lời trung thực là **chưa xác lập được**.
+
+Bản cũ báo giá mỗi cạnh lỗi tới hai chữ số thập phân. Kiểm lại bằng bootstrap 600 lần, bốc lại theo item:
+
+| Model | Loại | Giá pp/cạnh | CI 95% | R² | Hoà vốn k* | CI |
+|---|---|---|---|---|---|---|
+| gpt-4.1-nano | ED | 2,32 | **[-0,16 ; 4,05]** | 0,72 | - | - |
+| gpt-4.1-nano | FE | 0,58 | **[-7,53 ; 2,05]** | 0,50 | - | - |
+| gpt-4.1-nano | DR | 2,32 | **[-0,32 ; 4,96]** | 0,86 | - | - |
+| gpt-4.1-mini | ED | 2,27 | **[-0,00 ; 4,44]** | 0,79 | - | - |
+| gpt-4.1-mini | FE | 1,48 | **[-1,33 ; 6,67]** | 0,51 | - | - |
+| gpt-4.1-mini | DR | 3,35 | [1,39 ; 7,13] | 0,83 | 0,88 | [-1,38 ; 2,96] |
+| gpt-4.1 | ED | 2,97 | [0,60 ; 5,30] | 0,68 | 2,56 | [-0,22 ; 4,93] |
+| gpt-4.1 | FE | 2,09 | **[-5,19 ; 2,60]** | 0,19 | - | - |
+| gpt-4.1 | DR | 4,20 | [1,79 ; 6,57] | 0,88 | 1,54 | [0,13 ; 3,40] |
+
+**6 trong 9 ô có CI độ dốc còn chứa 0.** Không có giá nào cho `FE` được xác lập ở bất kỳ model nào. Thứ bậc `DR > ED > FE` mà bản cũ phát biểu như một quy luật **không đứng vững**.
+
+Chỉ một điểm hoà vốn duy nhất có CI không chứa 0: `gpt-4.1` với lỗi đảo chiều, **k\* = 1,54, CI [0,13 ; 3,40]**.
+
+Hai lỗi đã sửa trong khâu này:
+
+1. `slope_of` fit đường thẳng có hệ số chặn tự do, nhưng công thức hoà vốn lại giả định đường thẳng xuất phát tại `ORACLE`. Hai đường khác nhau trong một công thức. Riêng ở `nano` với lỗi `DR`, việc này làm k\* nhảy từ 0,51 lên 0,96.
+2. Không có khoảng tin cậy nào cả.
+
+**Hệ quả:** khẳng định cũ *"mô hình cộng tính dự đoán chi phí induction sai lệch dưới 0,3 pp"* cũng bị rút. Nó dựa trên các mức giá mà nay không qua nổi kiểm tra CI.
+
+---
+
+## 9. Kết quả 5: chất lượng đồ thị agent tự dựng có giảm thật
+
+Nhánh chính chứa 90 item từ thật và 57 item từ giả, **cùng file, cùng khuôn mẫu, prompt đầy đủ**. So sánh trong nội bộ nhánh này là hợp lệ:
+
+| Model | F1 từ thật | F1 từ giả | Chênh | p (Mann-Whitney) |
+|---|---|---|---|---|
+| gpt-4.1 | 0,633 | 0,491 | +0,142 | **0,0144** |
+| gpt-4.1-mini | 0,716 | 0,501 | +0,215 | **0,0002** |
+| gpt-4.1-nano | 0,535 | 0,490 | +0,046 | 0,3702 |
+
+Hai model mạnh **dựng đồ thị kém hẳn đi** khi tên biến là từ giả, và cả ba hội tụ về F1 ~0,49 - thang tier biến mất. Cạnh đảo chiều tăng khoảng gấp đôi (gpt-4.1: 0,022 lên 0,053), không phải 4-10 lần như bản cũ báo.
+
+Ghép mục 4 với mục 9 cho bức tranh đầy đủ:
+
+> **Neo từ vựng giúp model TRÍCH XUẤT đồ thị nhân quả, chứ không giúp nó SUY LUẬN trên đồ thị đã có.**
+
+Đó là một phát biểu sắc, kiểm được, và chưa ai công bố.
+
+---
+
+## 10. Còn giữ nguyên giá trị
+
+| Hạng mục | Trạng thái |
+|---|---|
+| Kiểm chứng nhãn chuẩn CLadder bằng solver SCM giải tích | 2.184 model, sai số tối đa 6,66e-16 |
+| Phép gây nhiễu tất định, liệt kê vét cạn | `src/perturb.py`, kiểm bằng NetworkX |
+| Seed theo từng `(item, loại, k)` | verify 441/441 ổn định |
+| Chấm điểm chỉ trên câu parse được | parse rate báo cáo riêng, 94-100% ở thí nghiệm mới |
+| Cache theo hash `(model, temperature, prompt)` | chạy lại 0 đồng |
+| Không có LLM nào tham gia viết nhãn | mọi nhãn lấy nguyên từ CLadder |
+
+---
+
+## 11. Chưa làm
+
+| Việc | Ghi chú |
+|---|---|
+| Nâng n cho phần định giá lỗi | 6/9 CI còn chứa 0; cần n lớn hơn nhiều |
+| Chạy `ED`/`FE` trong thí nghiệm từ vựng | hiện chỉ có `DR_k1` |
+| Induction trên ba bộ từ vựng ghép cặp | mục 9 hiện là between-items trong cùng nhánh |
+| Thêm dòng model khác họ | cả ba model đều là GPT-4.1, một nhà cung cấp |
+| Nhiều lần bốc nhiễu mỗi item (R>=3) | phương sai do bốc đã đo được 1,36 pp |
+| Nối lớp structured noise vào pilot | `src/noise.py` đã có 8 loại, chưa nối |
+| Tính lại đáp án cho `CI_ACTIVE` | cần dựng SCM mở rộng |
+
+### Giới hạn cứng
+
+Đồ thị CLadder chỉ 2-5 cạnh. `confounding` và `mediation` không thêm được cạnh nào vì đã là DAG đầy đủ trên 3 nút. GPU trên máy là RTX 3050 Laptop 4GB, không chạy được model 7-8B, nên mọi thứ chạy qua API.
+
+---
+
+## 12. Định vị so với Caliper
+
+Caliper (arXiv:2606.04915, 6/2026) đã công bố: ẩn danh tên biến làm tụt 7,6 tới 29,6 pp trên 9 model từ 3,8B tới 671B, và khoảng cách sụp ~19 lần trên tập pseudoword của CLadder. Mức tụt 10-13 pp đo được ở đây **nằm trong khoảng đó** - tức là tái lập được Caliper bằng một thiết kế độc lập.
+
+Ba thứ Caliper không có:
+
+1. **Điều kiện cấp đồ thị đúng.** Và kết quả là tác hại của ẩn danh biến mất (mục 4).
+2. **Đo chất lượng đồ thị tự dựng.** Caliper có prompt scaffold nhưng không chấm cạnh (mục 9).
+3. **Phân rã theo loại lỗi đồ thị, có phân biệt chiều cạnh** (mục 6, 8).
+
+Caliper là tiền đề, không phải đối thủ.
+
+---
+
+## 13. Chạy lại
+
+```bash
+export PYTHONIOENCODING=utf-8         # bat buoc tren Windows
+
+python scripts/verify_groundtruth.py  # khong can API key
+python scripts/feasibility.py         # khong can API key
+
+# Thi nghiem tu vung ghep cap (ket qua chinh)
+for LEX in KEEP PSEUDO SYMBOL; do
+  python scripts/pilot.py --n 200 --models gpt-4.1-nano,gpt-4.1-mini,gpt-4.1 \
+      --kmax 1 --types DR --drop-nonsense --lexicon $LEX --tag "_lex$LEX"
+done
+python scripts/analyze_lexical.py
+
+# Dinh gia loai loi do thi
+python scripts/pilot.py --n 150 --models gpt-4.1-nano,gpt-4.1-mini,gpt-4.1 \
+                        --kmax 3 --types DR,ED,FE
+python scripts/induction.py --n 150 --models gpt-4.1-nano,gpt-4.1-mini,gpt-4.1
+python scripts/analyze_types.py
+```
+
+Mọi lượt gọi được cache theo hash `(model, temperature, prompt)`. Chạy lại **không tốn thêm tiền**.
+
+Chi tiết từng module và từng cái bẫy: **`WALKTHROUGH.md`**. Phản biện hội đồng 5 ghế: **`REVIEW.md`**.

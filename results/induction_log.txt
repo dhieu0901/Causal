@@ -1,0 +1,76 @@
+items=147  families=['IV', 'arrowhead', 'confounding', 'diamond', 'diamondcut', 'frontdoor', 'mediation']
+
+>>> gpt-4.1-nano step 1 INDUCE: 147 calls
+    25/147
+    50/147
+    75/147
+    100/147
+    125/147
+    {'calls': 147, 'cached': 2, 'errors': 0, 'in_tok': 33877, 'out_tok': 74134}
+>>> gpt-4.1-nano step 2 INDUCED: 147 calls
+    25/147
+    50/147
+    75/147
+    100/147
+    125/147
+    {'calls': 147, 'cached': 37, 'errors': 0, 'in_tok': 23473, 'out_tok': 52033}
+
+>>> gpt-4.1-mini step 1 INDUCE: 147 calls
+    25/147
+    50/147
+    75/147
+    100/147
+    125/147
+    {'calls': 147, 'cached': 1, 'errors': 0, 'in_tok': 33877, 'out_tok': 87048}
+>>> gpt-4.1-mini step 2 INDUCED: 147 calls
+    25/147
+    50/147
+    75/147
+    100/147
+    125/147
+    {'calls': 147, 'cached': 34, 'errors': 0, 'in_tok': 24232, 'out_tok': 45339}
+
+>>> gpt-4.1 step 1 INDUCE: 147 calls
+    25/147
+    50/147
+    75/147
+    100/147
+    125/147
+    {'calls': 147, 'cached': 1, 'errors': 0, 'in_tok': 33877, 'out_tok': 63108}
+>>> gpt-4.1 step 2 INDUCED: 147 calls
+    25/147
+    50/147
+    75/147
+    100/147
+    125/147
+    {'calls': 147, 'cached': 36, 'errors': 0, 'in_tok': 23904, 'out_tok': 37689}
+
+==============================================================================
+CHAT LUONG DO THI TU DUNG (doi chieu Table 3 cua NoisyCausal)
+==============================================================================
+                n  parse_graph  precision  recall     f1  exact  canh_sai  dao_chieu   thua  thieu
+model                                                                                             
+gpt-4.1       147        0.980      0.778   0.510  0.578  0.252     2.272      0.034  0.333  1.905
+gpt-4.1-mini  147        1.000      0.816   0.569  0.633  0.272     2.034      0.048  0.333  1.653
+gpt-4.1-nano  147        0.918      0.721   0.445  0.518  0.190     2.503      0.014  0.327  2.163
+
+==============================================================================
+INDUCED ROI VAO DAU TREN DUONG CONG?
+==============================================================================
+cond            RAW  ORACLE  DR_k1  DR_k2  DR_k3  INDUCED
+model                                                    
+gpt-4.1       80.95   85.71  81.63  75.51  72.79    84.35
+gpt-4.1-mini  79.59   82.99  74.15  74.83  69.39    80.95
+gpt-4.1-nano  78.23   77.55  70.07  70.75  70.75    73.47
+
+  INDUCED so voi cac moc:
+    gpt-4.1        INDUCED=84.35  vs RAW +3.40  vs ORACLE -1.36  vs DR_k1 +2.72
+    gpt-4.1-mini   INDUCED=80.95  vs RAW +1.36  vs ORACLE -2.04  vs DR_k1 +6.80
+    gpt-4.1-nano   INDUCED=73.47  vs RAW -4.76  vs ORACLE -4.08  vs DR_k1 +3.40
+
+==============================================================================
+McNEMAR: INDUCED co khac RAW khong? (paired)
+==============================================================================
+  gpt-4.1-nano   n=147  b= 19 c= 26  p=0.3713
+  gpt-4.1-mini   n=147  b= 11 c=  9  p=0.8238
+  gpt-4.1        n=147  b= 12 c=  7  p=0.3593
