@@ -1,0 +1,14 @@
+{
+  "extraPaths": ["src", "scripts"],
+  "include": ["src", "scripts"],
+  "exclude": ["**/__pycache__", "cache", "data", "results"],
+
+  "//": "Analysis code is pandas-heavy. The stubs type DataFrame.loc as a huge union (bytes, datetime, str, ...), so every arithmetic on a cell is reported as an error even when the column is plainly numeric. Those false positives bury the real ones, so the pandas-shaped rules are relaxed here rather than sprinkling casts through the code.",
+  "typeCheckingMode": "basic",
+  "reportMissingImports": "warning",
+  "reportArgumentType": "none",
+  "reportOperatorIssue": "none",
+  "reportCallIssue": "none",
+  "reportIndexIssue": "none",
+  "reportAttributeAccessIssue": "warning"
+}

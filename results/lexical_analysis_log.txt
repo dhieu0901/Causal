@@ -1,0 +1,113 @@
+========================================================================================
+1. DO CHINH XAC THEO BO TU VUNG  (chi cau parse duoc, cung item)
+========================================================================================
+       model   cond  KEEP  parse_KEEP  SYMBOL  parse_SYMBOL  PSEUDO  parse_PSEUDO
+gpt-4.1-nano  PROSE 72.83        99.4   66.67          94.8   74.70          95.4
+gpt-4.1-nano    RAW 79.19        99.4   64.16          99.4   67.24         100.0
+gpt-4.1-nano ORACLE 74.25        96.0   68.45          96.6   68.86          96.0
+gpt-4.1-nano  DR_k1 72.35        97.7   64.50          97.1   71.01          97.1
+gpt-4.1-mini  PROSE 84.80        98.3   77.98          96.6   82.08          99.4
+gpt-4.1-mini    RAW 77.91        98.9   70.52          99.4   64.37         100.0
+gpt-4.1-mini ORACLE 84.80        98.3   82.35          97.7   81.98          98.9
+gpt-4.1-mini  DR_k1 77.78        98.3   67.25          98.3   67.26          96.6
+     gpt-4.1  PROSE 81.40        98.9   80.81          98.9   70.52          99.4
+     gpt-4.1    RAW 75.58        98.9   67.24         100.0   66.28          98.9
+     gpt-4.1 ORACLE 87.13        98.3   78.95          98.3   79.77          99.4
+     gpt-4.1  DR_k1 76.44       100.0   68.21          99.4   65.12          98.9
+
+========================================================================================
+2. McNEMAR GHEP CAP: doi tu vung tren CUNG item co lam giam do chinh xac khong?
+========================================================================================
+       model   cond         so_sanh   n  delta_pp      p y_nghia
+gpt-4.1-nano  PROSE   SYMBOL - KEEP 164     -5.49 0.2430        
+gpt-4.1-nano  PROSE   PSEUDO - KEEP 165      1.82 0.7660        
+gpt-4.1-nano  PROSE PSEUDO - SYMBOL 159      9.43 0.0107       *
+gpt-4.1-nano    RAW   SYMBOL - KEEP 172    -15.12 0.0002       *
+gpt-4.1-nano    RAW   PSEUDO - KEEP 173    -12.14 0.0038       *
+gpt-4.1-nano    RAW PSEUDO - SYMBOL 173      3.47 0.4709        
+gpt-4.1-nano ORACLE   SYMBOL - KEEP 163     -4.91 0.2430        
+gpt-4.1-nano ORACLE   PSEUDO - KEEP 162     -5.56 0.2430        
+gpt-4.1-nano ORACLE PSEUDO - SYMBOL 163     -0.61 1.0000        
+gpt-4.1-nano  DR_k1   SYMBOL - KEEP 167     -6.59 0.1173        
+gpt-4.1-nano  DR_k1   PSEUDO - KEEP 165     -1.21 0.8776        
+gpt-4.1-nano  DR_k1 PSEUDO - SYMBOL 165      6.06 0.1742        
+gpt-4.1-mini  PROSE   SYMBOL - KEEP 166     -7.23 0.0652        
+gpt-4.1-mini  PROSE   PSEUDO - KEEP 170     -2.94 0.4583        
+gpt-4.1-mini  PROSE PSEUDO - SYMBOL 167      4.19 0.1671        
+gpt-4.1-mini    RAW   SYMBOL - KEEP 172     -7.56 0.0241       *
+gpt-4.1-mini    RAW   PSEUDO - KEEP 172    -13.37 0.0001       *
+gpt-4.1-mini    RAW PSEUDO - SYMBOL 173     -5.78 0.0525        
+gpt-4.1-mini ORACLE   SYMBOL - KEEP 167     -2.99 0.4996        
+gpt-4.1-mini ORACLE   PSEUDO - KEEP 169     -2.96 0.4996        
+gpt-4.1-mini ORACLE PSEUDO - SYMBOL 168     -0.60 1.0000        
+gpt-4.1-mini  DR_k1   SYMBOL - KEEP 168     -9.52 0.0090       *
+gpt-4.1-mini  DR_k1   PSEUDO - KEEP 166    -10.24 0.0046       *
+gpt-4.1-mini  DR_k1 PSEUDO - SYMBOL 166     -1.20 0.8318        
+     gpt-4.1  PROSE   SYMBOL - KEEP 171      0.00 1.0000        
+     gpt-4.1  PROSE   PSEUDO - KEEP 171    -10.53 0.0051       *
+     gpt-4.1  PROSE PSEUDO - SYMBOL 172    -10.47 0.0029       *
+     gpt-4.1    RAW   SYMBOL - KEEP 172     -8.72 0.0135       *
+     gpt-4.1    RAW   PSEUDO - KEEP 170    -10.00 0.0115       *
+     gpt-4.1    RAW PSEUDO - SYMBOL 172     -1.16 0.8388        
+     gpt-4.1 ORACLE   SYMBOL - KEEP 168     -8.33 0.0243       *
+     gpt-4.1 ORACLE   PSEUDO - KEEP 170     -6.47 0.1173        
+     gpt-4.1 ORACLE PSEUDO - SYMBOL 171      1.17 0.8555        
+     gpt-4.1  DR_k1   SYMBOL - KEEP 173     -8.67 0.0107       *
+     gpt-4.1  DR_k1   PSEUDO - KEEP 172    -11.63 0.0012       *
+     gpt-4.1  DR_k1 PSEUDO - SYMBOL 171     -2.92 0.4244        
+
+========================================================================================
+3. PHAN RA THEO query_type  (dieu kien ORACLE: do thi dung 100%)
+========================================================================================
+  correlation va marginal la rung-1, thuan so hoc, do thi khong tham gia.
+  Neu muc roi o day bang hoac hon cac loai co nhan qua, thi thu bi pha huy
+  khong phai nang luc suy luan nhan qua.
+
+       model         query_type  n_KEEP  KEEP  SYMBOL  PSEUDO  roi_SYMBOL  roi_PSEUDO
+gpt-4.1-nano                ate      21  81.0    83.3    79.2        -2.3         1.8
+gpt-4.1-nano            backadj      32  53.1    46.9    53.1         6.2         0.0
+gpt-4.1-nano      collider_bias       4  75.0    75.0    75.0         0.0         0.0
+gpt-4.1-nano        correlation      24  91.7    84.0    88.0         7.7         3.7
+gpt-4.1-nano det-counterfactual      20  55.0    55.0    63.2         0.0        -8.2
+gpt-4.1-nano                ett      20  75.0    55.0    50.0        20.0        25.0
+gpt-4.1-nano           exp_away       4  75.0    75.0    75.0         0.0         0.0
+gpt-4.1-nano           marginal      31  93.5    75.9    78.6        17.6        14.9
+gpt-4.1-nano                nde       2  50.0   100.0    50.0       -50.0         0.0
+gpt-4.1-nano                nie       9  66.7    87.5    66.7       -20.8        -0.0
+gpt-4.1-mini                ate      22  68.2    78.3    79.2       -10.1       -11.0
+gpt-4.1-mini            backadj      32  87.5    87.5    84.4         0.0         3.1
+gpt-4.1-mini      collider_bias       4  75.0   100.0   100.0       -25.0       -25.0
+gpt-4.1-mini        correlation      25  92.0    96.0    96.0        -4.0        -4.0
+gpt-4.1-mini det-counterfactual      20  65.0    70.0    65.0        -5.0         0.0
+gpt-4.1-mini                ett      20  95.0    81.0    94.7        14.0         0.3
+gpt-4.1-mini           exp_away       4 100.0   100.0    50.0         0.0        50.0
+gpt-4.1-mini           marginal      31  96.8    80.0    80.6        16.8        16.2
+gpt-4.1-mini                nde       2 100.0     0.0    50.0       100.0        50.0
+gpt-4.1-mini                nie      11  72.7    70.0    72.7         2.7         0.0
+     gpt-4.1                ate      22  90.9    79.2    70.8        11.7        20.1
+     gpt-4.1            backadj      32  84.4    78.1    87.5         6.3        -3.1
+     gpt-4.1      collider_bias       4  75.0   100.0   100.0       -25.0       -25.0
+     gpt-4.1        correlation      25  92.0    96.0    96.0        -4.0        -4.0
+     gpt-4.1 det-counterfactual      20  75.0    60.0    75.0        15.0         0.0
+     gpt-4.1                ett      20  85.0    75.0    75.0        10.0        10.0
+     gpt-4.1           exp_away       4 100.0   100.0   100.0         0.0         0.0
+     gpt-4.1           marginal      31  96.8    74.2    77.4        22.6        19.4
+     gpt-4.1                nde       2  50.0   100.0   100.0       -50.0       -50.0
+     gpt-4.1                nie      11  81.8    77.8    45.5         4.0        36.3
+
+========================================================================================
+4. GIA CUA MOT CANH DAO CHIEU, THEO TUNG BO TU VUNG
+========================================================================================
+  Neu cau truc that su duoc dung de suy luan, bo neo tu vung phai lam
+  do thi SAI tro nen dat hon, chu khong phai re di.
+
+       model tu_vung   RAW  ORACLE  DR_k1  delta_struct  gia_1_canh_dao
+gpt-4.1-nano    KEEP 79.19   74.25  72.35         -4.94            1.90
+gpt-4.1-nano  SYMBOL 64.16   68.45  64.50          4.29            3.96
+gpt-4.1-nano  PSEUDO 67.24   68.86  71.01          1.62           -2.14
+gpt-4.1-mini    KEEP 77.91   84.80  77.78          6.89            7.02
+gpt-4.1-mini  SYMBOL 70.52   82.35  67.25         11.83           15.10
+gpt-4.1-mini  PSEUDO 64.37   81.98  67.26         17.61           14.71
+     gpt-4.1    KEEP 75.58   87.13  76.44         11.55           10.70
+     gpt-4.1  SYMBOL 67.24   78.95  68.21         11.71           10.74
+     gpt-4.1  PSEUDO 66.28   79.77  65.12         13.49           14.65

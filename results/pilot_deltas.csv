@@ -1,0 +1,4 @@
+model,RAW,ORACLE,Delta_struct,strip_cost(PROSE-RAW),doc_DR_pp_moi_canh
+gpt-4.1-nano,78.23,77.55,-0.68,0.68,2.27
+gpt-4.1-mini,79.59,82.99,3.4,9.53,4.53
+gpt-4.1,80.95,85.71,4.76,7.49,4.31

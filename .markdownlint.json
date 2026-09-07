@@ -1,0 +1,9 @@
+{
+  "//": "MD060 wants padded table pipes (| --- |). The tables here are wide and dense; padding every cell makes the source unreadable without changing how it renders. MD013 line length is likewise irrelevant for tables.",
+  "MD060": false,
+  "MD013": false,
+  "MD033": false,
+  "MD041": false,
+  "MD040": false,
+  "MD022": false
+}

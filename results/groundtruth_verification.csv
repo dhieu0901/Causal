@@ -1,0 +1,4 @@
+graph_id,checked,skipped,max_abs_err,mean_abs_err,all_match
+mediation,1008,0,6.661e-16,1.511e-16,True
+chain,624,0,6.661e-16,1.562e-16,True
+confounding,552,200,4.441e-16,1.408e-16,True

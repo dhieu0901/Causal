@@ -1,0 +1,11 @@
+graph_id,ED,FE,DR
+IV,4,2,4
+arrowhead,5,1,5
+chain,2,1,2
+collision,2,1,2
+confounding,3,0,3
+diamond,4,2,4
+diamondcut,4,2,4
+fork,2,1,2
+frontdoor,4,2,4
+mediation,3,0,3

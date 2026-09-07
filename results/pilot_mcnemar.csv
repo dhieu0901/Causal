@@ -1,0 +1,16 @@
+model,so_sanh,n,b,c,p,y_nghia
+gpt-4.1-nano,ORACLE vs RAW,147,18,19,1.0,
+gpt-4.1-nano,DR_k1 vs RAW,147,12,24,0.0652,
+gpt-4.1-nano,DR_k2 vs RAW,147,14,25,0.1081,
+gpt-4.1-nano,DR_k3 vs RAW,147,16,27,0.1263,
+gpt-4.1-nano,DR_k1 vs ORACLE,147,8,19,0.0522,
+gpt-4.1-mini,ORACLE vs RAW,147,19,14,0.4869,
+gpt-4.1-mini,DR_k1 vs RAW,147,10,18,0.1849,
+gpt-4.1-mini,DR_k2 vs RAW,147,8,15,0.21,
+gpt-4.1-mini,DR_k3 vs RAW,147,8,23,0.0107,*
+gpt-4.1-mini,DR_k1 vs ORACLE,147,6,19,0.0146,*
+gpt-4.1,ORACLE vs RAW,147,18,11,0.2649,
+gpt-4.1,DR_k1 vs RAW,147,11,10,1.0,
+gpt-4.1,DR_k2 vs RAW,147,9,17,0.1686,
+gpt-4.1,DR_k3 vs RAW,147,6,18,0.0227,*
+gpt-4.1,DR_k1 vs ORACLE,147,8,14,0.2863,

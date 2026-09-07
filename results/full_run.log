@@ -1,0 +1,165 @@
+BAT DAU 2026-09-07 15:04:02  n=800  models=gpt-4.1-nano,gpt-4.1-mini,gpt-4.1
+
+=================================================================
+>>> 1/5 pilot commonsense n=800   [15:04:02]
+=================================================================
+items=798  jobs/model=8208  families=['IV', 'arrowhead', 'confounding', 'diamond', 'diamondcut', 'frontdoor', 'mediation']
+
+>>> gpt-4.1-nano: 8208 calls
+    25/8208
+    50/8208
+    75/8208
+    100/8208
+    125/8208
+<<< 1/5 pilot commonsense n=800 done, exit=127   [15:04:57]
+
+=================================================================
+>>> 2/5 induction commonsense n=800   [15:04:57]
+=================================================================
+items=798  families=['IV', 'arrowhead', 'confounding', 'diamond', 'diamondcut', 'frontdoor', 'mediation']
+
+>>> gpt-4.1-nano step 1 INDUCE: 798 calls
+    25/798
+<<< 2/5 induction commonsense n=800 done, exit=127   [15:05:20]
+
+=================================================================
+>>> 3/5 pilot pseudoword n=800   [15:05:20]
+=================================================================
+items=798  jobs/model=8208  families=['IV', 'arrowhead', 'confounding', 'diamond', 'diamondcut', 'frontdoor', 'mediation']
+
+>>> gpt-4.1-nano: 8208 calls
+    25/8208
+    50/8208
+    75/8208
+    100/8208
+    125/8208
+    150/8208
+    175/8208
+    200/8208
+    225/8208
+    250/8208
+    275/8208
+    300/8208
+    325/8208
+    350/8208
+    375/8208
+    400/8208
+    425/8208
+    450/8208
+    475/8208
+    500/8208
+    525/8208
+    550/8208
+    575/8208
+    600/8208
+    625/8208
+    650/8208
+    675/8208
+    700/8208
+    725/8208
+    750/8208
+    775/8208
+    800/8208
+    825/8208
+    850/8208
+    875/8208
+    900/8208
+    925/8208
+    950/8208
+    975/8208
+    1000/8208
+    1025/8208
+    1050/8208
+    1075/8208
+    1100/8208
+    1125/8208
+    1150/8208
+    1175/8208
+    1200/8208
+    1225/8208
+    1250/8208
+    1275/8208
+    1300/8208
+<<< 3/5 pilot pseudoword n=800 done, exit=127   [15:11:10]
+
+=================================================================
+>>> 4/5 induction pseudoword n=800   [15:11:10]
+=================================================================
+items=798  families=['IV', 'arrowhead', 'confounding', 'diamond', 'diamondcut', 'frontdoor', 'mediation']
+
+>>> gpt-4.1-nano step 1 INDUCE: 798 calls
+    25/798
+    50/798
+<<< 4/5 induction pseudoword n=800 done, exit=127   [15:11:39]
+
+=================================================================
+>>> 5/5 analyse commonsense   [15:11:40]
+=================================================================
+Traceback (most recent call last):
+  File "D:\code\Noisy Causal\scripts\analyze_types.py", line 178, in <module>
+    main()
+    ~~~~^^
+  File "D:\code\Noisy Causal\scripts\analyze_types.py", line 59, in main
+    df = pd.read_csv(ROOT / "results" / a.pilot)
+  File "C:\Users\duong\AppData\Local\Programs\Python\Python314\Lib\site-packages\pandas\io\parsers\readers.py", line 873, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "C:\Users\duong\AppData\Local\Programs\Python\Python314\Lib\site-packages\pandas\io\parsers\readers.py", line 300, in _read
+    parser = TextFileReader(filepath_or_buffer, **kwds)
+  File "C:\Users\duong\AppData\Local\Programs\Python\Python314\Lib\site-packages\pandas\io\parsers\readers.py", line 1645, in __init__
+    self._engine = self._make_engine(f, self.engine)
+                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\duong\AppData\Local\Programs\Python\Python314\Lib\site-packages\pandas\io\parsers\readers.py", line 1904, in _make_engine
+    self.handles = get_handle(
+                   ~~~~~~~~~~^
+        f,
+        ^^
+    ...<6 lines>...
+        storage_options=self.options.get("storage_options", None),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\duong\AppData\Local\Programs\Python\Python314\Lib\site-packages\pandas\io\common.py", line 926, in get_handle
+    handle = open(
+        handle,
+    ...<3 lines>...
+        newline="",
+    )
+FileNotFoundError: [Errno 2] No such file or directory: 'D:\\code\\Noisy Causal\\results\\pilot_raw_n800.csv'
+<<< 5/5 analyse commonsense done, exit=1   [15:11:44]
+
+=================================================================
+>>> 5/5 analyse pseudoword   [15:11:45]
+=================================================================
+Traceback (most recent call last):
+  File "D:\code\Noisy Causal\scripts\analyze_types.py", line 178, in <module>
+    main()
+    ~~~~^^
+  File "D:\code\Noisy Causal\scripts\analyze_types.py", line 59, in main
+    df = pd.read_csv(ROOT / "results" / a.pilot)
+  File "C:\Users\duong\AppData\Local\Programs\Python\Python314\Lib\site-packages\pandas\io\parsers\readers.py", line 873, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "C:\Users\duong\AppData\Local\Programs\Python\Python314\Lib\site-packages\pandas\io\parsers\readers.py", line 300, in _read
+    parser = TextFileReader(filepath_or_buffer, **kwds)
+  File "C:\Users\duong\AppData\Local\Programs\Python\Python314\Lib\site-packages\pandas\io\parsers\readers.py", line 1645, in __init__
+    self._engine = self._make_engine(f, self.engine)
+                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\duong\AppData\Local\Programs\Python\Python314\Lib\site-packages\pandas\io\parsers\readers.py", line 1904, in _make_engine
+    self.handles = get_handle(
+                   ~~~~~~~~~~^
+        f,
+        ^^
+    ...<6 lines>...
+        storage_options=self.options.get("storage_options", None),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\duong\AppData\Local\Programs\Python\Python314\Lib\site-packages\pandas\io\common.py", line 926, in get_handle
+    handle = open(
+        handle,
+    ...<3 lines>...
+        newline="",
+    )
+FileNotFoundError: [Errno 2] No such file or directory: 'D:\\code\\Noisy Causal\\results\\pilot_raw_n800_noncs.csv'
+<<< 5/5 analyse pseudoword done, exit=1   [15:11:48]
+
+HOAN TAT 2026-09-07 15:11:49

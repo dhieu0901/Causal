@@ -1,0 +1,34 @@
+[project]
+name = "break-even-structure-guidance"
+version = "0.1.0"
+description = "Locating the break-even point of causal structure guidance in LLM reasoning"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=2.0",
+    "pandas>=2.2",
+    "scipy>=1.13",
+    "networkx>=3.3",
+    "statsmodels>=0.14",
+    "openai>=1.40",
+]
+
+# Scripts add src/ to sys.path at runtime rather than installing the package, so
+# every checker needs telling where the modules live. Without this, editors flag
+# "cannot find module perturb" on files that run perfectly well.
+[tool.ruff]
+src = ["src", "scripts"]
+line-length = 92
+
+[tool.ty.environment]
+extra-paths = ["src", "scripts"]
+
+[tool.pyright]
+extraPaths = ["src", "scripts"]
+
+# Same reason as pyrightconfig.json: pandas cell access is typed as a wide union,
+# so arithmetic on a numeric column reads as a type error. Silencing the shape of
+# error pandas provokes keeps genuine problems visible.
+[tool.ty.rules]
+invalid-argument-type = "ignore"
+unsupported-operator = "ignore"
+no-matching-overload = "ignore"

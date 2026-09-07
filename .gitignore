@@ -1,0 +1,10 @@
+.env
+__pycache__/
+*.pyc
+data/*.json
+data/*.csv
+cache/
+
+# Ban PDF cua arXiv la tai lieu ben thu ba, khong phat hanh lai trong repo nay.
+# Tai tu https://arxiv.org/abs/2605.04313
+*.pdf

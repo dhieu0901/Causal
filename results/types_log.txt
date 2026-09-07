@@ -1,0 +1,81 @@
+================================================================================
+1. DO CHINH XAC THEO TUNG LOAI LOI  (chi tren cau parse duoc)
+================================================================================
+cond          PROSE    RAW  ORACLE  ED_k1  ED_k2  ED_k3  FE_k1  FE_k2  DR_k1  DR_k2  DR_k3
+model                                                                                     
+gpt-4.1-nano  81.69  80.99   83.21  78.99  75.00  76.81  81.63  82.05  78.83  76.47  76.26
+gpt-4.1-mini  89.73  82.98   87.77  87.94  82.14  82.14  88.78  84.81  80.15  78.57  77.14
+gpt-4.1       88.36  82.07   89.36  88.97  80.14  82.39  79.81  85.19  84.51  77.24  77.78
+
+-- parse rate (%) --
+cond          PROSE   RAW  ORACLE  ED_k1  ED_k2  ED_k3  FE_k1  FE_k2  DR_k1  DR_k2  DR_k3
+model                                                                                    
+gpt-4.1-nano   96.6  96.6    93.2   93.9   92.5   93.9   93.3   92.9   93.2   92.5   94.6
+gpt-4.1-mini   99.3  95.9    94.6   95.9   95.2   95.2   93.3   94.0   92.5   95.2   95.2
+gpt-4.1        99.3  98.6    95.9   98.6   99.3   96.6   99.0   96.4   96.6   98.6   98.0
+
+-- de doi chieu: cham ca cau khong parse duoc thanh sai --
+cond          PROSE    RAW  ORACLE  ED_k1  ED_k2  ED_k3  FE_k1  FE_k2  DR_k1  DR_k2  DR_k3
+model                                                                                     
+gpt-4.1-nano  78.91  78.23   77.55  74.15  69.39  72.11  76.19  76.19  73.47  70.75  72.11
+gpt-4.1-mini  89.12  79.59   82.99  84.35  78.23  78.23  82.86  79.76  74.15  74.83  73.47
+gpt-4.1       87.76  80.95   85.71  87.76  79.59  79.59  79.05  82.14  81.63  76.19  76.19
+
+================================================================================
+2. GIA MOI CANH LOI, VA DIEM HOA VON SO VOI DUONG SAN RAW
+================================================================================
+       model            loai  gia_pp_moi_canh  k_do_toi  ngan_sach_pp  hoa_von_k
+gpt-4.1-nano ED (thieu canh)             2.32         3          2.22       0.96
+gpt-4.1-nano  FE (thua canh)             0.58         2          2.22       3.83
+gpt-4.1-nano  DR (dao chieu)             2.32         3          2.22       0.96
+gpt-4.1-mini ED (thieu canh)             2.27         3          4.79       2.11
+gpt-4.1-mini  FE (thua canh)             1.48         2          4.79       3.24
+gpt-4.1-mini  DR (dao chieu)             3.35         3          4.79       1.43
+     gpt-4.1 ED (thieu canh)             2.97         3          7.29       2.45
+     gpt-4.1  FE (thua canh)             2.09         2          7.29       3.50
+     gpt-4.1  DR (dao chieu)             4.20         3          7.29       1.74
+
+================================================================================
+3. McNEMAR: tung dieu kien so voi RAW
+================================================================================
+       model dieu_kien   n  delta_pp      p y_nghia
+gpt-4.1-nano    ORACLE 135      2.22 0.8601        
+gpt-4.1-nano     ED_k1 137     -2.00 1.0000        
+gpt-4.1-nano     ED_k2 133     -5.99 0.2005        
+gpt-4.1-nano     ED_k3 134     -4.18 0.4050        
+gpt-4.1-nano     FE_k1  98      0.64 1.0000        
+gpt-4.1-nano     FE_k2  77      1.06 1.0000        
+gpt-4.1-nano     DR_k1 135     -2.16 0.7359        
+gpt-4.1-nano     DR_k2 132     -4.52 0.3771        
+gpt-4.1-nano     DR_k3 136     -4.73 0.2810        
+gpt-4.1-mini    ORACLE 137      4.79 0.2649        
+gpt-4.1-mini     ED_k1 139      4.96 0.2863        
+gpt-4.1-mini     ED_k2 137     -0.84 1.0000        
+gpt-4.1-mini     ED_k3 137     -0.84 0.7744        
+gpt-4.1-mini     FE_k1  97      5.80 0.4049        
+gpt-4.1-mini     FE_k2  78      1.83 0.6636        
+gpt-4.1-mini     DR_k1 135     -2.83 0.6636        
+gpt-4.1-mini     DR_k2 137     -4.41 0.3449        
+gpt-4.1-mini     DR_k3 137     -5.84 0.1221        
+     gpt-4.1    ORACLE 140      7.29 0.0639        
+     gpt-4.1     ED_k1 143      6.90 0.0784        
+     gpt-4.1     ED_k2 144     -1.93 0.6476        
+     gpt-4.1     ED_k3 140      0.32 1.0000        
+     gpt-4.1     FE_k1 102     -2.26 1.0000        
+     gpt-4.1     FE_k2  81      3.12 0.2379        
+     gpt-4.1     DR_k1 140      2.44 0.5413        
+     gpt-4.1     DR_k2 143     -4.83 0.2295        
+     gpt-4.1     DR_k3 143     -4.29 0.2863        
+
+================================================================================
+4. GIA x HO SO LOI THUC TE  ->  CO DU DOAN DUOC CHI PHI INDUCTION KHONG?
+================================================================================
+       model  so_canh_ED  so_canh_FE  so_canh_DR  gia_ED  gia_FE  gia_DR  du_doan_mat_pp  thuc_te_mat_pp  lech chua_dinh_gia
+gpt-4.1-nano        2.16        0.33        0.01    2.32    0.58    2.32            5.24            5.51  0.27             -
+gpt-4.1-mini        1.65        0.33        0.05    2.27    1.48    3.35            4.41            4.55  0.15             -
+     gpt-4.1        1.90        0.33        0.03    2.97    2.09    4.20            6.50            3.25 -3.25             -
+
+  du_doan_mat_pp = tong(gia moi canh x so canh loi loai do) tren do thi induced
+  thuc_te_mat_pp = ORACLE - INDUCED
+  lech nho  -> chi phi do thi phan ra duoc theo loai loi
+  lech lon  -> con co che khac dang chi phoi

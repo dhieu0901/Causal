@@ -1,0 +1,10 @@
+model,loai,gia_pp_moi_canh,gia_lo,gia_hi,r2,k_do_toi,ngan_sach_pp,chan_fit,hoa_von_k,hoa_von_lo,hoa_von_hi,canh_bao
+gpt-4.1-nano,ED (thieu canh),2.32,-0.16,4.05,0.72,3,2.22,81.98,,,,CI do doc chua tach khoi 0
+gpt-4.1-nano,FE (thua canh),0.58,-7.53,2.05,0.5,2,2.22,82.88,,,,CI do doc chua tach khoi 0
+gpt-4.1-nano,DR (dao chieu),2.32,-0.32,4.96,0.86,3,2.22,82.17,,,,CI do doc chua tach khoi 0
+gpt-4.1-mini,ED (thieu canh),2.27,-0.0,4.44,0.79,3,4.79,88.4,,,,CI do doc chua tach khoi 0
+gpt-4.1-mini,FE (thua canh),1.48,-1.33,6.67,0.51,2,4.79,88.6,,,,CI do doc chua tach khoi 0
+gpt-4.1-mini,DR (dao chieu),3.35,1.39,7.13,0.83,3,4.79,85.93,0.88,-1.38,2.96,
+gpt-4.1,ED (thieu canh),2.97,0.6,5.3,0.68,3,7.29,89.68,2.56,-0.22,4.93,
+gpt-4.1,FE (thua canh),2.09,-5.19,2.6,0.19,2,7.29,86.87,,,,CI do doc chua tach khoi 0
+gpt-4.1,DR (dao chieu),4.2,1.79,6.57,0.88,3,7.29,88.52,1.54,0.13,3.4,

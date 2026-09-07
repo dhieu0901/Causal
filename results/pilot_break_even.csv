@@ -1,0 +1,4 @@
+model,k*,CI_lo,CI_hi,rong,k_da_do_toi,danh_gia
+gpt-4.1-nano,0.0,0.0,1.0,1.0,3,trong tam voi
+gpt-4.1-mini,0.38,0.0,1.4,1.4,3,trong tam voi
+gpt-4.1,1.11,0.0,2.2,2.2,3,trong tam voi
