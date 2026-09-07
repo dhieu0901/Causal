@@ -125,7 +125,14 @@ def build_jobs(items, kmax=3, seed=0, types=("DR",), lexicon="KEEP"):
             continue
         meta = dict(item=i, gold=r.label, graph_id=r.graph_id, rung=r.rung,
                     query_type=r.get("query_type", ""),
-                    story_id=r.get("story_id", ""))
+                    story_id=r.get("story_id", ""),
+                    # CLadder's own lexical label. --drop-nonsense keeps every
+                    # real-word row, but 45% of those are CLadder's
+                    # anticommonsense items, whose names already point the wrong
+                    # way - so an unstratified KEEP baseline has the correct
+                    # prior removed on nearly half its items and dilutes every
+                    # lexical effect measured against it.
+                    question_property=r.get("question_property", ""))
         jobs.append(dict(cond="PROSE", prompt=build(prompt, "PROSE"), **meta))
         jobs.append(dict(cond="RAW", prompt=build(prompt, "RAW"), **meta))
         jobs.append(dict(cond="ORACLE", prompt=build(prompt, "ORACLE", edges), **meta))
@@ -185,6 +192,7 @@ def main():
                             # Carried through so the lexical analysis can split by
                             # query type without re-deriving the sample.
                             "query_type": r["query_type"], "story_id": r["story_id"],
+                            "question_property": r["question_property"],
                             "lexicon": a.lexicon,
                             "gold": r["gold"], "pred": pred,
                             "correct": int(pred == r["gold"]) if pred else 0,
