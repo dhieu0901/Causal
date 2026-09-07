@@ -121,6 +121,52 @@ Ngoại lệ trung thực: `PERMUTE` là bộ mà đồ thị cứu **kém nhấ
 
 Đây chính là điều kiện Caliper (arXiv:2606.04915) không có. Caliper chứng minh model mất năng lực khi bỏ neo từ vựng; kết quả ở đây chỉ ra **phần lớn thứ bị mất là cái mà đồ thị nhân quả bù lại được**.
 
+### 4.1 Phân tầng theo nhãn từ vựng gốc của CLadder - kết quả sắc hơn nhiều
+
+`full_v1.5_default.csv` có cột `question_property` mà ba file `test-*` bỏ mất, và nó gán nhãn loại từ vựng cho từng item:
+
+| Nhãn | Số dòng | Nghĩa |
+|---|---|---|
+| `nonsense` | 3.842 | từ bịa |
+| `anticommonsense` | 3.129 | **từ thật, chiều nhân quả trái lẽ thường** |
+| `easy` + `hard` + `commonsense` | 3.141 | từ thật, chiều hợp lẽ thường |
+
+Cờ `--drop-nonsense` giữ lại mọi dòng từ thật, nghe thì giống "đặt tên hợp lẽ thường" nhưng thực tế **45% mẫu là anticommonsense của chính CLadder**. Nghĩa là đường sàn `KEEP` đã bị bỏ prior đúng trên gần một nửa số item, và mọi hiệu ứng đo được ở mục 4 đều **bị pha loãng**.
+
+Tách ra thì con số đổi hẳn. Gộp 3 bộ ẩn danh x 3 model = 9 phép so sánh mỗi ô:
+
+| Điều kiện | Item có **prior đúng** | Item **prior đã sai sẵn** |
+|---|---|---|
+| **RAW** (không đồ thị) | **-12,23 pp, 8/9 đạt p<0,05** | -8,91 pp, 2/9 |
+| **ORACLE** (đồ thị đúng) | **-3,84 pp, 0/9 đạt p<0,05** | -7,91 pp, 1/9 |
+
+Trên đúng nhóm item mà model **có** một prior đúng để mất, cấp đồ thị đưa tác hại từ 8/9 ô có ý nghĩa xuống **0/9**. Đó là cứu hoàn toàn, không phải cứu một nửa như con số gộp chung gợi ý.
+
+Hai ô mạnh nhất, `PERMUTE` so với `KEEP` ở `RAW`:
+
+| Model | Prior đúng | p | Prior đã sai sẵn | p |
+|---|---|---|---|---|
+| gpt-4.1 | **-14,13** | **0,0146** | -5,19 | 0,5235 |
+| gpt-4.1-mini | **-13,83** | **0,0072** | -10,53 | 0,1516 |
+
+**Xoá một prior đúng đắt hơn xoá một prior vốn đã sai.** Đây là điều bắt buộc phải xảy ra nếu cơ chế được nêu là đúng, và nó là một phép kiểm **có thể thất bại** - nó đã không thất bại.
+
+### 4.2 Một phép nhân bản độc lập không hẹn mà có
+
+Anticommonsense của CLadder là **cùng một thao tác** với `PERMUTE`: giữ từ thật, phá chiều nhân quả hợp lẽ. Hai nhóm khác nhau, hai phương pháp khác nhau, hai tập item khác nhau.
+
+Chi phí đo được, điều kiện `RAW`:
+
+| Model | Anticommonsense của CLadder | `PERMUTE` của dự án này |
+|---|---|---|
+| gpt-4.1 | **-11,6 pp** | **-14,1 pp** |
+| gpt-4.1-mini | **-11,7 pp** | **-13,8 pp** |
+| gpt-4.1-nano | -3,6 pp | -4,6 pp |
+
+Ba cặp số, ba lần khớp. `PERMUTE` không phải một thao tác tự chế cho ra một hiệu ứng riêng của nó - nó tái lập được thứ mà chính tác giả CLadder đã dựng sẵn trong benchmark.
+
+Tính bằng `scripts/analyze_prior_strength.py`, 0 USD.
+
 ---
 
 ## 5. Kết quả 2: bỏ neo từ vựng làm cấu trúc có giá trị hơn

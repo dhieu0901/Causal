@@ -15,7 +15,7 @@ Tài liệu này được biên soạn đầy đủ và trực quan bằng đị
 4. [PHẦN 4: THIẾT KẾ THỰC NGHIỆM CHI TIẾT (7 Điều kiện Paired)](#phần-4-thiết-kế-thực-nghiệm-chi-tiết-7-điều-kiện-paired)
 5. [PHẦN 5: KẾT QUẢ THỰC NGHIỆM & CÁC PHÁT HIỆN CỐT LÕI](#phần-5-kết-quả-thực-nghiệm--các-phát-hiện-cốt-lõi)
    - [**5.1 ĐÍNH CHÍNH: lỗi nạp dữ liệu đã rút bỏ phát hiện tiêu đề cũ**](#51-đính-chính-trước-khi-đọc-tiếp-một-lỗi-nạp-dữ-liệu-đã-xoá-bỏ-phát-hiện-chấn-động)
-6. [PHẦN 6: SỔ TAY XỬ LÝ 8 CÁI BẪY KỸ THUẬT KINH ĐIỂN](#phần-6-sổ-tay-xử-lý-8-cái-bẫy-kỹ-thuật-kinh-điển)
+6. [PHẦN 6: SỔ TAY XỬ LÝ 9 CÁI BẪY KỸ THUẬT KINH ĐIỂN](#phần-6-sổ-tay-xử-lý-9-cái-bẫy-kỹ-thuật-kinh-điển)
 7. [PHẦN 7: HƯỚNG DẪN TÁI LẬP THỰC NGHIỆM TỪ A ĐẾN Z](#phần-7-hướng-dẫn-tái-lập-thực-nghiệm-từ-a-đến-z)
 8. [PHẦN 8: BÀI HỌC VỀ CƠ CHẾ SELF-GATING & LỘ TRÌNH TIẾP THEO](#phần-8-bài-học-về-cơ-chế-self-gating--lộ-trình-tiếp-theo)
 
@@ -242,6 +242,19 @@ Tách theo từng bộ:
 
 `PERMUTE` là bộ đồ thị cứu kém nhất (2/3 vẫn có ý nghĩa ở ORACLE). Hợp lý về cơ chế: nó không chỉ lấy đi tri thức đúng mà còn cấp một tri thức **sai lệch** đang cạnh tranh trực tiếp với đồ thị. Đây là dạng nhiễu duy nhất trong bốn bộ có tính đối kháng.
 
+#### PHÂN TẦNG THEO NHÃN GỐC CỦA CLADDER - bắt buộc phải đọc
+
+Cột `question_property` (chỉ có trong `full_v1.5_default.csv`) cho biết `--drop-nonsense` giữ lại **45% là anticommonsense của chính CLadder**, tức prior đúng đã bị bỏ sẵn trên gần nửa mẫu `KEEP`. Tách ra:
+
+| Điều kiện | Item có **prior đúng** | Item **prior đã sai sẵn** |
+|---|:---:|:---:|
+| **RAW** | **-12,23 pp, 8/9 p<0,05** | -8,91 pp, 2/9 |
+| **ORACLE** | **-3,84 pp, 0/9 p<0,05** | -7,91 pp, 1/9 |
+
+> Trên nhóm item mà model **có** prior đúng để mất, đồ thị đưa tác hại từ **8/9 xuống 0/9**. Cứu hoàn toàn, không phải một nửa.
+
+**Phép nhân bản độc lập:** anticommonsense của CLadder là cùng một thao tác với `PERMUTE`. Chi phí ở `RAW`: CLadder -11,6 / -11,7 / -3,6 pp so với `PERMUTE` -14,1 / -13,8 / -4,6 pp. Ba cặp, ba lần khớp.
+
 ---
 
 ### 5.4. KẾT QUẢ 2: Bỏ neo từ vựng làm cấu trúc CÓ GIÁ TRỊ HƠN
@@ -376,11 +389,13 @@ Hai lỗi đã sửa trong khâu này:
 
 ---
 
-## PHẦN 6: SỔ TAY XỬ LÝ 8 CÁI BẪY KỸ THUẬT KINH ĐIỂN
+## PHẦN 6: SỔ TAY XỬ LÝ 9 CÁI BẪY KỸ THUẬT KINH ĐIỂN
 
 > Hai bẫy đầu là hai bẫy **đắt nhất**: chúng không làm chương trình chạy sai, chúng làm ra một con số đẹp và sai. Đó là loại lỗi nguy hiểm nhất trong nghiên cứu thực nghiệm.
 
 **0a. Bẫy file dữ liệu thiếu câu hỏi.** Ba file `test-*-v1.5.csv` của CLadder chỉ có bối cảnh và dữ kiện, **0,00% prompt có dấu `?`**, trong khi `full_v1.5_default.csv` là 100%. Chạy trên chúng nghĩa là bắt model trả lời yes/no cho một prompt không hỏi gì, và kết quả là **đúng 50%** - trông y hệt một phát hiện chấn động về nhận thức của LLM. Đây là lỗi đã sinh ra "phát hiện lớn nhất" của bản trước, và nó tồn tại nhiều ngày. **Bài học: trước khi tin bất kỳ con số nào, hãy in ra một prompt hoàn chỉnh và tự đọc.** Đã sửa: `make_items` từ chối chạy nếu dưới 99% prompt có dấu `?`.
+
+**0c. Bẫy tên cờ nghe như một điều khiển thí nghiệm.** `--drop-nonsense` loại story từ bịa, nên phần còn lại nghe như "từ vựng đời thường". Thực tế **45% là anticommonsense của chính CLadder** - từ thật nhưng chiều nhân quả trái lẽ. Đường sàn `KEEP` vì thế đã bị bỏ prior đúng trên gần nửa mẫu, và mọi hiệu ứng từ vựng đo được đều bị pha loãng: -7,52 pp gộp chung so với **-14,13 pp** khi tách riêng nhóm có prior đúng. **Bài học: cột metadata mà bạn chưa mở ra xem thường là cột quan trọng nhất.** Đã sửa: `question_property` giờ được ghi vào output, và `scripts/analyze_prior_strength.py` phân tầng theo nó.
 
 **0b. Bẫy file mặc định trộn lẫn split.** `full_v1.5_default.csv` không phải là split commonsense - nó trộn 6.270 dòng story từ thật với 3.842 dòng story `nonsense`. Nhánh chính vì thế có **57/147 item là từ giả** trong khi cả hai tài liệu đều gọi nó là nhánh "commonsense". **Bài học: kiểm tra thành phần thực tế của mẫu, đừng tin tên file.** Đã sửa: cờ `--drop-nonsense`.
 

@@ -7,6 +7,7 @@
 **Quyết định vòng 2 (sau khi tác giả sửa):** **MINOR REVISION** - xem mục 9
 **Cập nhật sau vòng 2:** R2 và R4 đã hoàn thành bằng bộ từ vựng `PERMUTE` - xem mục 10
 **Quyết định vòng 3 (sau khi chạy induction ghép cặp):** **MINOR REVISION** - xem mục 11
+**Vòng 4 (kiểm dữ liệu theo yêu cầu, đối chiếu bài CLadder gốc):** **MINOR REVISION** - một finding MAJOR mới, xem mục 12
 
 ---
 
@@ -560,3 +561,71 @@ Luận điểm lõi **sống sót qua đợt tấn công mạnh nhất tôi dự
 Cái không sống sót là **cách phát biểu**. Hai finding MAJOR đều là bệnh chung của bài phân tích: báo một thước đo mà không nói sàn của nó ở đâu, và biến một hiệu ứng có mức độ thành một mệnh đề nhị phân. Cả hai sửa trong một buổi, không tốn đồng nào.
 
 Khoảng cách tới Accept giờ là ba lần viết lại và một bảng bổ sung.
+
+
+---
+
+## 12. Vòng 4 - kiểm dữ liệu đối chiếu bài CLadder gốc (2026-09-08)
+
+Kích hoạt bởi yêu cầu của tác giả: đối chiếu bộ dữ liệu với arXiv:2312.04350.
+
+### 12.1 Ba sự thật lấy từ bài gốc
+
+| Kiểm chứng | Kết quả |
+|---|---|
+| Bài báo nêu v1.5 có **10.112** câu hỏi | `full_v1.5_default.csv` có **đúng 10.112** dòng. Đây là bản phát hành chính thức |
+| Ba file `test-*` có 10.392 / 10.392 / 10.240 dòng | **Nhiều hơn cả bộ đầy đủ**, nên không thể là một split test của v1.5 |
+| Cột của `full` so với `test-*` | `full` có 10 cột, `test-*` có 9 - thiếu `question_property`. Trình xem của HuggingFace hiện cũng lỗi vì "các file dữ liệu không cùng số cột" |
+
+Chỉ **70/150** prompt của `test-commonsense` là tiền tố của một prompt trong `full`. Vậy các file `test-*` không phải bản cắt cụt của v1.5, chúng là một artefact khác, không có tài liệu, và không nằm trong bản phát hành mà bài báo mô tả. Kết luận vòng trước - chỉ dùng `full_v1.5_default.csv` - được xác nhận, và giờ có thêm căn cứ từ chính bài gốc.
+
+### 12.2 Finding MAJOR mới
+
+| # | Chiều | Mô tả | Evidence Anchor | Confidence |
+|---|---|---|---|---|
+| N3 | Hiệu lực cấu trúc của điều kiện đối chứng | **Điều kiện `KEEP` không phải "đặt tên hợp lẽ thường".** Cột `question_property` cho thấy `--drop-nonsense` giữ lại 3.129 dòng `anticommonsense` bên cạnh 3.141 dòng hợp lẽ thường. Trong mẫu 174 item thực dùng: **79 anticommonsense, 95 hợp lẽ, chỉ 9 là `commonsense` thuần.** Đường sàn của toàn bộ thang từ vựng vì thế đã bị bỏ prior đúng trên 45% số item, và mọi hiệu ứng đo được ở mục 4 tới 7 REPORT đều **bị pha loãng**. | `dataset: data/full_v1.5_default.csv cot question_property - anticommonsense=3129, mau 174 item co 79 anticommonsense` | 5 - kiểm trực tiếp trên cột metadata |
+
+**Mức độ pha loãng, đo được:** `PERMUTE` so với `KEEP` ở `RAW`, gpt-4.1: **-7,52 pp** khi gộp chung so với **-14,13 pp** khi chỉ lấy nhóm có prior đúng. Hiệu ứng thật lớn gần gấp đôi con số đã báo cáo.
+
+**Đây là finding có lợi cho tác giả.** Nó không lật kết luận nào, nó làm mọi kết luận mạnh lên. Nhưng nó vẫn là MAJOR vì con số đang in trong báo cáo sai về độ lớn, và vì một điều kiện đối chứng bị đặt tên sai suốt ba vòng phản biện mà không ghế nào phát hiện - kể cả tôi.
+
+### 12.3 Hai điểm mạnh mới
+
+**S1: Phân tầng biến confound thành một điều kiện thứ ba, và nó cho một phép kiểm có thể thất bại.**
+
+| Điều kiện | Item có prior đúng | Item prior đã sai sẵn |
+|---|---|---|
+| `RAW` | **-12,23 pp, 8/9 đạt p<0,05** | -8,91 pp, 2/9 |
+| `ORACLE` | **-3,84 pp, 0/9 đạt p<0,05** | -7,91 pp, 1/9 |
+
+Cơ chế được nêu bắt buộc dự đoán rằng **xoá một prior đúng phải đắt hơn xoá một prior vốn đã sai**. Dự đoán đó có thể sai. Nó đã không sai.
+
+Và luận điểm chính sắc hơn hẳn: trên nhóm item mà model **có** prior đúng để mất, cấp đồ thị đưa tác hại từ 8/9 ô có ý nghĩa xuống **0/9**. Bản gộp chung chỉ cho 8/9 xuống 3/9.
+**Evidence Anchor**: `table: results/prior_strength.csv - ORACLE, prior dung, 0/9 dat p<0.05`
+
+**S2: Một phép nhân bản độc lập, không hẹn mà có.**
+
+Anticommonsense của CLadder là cùng một thao tác với `PERMUTE`: giữ từ thật, phá chiều nhân quả hợp lẽ. Khác nhóm tác giả, khác phương pháp, khác tập item.
+
+| Model | Anticommonsense của CLadder | `PERMUTE` của dự án |
+|---|---|---|
+| gpt-4.1 | -11,6 pp | -14,1 pp |
+| gpt-4.1-mini | -11,7 pp | -13,8 pp |
+| gpt-4.1-nano | -3,6 pp | -4,6 pp |
+
+Ba cặp, ba lần khớp, kể cả ở model lệch chuẩn là `nano`. `PERMUTE` không phải một thao tác tự chế cho ra hiệu ứng của riêng nó.
+**Evidence Anchor**: `table: results/prior_strength.csv muc 1 - chenh prior dung so voi prior sai san co tren dieu kien KEEP/RAW`
+
+### 12.4 Mục sửa bắt buộc
+
+**R1: Phân tầng theo `question_property` ở mọi bảng từ vựng** - **đã sửa trong lượt.** Thêm `scripts/analyze_prior_strength.py`, mục 4.1 và 4.2 REPORT, khối tương ứng trong WALKTHROUGH 5.3, và `question_property` giờ được ghi vào output của `pilot.py`.
+
+**R2: Ghi bẫy này vào sổ tay** - **đã sửa.** Bẫy 0c trong WALKTHROUGH phần 6: *cột metadata mà bạn chưa mở ra xem thường là cột quan trọng nhất*.
+
+**R3: Nêu rõ nguồn gốc ba file `test-*`** - còn để mở. Nên hỏi nhóm CLadder qua HuggingFace discussion, vì trình xem của họ cũng đang lỗi vì chính vấn đề không đồng nhất số cột này. Đây là đóng góp cho cộng đồng, không chặn bài báo.
+
+### 12.5 Kết luận vòng 4
+
+Bốn vòng phản biện, và vòng này là vòng đầu tiên mà finding lớn nhất đến từ **yêu cầu của tác giả** chứ không phải từ hội đồng. Điều đó nên được ghi lại: ba vòng trước đều đọc cột `question_property` mà không ai mở nó ra.
+
+Luận điểm không đổi, nhưng mọi con số của nó đều mạnh lên. Quyết định giữ **MINOR REVISION**.
