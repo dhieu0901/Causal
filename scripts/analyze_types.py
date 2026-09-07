@@ -214,6 +214,21 @@ def main():
         return
 
     ind = pd.read_csv(ipath)
+
+    # The induction file has to come from the same items and the same lexicon as
+    # the pilot file, because section 4 subtracts one from the other. The default
+    # name does not track --pilot, so pricing a PSEUDO run at n=400 against the
+    # default KEEP induction at n=147 joins two unrelated samples and returns a
+    # negative "observed loss" that looks like a finding. Item overlap is the
+    # cheapest thing that catches it.
+    shared = set(ind.item) & set(df.item)
+    cover = len(shared) / max(1, len(set(df.item)))
+    if cover < 0.9:
+        print(f"\n[BO QUA MUC 4] {ipath.name} chi trung {100*cover:.0f}% item voi "
+              f"{a.pilot}. Hai file nay khong cung mau, tru nhau se ra so vo nghia.")
+        print(f"  Chay induction.py voi cung --n, --lexicon va --tag roi truyen "
+              f"--induction cho khop.")
+        return
     print("\n" + "=" * 80)
     print("4. GIA x HO SO LOI THUC TE  ->  CO DU DOAN DUOC CHI PHI INDUCTION KHONG?")
     print("=" * 80)
