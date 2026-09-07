@@ -25,6 +25,7 @@ from induce import build_induce_prompt, parse_edges, edge_f1
 from runner import run_batch, usage_summary
 from stats import mcnemar_exact_p
 from pilot import make_items
+from lexical import relabel_item
 
 
 def main():
@@ -37,22 +38,33 @@ def main():
                     help="lexical split; the pseudoword split separates structure "
                          "inference from world knowledge")
     ap.add_argument("--tag", default="", help="suffix for the output files")
+    ap.add_argument("--lexicon", default="KEEP",
+                    choices=["KEEP", "PERMUTE", "SYMBOL", "PSEUDO"],
+                    help="swap variable names within item (see src/lexical.py)")
+    ap.add_argument("--drop-nonsense", action="store_true", dest="drop_nonsense",
+                    help="keep only real-word stories")
     a = ap.parse_args()
 
-    items = make_items(a.n, a.seed, a.kmax, a.data)
+    items = make_items(a.n, a.seed, a.kmax, a.data, None, a.drop_nonsense)
 
-    # keep only items whose prose graph parses to the known DAG - same filter as pilot
+    # Same items and same lexicon as the matching pilot run, so induction quality
+    # is paired across lexicons the way accuracy already is. Comparing induction
+    # on real-word items against induction on CLadder's own nonsense stories is a
+    # between-items contrast; relabelling in place makes it a paired one.
     recs = []
     for i, r in items.iterrows():
-        _, removed = strip_structure(r.prompt)
+        prompt, clean = relabel_item(r.prompt, a.lexicon, seed=str(r.id))
+        if not clean:
+            continue
+        _, removed = strip_structure(prompt)
         edges = parse_prose_graph(removed)
         if len(edges) != len(to_edges(FAMILY_STRUCTURE[r.graph_id])):
             continue
         nodes = sorted({n for e in edges for n in e})
-        body, _ = strip_structure(r.prompt)
+        body, _ = strip_structure(prompt)
         recs.append({"item": i, "gold": r.label, "graph_id": r.graph_id,
                      "rung": r.rung, "true_edges": edges, "nodes": nodes,
-                     "body": body, "prompt": r.prompt})
+                     "body": body, "prompt": prompt})
     print(f"items={len(recs)}  families={sorted({x['graph_id'] for x in recs})}")
 
     rows = []
