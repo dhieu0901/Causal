@@ -12,8 +12,16 @@ together.
   budget  ORACLE - RAW, how much benefit the correct graph confers in the
           first place - the height that slope has to eat through
 
-k* = budget / price, so a change in k* between lexicons could come from either.
-It turns out to come entirely from one of them.
+k* is solved from the fitted line as (intercept - RAW) / price, NOT as
+budget / price - the fitted intercept sits 1.8 to 2.2 pp below the measured
+ORACLE point, so the two formulas differ by up to 2.7 edges. See
+analyze_types.py:175 for the expression actually used.
+
+Round 5 of the review panel rejected the reading that the budget doubles when
+the lexical anchor is removed: all three paired difference CIs contain 0 and
+gpt-4.1-nano moves the other way. REPORT.md section 8.3 records that
+retraction. This script therefore reports the price contrast, which stands,
+and prints the budget numbers without a conclusion attached.
 """
 from __future__ import annotations
 import sys
@@ -77,22 +85,33 @@ def main():
                     "ngan_sach_KEEP": k.ngan_sach_pp,
                     "ngan_sach_PSEUDO": p.ngan_sach_pp,
                     "kstar_KEEP_DR": fmt(k),
-                    "kstar_PSEUDO_DR": fmt(p)})
+                    "kstar_PSEUDO_DR": fmt(p),
+                    # Carried in the file itself, not only in the printed text:
+                    # anyone reading this CSV without the script must see that
+                    # the contrast between the two budgets was retracted.
+                    "canh_bao": "hieu ngan sach CHUA XAC LAP, ca ba CI chua 0, "
+                                "nano di nguoc - xem REPORT.md muc 8.3"})
     o = pd.DataFrame(out)
     print(o.to_string(index=False))
     o.to_csv(ROOT / "results" / "breakeven_by_lexicon.csv", index=False)
 
     print("""
-  Doc nhu sau. Gia mot canh sai la mot HANG SO CUA MODEL, khong doi khi doi
-  mien tu vung. Cai doi la NGAN SACH: bo neo tu vung di thi do thi dung tro
-  nen dang gia hon gap doi, nen cung mot con doc phai an het mot chieu cao lon
-  hon truoc khi het lai.
+  CACH DOC, theo REPORT.md muc 8.3.
 
-  He qua thuc dung: tren tu vung quen thuoc, diem hoa von cua gpt-4.1 la 0.74
-  canh - DUOI MOT. Chi mot canh dao chieu la do thi da lo. Tren tu vung xa la,
-  cung model do chiu duoc 1.93 canh.
+  VUNG: gia mot canh sai khong doi ro ret theo mien tu vung. 9/9 cap CI chong
+  nhau, va CI tren HIEU ghep cap la -0,11 [-1,62 ; 1,42] pp - day moi la co so
+  cua ket luan tuong duong, khong phai viec CI chong nhau.
 
-  Nghia la huong dan bang do thi BEN VUNG HON o dung noi no CAN THIET HON.""")
+  CHUA XAC LAP: khang dinh "ngan sach tang gap doi khi bo neo tu vung" da bi
+  vong phan bien thu 5 bac bo. Ca ba CI tren hieu ngan sach deu chua 0, va
+  gpt-4.1-nano di NGUOC huong - ngan sach cua no GIAM. Bang tren in ra de doi
+  chieu, khong kem ket luan nao.
+
+  Do do diem hoa von k* cung chua xac lap, vi tu so cua no chua vung. Khong
+  duoc doc cap so 0,74 va 1,93 nhu mot quy luat.
+
+  Chay scripts/analyze_budget_paired.py de co CI tren hieu ngan sach va co mau
+  can thiet de chot.""")
 
 
 if __name__ == "__main__":

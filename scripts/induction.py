@@ -22,7 +22,7 @@ import pandas as pd
 from perturb import FAMILY_STRUCTURE, to_edges
 from prompts import build, parse_answer, strip_structure, parse_prose_graph
 from induce import build_induce_prompt, parse_edges, edge_f1
-from runner import run_batch, usage_summary
+from runner import run_batch, usage_summary, guard_errors, is_ok
 from stats import mcnemar_exact_p
 from pilot import make_items
 from lexical import relabel_item
@@ -76,9 +76,17 @@ def main():
         got = run_batch(jobs, model, temperature=0.0, workers=16, max_tokens=1400,
                         on_tick=lambda d, t: print(f"    {d}/{t}", flush=True))
         print(f"    {usage_summary(got)}")
+        guard_errors(got, label=f"{model} INDUCE")
+        # A failed INDUCE call is far more corrosive here than in pilot.py. Its
+        # empty text parses to zero edges, which (a) scores as an F1 the model
+        # never earned and (b) sends the item down the `not e` branch below,
+        # silently turning its PERTURB condition into RAW. The experimental
+        # condition itself would change without a trace. Drop those items.
+        failed_induce = {g["item"] for g in got if not is_ok(g["result"])}
         induced = {g["item"]: parse_edges(g["result"]["text"],
                                           next(r["nodes"] for r in recs if r["item"] == g["item"]))
-                   for g in got}
+                   for g in got if is_ok(g["result"])}
+        recs = [r for r in recs if r["item"] not in failed_induce]
 
         # ---- step 2: reason using that graph -------------------------------
         jobs2 = []
@@ -94,12 +102,15 @@ def main():
         got2 = run_batch(jobs2, model, temperature=0.0, workers=16,
                          on_tick=lambda d, t: print(f"    {d}/{t}", flush=True))
         print(f"    {usage_summary(got2)}")
-        answers = {g["item"]: g["result"]["text"] for g in got2}
+        guard_errors(got2, label=f"{model} INDUCED")
+        answers = {g["item"]: g["result"]["text"] for g in got2 if is_ok(g["result"])}
 
         for r in recs:
+            if r["item"] not in answers:      # step-2 call failed: not a wrong answer
+                continue
             e = induced.get(r["item"], [])
             sc = edge_f1(e, r["true_edges"])
-            pred = parse_answer(answers.get(r["item"], ""))
+            pred = parse_answer(answers[r["item"]])
             rows.append({"model": model, "item": r["item"], "graph_id": r["graph_id"],
                          "rung": r["rung"], "gold": r["gold"], "pred": pred,
                          "correct": int(pred == r["gold"]) if pred else 0,

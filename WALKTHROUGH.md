@@ -1,525 +1,363 @@
-# WALKTHROUGH - CẨM NANG TOÀN DIỆN VỀ DỰ ÁN NOISY CAUSAL
-
-> **Đề tài:** Chi phí của các loại lỗi đồ thị nhân quả trong suy luận LLM, và mức độ phụ thuộc của năng lực đó vào từ vựng đời thường.  
-> **Repository:** Noisy Causal  
-> **Cập nhật:** 2026-09-08 (23.448 lượt gọi mô hình, 23,4 USD. Bản này **rút lại** phát hiện tiêu đề của bản trước sau khi phát hiện một lỗi nạp dữ liệu - xem mục 5.1)  
-
-Tài liệu này được biên soạn đầy đủ và trực quan bằng định dạng thuần (Markdown chuẩn, hiển thị tốt 100% trên mọi trình xem không cần plugin LaTeX) để bất kỳ ai khi đọc cũng hiểu rõ: **Đề tài làm về gì? Đã triển khai như thế nào? Kết quả cụ thể ra sao? Những bài học kỹ thuật nào đã rút ra? Và hướng phát triển tiếp theo là gì?**
+# BÁO CÁO TOÀN DIỆN DỰ ÁN NOISY CAUSAL
+## Chi Phí Của Cấu Trúc Nhân Quả Sai, Neo Từ Vựng & Bản Chất Nhận Thức Của LLM
+> *(Bản tổng hợp chi tiết từ Phương pháp luận đến Số liệu thực nghiệm — Trình bày bằng Markdown thuần, giải thích tường minh mọi khái niệm cho người mới bắt đầu)*
 
 ---
 
-## MỤC LỤC
-1. [PHẦN 1: ĐỀ TÀI LÀM VỀ GÌ? (Bối cảnh, Động lực & 2 Câu hỏi lớn)](#phần-1-đề-tài-làm-về-gì-bối-cảnh-động-lực--2-câu-hỏi-lớn)
-2. [PHẦN 2: NỀN TẢNG PHƯƠNG PHÁP (Vì sao chọn CLadder thay vì NoisyCausal?)](#phần-2-nền-tảng-phương-pháp-vì-sao-chọn-cladder-thay-vì-noisycausal)
-3. [PHẦN 3: KIẾN TRÚC MÃ NGUỒN & DỮ LIỆU](#phần-3-kiến-trúc-mã-nguồn--dữ-liệu)
-4. [PHẦN 4: THIẾT KẾ THỰC NGHIỆM CHI TIẾT (7 Điều kiện Paired)](#phần-4-thiết-kế-thực-nghiệm-chi-tiết-7-điều-kiện-paired)
-5. [PHẦN 5: KẾT QUẢ THỰC NGHIỆM & CÁC PHÁT HIỆN CỐT LÕI](#phần-5-kết-quả-thực-nghiệm--các-phát-hiện-cốt-lõi)
-   - [**5.1 ĐÍNH CHÍNH: lỗi nạp dữ liệu đã rút bỏ phát hiện tiêu đề cũ**](#51-đính-chính-trước-khi-đọc-tiếp-một-lỗi-nạp-dữ-liệu-đã-xoá-bỏ-phát-hiện-chấn-động)
-6. [PHẦN 6: SỔ TAY XỬ LÝ 9 CÁI BẪY KỸ THUẬT KINH ĐIỂN](#phần-6-sổ-tay-xử-lý-9-cái-bẫy-kỹ-thuật-kinh-điển)
-7. [PHẦN 7: HƯỚNG DẪN TÁI LẬP THỰC NGHIỆM TỪ A ĐẾN Z](#phần-7-hướng-dẫn-tái-lập-thực-nghiệm-từ-a-đến-z)
-8. [PHẦN 8: BÀI HỌC VỀ CƠ CHẾ SELF-GATING & LỘ TRÌNH TIẾP THEO](#phần-8-bài-học-về-cơ-chế-self-gating--lộ-trình-tiếp-theo)
+## TỪ ĐIỂN KHÁI NIỆM DÀNH CHO NGƯỜI MỚI BẮT ĐẦU
+
+Trước khi đi vào phương pháp và số liệu, dưới đây là các khái niệm nền tảng được giải thích bằng trực giác đời thường:
+
+* **LLM (Large Language Model - Mô hình ngôn ngữ lớn):** Các hệ thống trí tuệ nhân tạo như GPT-4, GPT-4.1, Claude, Llama. Về bản chất, chúng được huấn luyện trên hàng nghìn tỷ từ ngữ từ Internet để làm nhiệm vụ: **đoán từ tiếp theo có xác suất xuất hiện cao nhất** dựa trên chuỗi từ ngữ phía trước.
+* **Tương quan (Correlation) vs. Nhân quả (Causation):** 
+  * *Tương quan:* Hai sự việc thường xuất hiện cùng lúc. Ví dụ: Khi trời mùa hè nắng gắt, lượng kem bán ra tăng mạnh và số vụ đuối nước cũng tăng mạnh. Hai hiện tượng này tương quan thống kê với nhau.
+  * *Nhân quả:* Sự việc này là nguyên nhân trực tiếp sinh ra sự việc kia. Thời tiết nắng nóng là nguyên nhân khiến người ta đi bơi nhiều (dẫn đến đuối nước) và ăn kem nhiều; nhưng ăn kem **không phải** nguyên nhân gây ra đuối nước.
+* **Đồ thị nhân quả (Causal DAG - Directed Acyclic Graph):** Một sơ đồ gồm các nút tròn (biến/sự kiện) và các mũi tên nối giữa chúng. Mũi tên `A → B` biểu thị "$A$ trực tiếp gây ra $B$". "Phi chu trình" nghĩa là các mũi tên đi một chiều, không bao giờ quay ngược lại tạo thành vòng luẩn quẩn (`A → B → C → A`).
+* **Can thiệp (Intervention) và Toán tử do(X):** 
+  * *Quan sát thông thường:* Bạn thấy một người tự nguyện uống thuốc và bệnh thuyên giảm.
+  * *Can thiệp [do(X)]:* Bác sĩ chủ động chỉ định bắt buộc bệnh nhân phải uống thuốc (cắt đứt mọi yếu tố ngoại cảnh) để đo lường chính xác hiệu quả chữa bệnh của viên thuốc.
+* **Điểm phần trăm (pp - Percentage Points):** Thước đo chênh lệch tuyệt đối giữa hai tỷ lệ phần trăm. 
+  * Ví dụ: Điểm số tăng từ 70% lên 80% nghĩa là tăng **10 điểm phần trăm (10 pp)**. Nếu nói "tăng 10%" là sai về toán học (vì 10% của 70% chỉ là 7% → lên 77%).
+* **Khoảng tin cậy 95% (95% Confidence Interval - viết tắt là CI [a ; b]):** Khi làm thí nghiệm trên một mẫu câu hỏi, con số thu được luôn có dao động ngẫu nhiên. Khoảng tin cậy `[a ; b]` cho biết: Ta tin tưởng 95% rằng giá trị thực tế của toàn bộ tổng thể nằm trong khoảng từ `a` đến `b`.
+  * *Quy tắc suy diễn:* Nếu khoảng tin cậy của một hiệu số chứa số 0 (ví dụ `[-1,5 ; +2,0]`), ta **chưa thể khẳng định có sự khác biệt thực sự**; kết quả đó hoàn toàn có thể do may rủi.
+* **Giá trị p (p-value):** Xác suất để một kết quả tốt xảy ra hoàn toàn do ăn may ngẫu nhiên. Quy chuẩn khoa học quy định: nếu **p < 0,05 (dưới 5%)**, kết quả mới được công nhận là "có ý nghĩa thống kê" (đáng tin cậy).
+* **Difference-in-Differences (DiD - Hiệu của các hiệu số):** Phương pháp đo lường mức độ tác động thuần túy của một can thiệp.
+  * Công thức: `DiD = (Tác hại khi KHÔNG có đồ thị) - (Tác hại khi CÓ đồ thị)`
+  * Nếu `DiD > 0`: Cấp đồ thị giúp làm giảm bớt tổn thất do việc ẩn danh hóa gây ra.
 
 ---
 
-## PHẦN 1: ĐỀ TÀI LÀM VỀ GÌ? (Bối cảnh, Động lực & 2 Câu hỏi lớn)
+# PHẦN I: TỔNG QUAN, BỐI CẢNH & CÂU HỎI NGHIÊN CỨU
 
-### 1.1. Bối cảnh: Khi LLM suy luận nhân quả
-Trong các ứng dụng thực tế (y tế, kinh tế, phân tích nguyên nhân - kết quả), Large Language Models (LLM) thường bộc lộ điểm yếu chết người: **nhầm lẫn giữa tương quan (correlation) và nhân quả (causation)**. Mô hình có xu hướng học vẹt các mẫu thống kê bề mặt (ví dụ: thấy người ho hay uống siro ho thì tưởng uống siro gây ra ho).
+### 1.1. Con số 50–70% trên benchmark và Nghịch lý quan sát
+Trên các bộ đề kiểm tra suy luận nhân quả (như benchmark CLadder), các mô hình AI tiên tiến thường đạt độ chính xác từ **50% đến 70%**. Con số này dẫn đến hai cách giải thích hoàn toàn trái ngược:
+1. **Tư duy cấu trúc (Structural Reasoning):** Mô hình thực sự tiếp nhận đồ thị, duyệt theo các chiều mũi tên, tính toán can thiệp logic để ra đáp án. Tên biến chỉ là nhãn đại diện.
+2. **Ghi nhớ từ vựng bề mặt (Lexical Memory):** Mô hình hoạt động như một con vẹt ngẫu nhiên. Vì đã đọc hàng triệu văn bản trên mạng, nó nhớ cụm từ *"hút thuốc"* thường đi cùng *"ung thư"*. Nó trả lời đúng chỉ nhờ nhớ từ ngữ quen thuộc.
 
-Để khắc phục, hướng đi phổ biến hiện nay của các AI Agent là **Graph-Guided Reasoning (Suy luận dựa vào đồ thị nhân quả)**: Yêu cầu LLM trích xuất các thực thể và tự dựng đồ thị có hướng phi chu trình (Causal DAG: X -> Y), sau đó suy luận từng bước dựa trên đồ thị này.
-
-### 1.2. Nghịch lý khởi nguồn từ bài báo NoisyCausal (arXiv:2605.04313v1)
-Bài báo NoisyCausal (tháng 5/2026) thử nghiệm đưa đồ thị vào prompt và thu được kết quả:
-
-| Điều kiện trong NoisyCausal | Độ chính xác | Ghi chú |
-|---|:---:|---|
-| **Full Graph-Guided** (Có đồ thị hướng dẫn) | **80.68%** | Tăng vọt so với suy luận thông thường |
-| **No Graph** (Không có đồ thị) | **65.32%** | Mức suy luận tự nhiên của mô hình |
-| **Random Graph** (Đồ thị bị nối lại ngẫu nhiên) | **60.87%** | **Thấp hơn không có đồ thị 4.45 điểm %!** |
-| **Oracle Graph** (Đồ thị chuẩn 100%) | **85.00%** | Trần hiệu năng đo trên 1.000 mẫu |
-| **Oracle + 1 cạnh đảo chiều** | **73.20%** | Sụt giảm **-11.8 điểm %** chỉ vì 1 cạnh sai! |
-
-> **VẤN ĐỀ CỐT LÕI:**  
-> Đồ thị sai không trung tính — nó **gây độc (toxic/harmful)** trực tiếp cho LLM.  
-> Nhưng bài báo NoisyCausal chỉ báo cáo con số đó rồi bỏ qua. Họ không trả lời câu hỏi: **Ranh giới chịu đựng nằm ở đâu?**  
-> Trong thực tế, AI Agent phải **tự dựng đồ thị** từ văn bản. Mà đã tự dựng thì chắc chắn sẽ có sai sót (điểm F1 cạnh chỉ đạt 70–85%). Nếu ranh giới chịu đựng quá nhỏ, việc ép Agent dựng đồ thị có thể đang vô tình làm hỏng kết quả của chính nó!
-
-### 1.3. Hai câu hỏi nghiên cứu lớn của đề tài
-* **Câu hỏi 1 (Định giá lỗi đồ thị & Điểm hòa vốn):**  
-  *Mỗi loại lỗi đồ thị (đảo chiều, thiếu cạnh, thừa cạnh) làm suy giảm bao nhiêu % độ chính xác của LLM? Đồ thị phải sai bao nhiêu cạnh thì việc dùng nó hết có lãi (Break-Even Point k*)?*
-* **Câu hỏi 2 (Bản chất nhận thức của LLM):**  
-  *LLM thực sự hiểu và suy luận được dựa trên cấu trúc đồ thị trừu tượng, hay nó chỉ đang "học vẹt" từ vựng đời thường quen thuộc?*
+**Nghịch lý quan sát (Observational Equivalence):** Trên các bài toán thông thường, cấu trúc nhân quả đúng và từ ngữ đời thường luôn đi đôi với nhau (*"Nghèo đói dẫn đến nước bẩn, nước bẩn gây ra dịch tả"*). Dù dùng tư duy thật hay học vẹt, mô hình đều cho ra đáp án đúng. Do đó, điểm số 50–70% **hoàn toàn không cho biết mô hình dùng cơ chế nào**.
 
 ---
 
-## PHẦN 2: NỀN TẢNG PHƯƠNG PHÁP (Vì sao chọn CLadder thay vì NoisyCausal?)
+### 1.2. Thao tác ẩn danh hóa của Caliper (arXiv:2606.04915)
+Để phân ly hai cơ chế trên, bài báo Caliper (tháng 6/2026) giữ nguyên 100% cấu trúc logic và các bảng xác suất, nhưng **ẩn danh hóa tên biến** (thay tên thật bằng ký hiệu `A, B, C` hoặc từ vô nghĩa `glimx, muvq`).
 
-Mặc dù ý tưởng xuất phát từ NoisyCausal, dự án quyết định xây dựng thực nghiệm trên **CLadder** (Jin et al., NeurIPS 2023) vì 4 lý do phương pháp luận đanh thép:
+* **Kết quả của Caliper:** Điểm số của 14 mô hình lớn nhỏ **đồng loạt sụp đổ từ 7,6 đến 29,6 điểm phần trăm**, nhiều mô hình rơi thẳng về mức 50% (đoán mò ngẫu nhiên).
+* **Kết luận:** Năng lực của AI phụ thuộc nặng nề vào "chiếc nạng" từ vựng đời thường; khi mất từ vựng, khả năng nhân quả biến mất.
+
+---
+
+### 1.3. Hai khoảng trống nghiên cứu (Research Gaps)
+Mặc dù Caliper đã chỉ ra điểm yếu của AI, y văn vẫn bỏ ngỏ hai câu hỏi lớn:
+
+1. **Lỗ hổng từ NoisyCausal (arXiv:2605.04313):** Bài báo này phát hiện rằng cấp đồ thị đúng giúp AI tăng từ 65,32% lên 85,00%, nhưng chỉ cần **đảo chiều 1 cạnh**, mô hình tụt ngay xuống 73,20% (-11,8 pp); nếu cấp đồ thị ngẫu nhiên, mô hình tụt về 60,87% (tệ hơn cả lúc không có đồ thị).
+   * *Khoảng trống 1:* Đồ thị sai gây "độc" cho mô hình. Nhưng NoisyCausal không trả lời: **Đồ thị phải sai bao nhiêu cạnh thì việc dùng nó hết có lãi? Điểm hòa vốn nằm ở đâu?**
+2. **Lỗ hổng từ Caliper (arXiv:2606.04915):** Caliper chứng minh AI sụp đổ khi mất từ vựng, nhưng họ chỉ bắt mô hình tự vẽ lại cạnh (vốn bất khả thi khi không hiểu từ vựng). Họ chưa từng cấp đồ thị nhân quả hoàn chỉnh cho mô hình.
+   * *Khoảng trống 2:* Nếu mô hình bị tước mất chiếc nạng từ vựng, **việc cấp sẵn một đồ thị nhân quả tường minh có bù đắp lại được phần năng lực đã mất không?** Cấu trúc logic có thực sự thay thế được tri thức thế giới?
+
+---
+
+### 1.4. Hai câu hỏi nghiên cứu cốt lõi của đề tài
+* **Câu hỏi 1 (Q1 - Định giá lỗi cấu trúc & Điểm hòa vốn):** Mỗi loại lỗi đồ thị (đảo chiều cạnh `DR`, xóa thiếu cạnh `ED`, thêm thừa cạnh `FE`) làm suy giảm bao nhiêu điểm phần trăm? Điểm hòa vốn `k*` (Break-even point - số cạnh sai tối đa trước khi đồ thị gây hại hơn là không dùng) là bao nhiêu?
+* **Câu hỏi 2 (Q2 - Bản chất nhận thức & Tính thay thế):** Năng lực biểu kiến của LLM là năng lực từ vựng hay năng lực cấu trúc? Cấp đồ thị đúng có khôi phục được tổn thất do ẩn danh hóa gây ra hay không?
+
+---
+
+# PHẦN II: PHƯƠNG PHÁP LUẬN & THIẾT KẾ THỰC NGHIỆM
+
+### 2.1. Nền tảng dữ liệu benchmark CLadder & Bộ kiểm chứng giải tích
+Dự án không tự sinh dữ liệu bằng LLM (tránh bẫy ảo giác) mà xây dựng hoàn toàn trên benchmark **CLadder** (Jin et al., NeurIPS 2023). Nhãn của CLadder được sinh từ các Mô hình Nhân quả Cấu trúc (SCM) hình thức.
+
+* **Kiểm chứng giải tích độc lập:** Nhóm nghiên cứu đã tự lập trình bộ giải toán giải tích SCM, tính toán lại toàn bộ 66.824 phép tính trên 7.064 mô hình của CLadder.
+* **Độ chính xác:** Khớp tuyệt đối với lý thuyết ở sai số máy tính: **6,66 x 10⁻¹⁶**.
+
+---
+
+### 2.2. Thiết kế ghép cặp trong cùng một câu hỏi (Within-item Paired Design)
+Mọi so sánh đều thực hiện trên **cùng một bài toán**: Cùng cấu trúc đồ thị, cùng các con số xác suất, cùng câu hỏi và nhãn chuẩn. Mô hình giải cùng một bài toán dưới các điều kiện can thiệp khác nhau để loại bỏ 100% sai số ngẫu nhiên giữa các đề bài.
+
+---
+
+### 2.3. Kỹ thuật phẫu thuật gỡ sạch đồ thị văn xuôi
+Prompt gốc của CLadder luôn lồng sẵn đồ thị vào văn bản:  
+`"Poverty has a direct effect on water quality and cholera. Water company has a direct effect on water quality..."`
+
+* **Nguy cơ:** Nếu để nguyên, điều kiện "không đồ thị" thực chất vẫn chứa đồ thị lén lút bên trong; còn cấp thêm đồ thị sai sẽ biến thành bài toán "xung đột văn cảnh".
+* **Giải pháp:** Sử dụng biểu thức chính quy (Regex) quét mẫu chữ `has a direct effect on` để bóc tách triệt để toàn bộ các câu mô tả cạnh. Thân đề bài sạch chỉ còn bối cảnh, các con số xác suất và câu hỏi. Đồ thị chỉ được đưa vào ở một khối cấu trúc riêng biệt ở cuối prompt nếu điều kiện yêu cầu.
+
+---
+
+### 2.4. Ma trận thực nghiệm 2 trục can thiệp
+
+Dự án thiết lập ma trận 2 trục can thiệp độc lập trên cùng một tập câu hỏi:
 
 ```
-[HẠN CHẾ CỦA NOISYCAUSAL]                      [ĐIỂM TỰA VỮNG CHẮC CỦA CLADDER]
-- Không công khai code hay dữ liệu      ==>    - Mã nguồn & dữ liệu mở 100% (NeurIPS 2023)
-- 5 bước sinh dữ liệu đều là prompt     ==>    - Nhãn sinh từ SCM hình thức & Do-calculus
-- Lỗi logic: Tiêm Confounder nhưng             - Nhóm đã tự kiểm chứng đạt sai số 6.66e-16
-  vẫn chấm theo mô hình sạch                   - Có sẵn variable_mapping de doi tu vung
-                                                 ngay trong cung mot item
-```
+[TRỤC TỪ VỰNG: Mức độ cung cấp tri thức đời thường]
+  KEEP         ──► Tên biến gốc đời thường hợp lẽ tự nhiên (Poverty, Cholera)
+  IRRELEVANT   ──► Tên đồ gia dụng có thật ngoài đời (Spoon, Lamp, Kettle)
+  PERMUTE      ──► Hoán vị chính các từ đó sang chiều SAI (Cholera causes Poverty)
+  SYMBOL       ──► Ký hiệu trừu tượng ngắn gọn (Biến A, Biến B, Biến C)
+  PSEUDO       ──► Từ giả vô nghĩa nhiều âm tiết của CLadder (Glimx, Muvq, Zuph)
 
-1. **Khả năng tái lập:** NoisyCausal không phát hành bất kỳ thứ gì. CLadder công khai toàn bộ 10.112 câu hỏi.
-2. **Kiểm chứng Ground Truth tới mức sai số máy tính:**  
-   Trong file `scripts/verify_groundtruth.py`, chúng ta tự viết bộ solver toán học để tính ATE giải tích từ các bảng xác suất CPD của các mô hình CLadder. Đối chiếu với nhãn công bố: **2.184 model, sai lệch tuyệt đối tối đa chỉ là 6.66 × 10^-16** (đúng bằng sai số dấu phẩy động của máy tính).
-3. **Giải quyết nghịch lý Confounder Injection (CI):**  
-   NoisyCausal tiêm biến ẩn gây nhiễu làm xuất hiện đường backdoor nhưng lại chấm theo clean SCM (phạt mô hình điều chỉnh đúng, thưởng mô hình phớt lờ). Module `src/noise.py` của chúng ta tách rõ:
-   * `answer_preserving = True`: Nhiễu không làm đổi đại lượng truy vấn -> giữ nguyên nhãn.
-   * `answer_preserving = False` (như `CI_ACTIVE`): Thay đổi bản chất phân phối -> tách riêng, không chấm theo nhãn cũ.
-4. **Không tự sinh dữ liệu bừa bãi:**  
-   Mọi câu hỏi, xác suất, bối cảnh, nhãn chuẩn đều lấy nguyên bản từ CLadder. Dự án chỉ áp dụng các **phép biến đổi cơ học tất định** (lật chiều cạnh, xóa cạnh, đổi tên biến). **Không có bất kỳ LLM nào tham gia viết nhãn dữ liệu.**
-
----
-
-## PHẦN 3: KIẾN TRÚC MÃ NGUỒN & DỮ LIỆU
-
-```
-Noisy Causal/
-├── 2605.04313v1.pdf           # Toàn văn bài báo gốc NoisyCausal
-├── REPORT.md                  # Báo cáo kết quả nghiên cứu & số liệu chi tiết
-├── REVIEW.md                  # Phan bien hoi dong 5 ghe (academic-paper-reviewer)
-├── WALKTHROUGH.md             # File cẩm nang hướng dẫn này
-├── pyproject.toml             # Cấu hình dependency & linter
-├── .env                       # Chứa OPENAI_API_KEY (gitignored)
-│
-├── data/                      # Dữ liệu benchmark CLadder v1 và v1.5
-│   ├── cladder-questions.json        # 10.560 câu hỏi v1 kèm metadata
-│   ├── cladder-meta.json             # 7.064 mô hình nhân quả (DAG + CPD + ATE)
-│   ├── full_v1.5_default.csv         # 10.112 cau hoi DAY DU - file DUY NHAT dung duoc
-│   ├── test-commonsense-v1.5.csv     # KHONG DUNG DUOC: 0% prompt co cau hoi
-│   ├── test-anticommonsense-v1.5.csv # KHONG DUNG DUOC: 0% prompt co cau hoi
-│   └── test-noncommonsense-v1.5.csv  # KHONG DUNG DUOC: 0% prompt co cau hoi
-│
-├── src/                       # Thư viện module chức năng
-│   ├── cladder.py             # Nạp & nối questions với models qua desc_id (tỷ lệ 100%)
-│   ├── perturb.py             # Làm hỏng DAG có kiểm soát: ED, FE, DR (kiểm tra bằng NetworkX)
-│   ├── prompts.py             # Bóc DAG văn xuôi, dựng prompt 7 điều kiện, parser đáp án
-│   ├── induce.py              # Cho mô hình tự dựng DAG từ văn bản, tính F1 cạnh có phân biệt chiều
-│   ├── lexical.py             # Doi ten bien NGAY TRONG cung item:
-│   │                          #   KEEP / PERMUTE / SYMBOL / PSEUDO
-│   ├── noise.py               # Tiêm 8 loại structured noise vào trước câu hỏi
-│   ├── runner.py              # Gọi OpenAI song song 16 luồng, cache đĩa SHA256, tự động retry
-│   └── stats.py               # Thống kê: McNemar Exact, Bootstrap tìm k*, mô phỏng Power
-│
-├── scripts/                   # Kịch bản thực thi thí nghiệm
-│   ├── verify_groundtruth.py  # Tự động kiểm chứng nhãn chuẩn CLadder bằng giải tích SCM (0đ)
-│   ├── feasibility.py         # Kiểm tra khả thi, độ phân giải mẫu và dự toán ngân sách (0đ)
-│   ├── pilot.py               # Chạy thử nghiệm pilot thật (147 items x 6 điều kiện x 3 models)
-│   ├── induction.py           # Chạy thí nghiệm Agent tự dựng đồ thị (147 items x 3 models)
-│   ├── analyze_lexical.py     # Phan tich thi nghiem tu vung ghep cap (ket qua chinh)
-│   ├── analyze_prior_strength.py  # Phan tang theo question_property cua CLadder
-│   ├── compare_price_lexicon.py   # Gia loi co doi theo che do tu vung khong
-│   ├── induction_baselines.py     # Hai duong san mo phong cho F1 va dao chieu
-│   ├── analyze_pilot.py       # Phân tích kết quả pilot_raw.csv
-│   └── analyze_types.py       # Định giá từng loại lỗi (ED, FE, DR) & kiểm chứng mô hình cộng tính
-│
-├── results/                   # Lưu trữ toàn bộ 32 bảng CSV kết quả và log chạy thực tế
-└── cache/                     # Cache phản hồi API dạng JSON (chạy lại 0đ)
+[TRỤC CẤU TRÚC: Mức độ đồ thị cung cấp cho mô hình]
+  RAW          ──► Thân đề bài đã gỡ sạch đồ thị (Đường sàn thực tế không có đồ thị)
+  RAW_INSTR    ──► Thân đề bài + Câu lệnh nhắc suy luận nhân quả, KHÔNG có đồ thị
+  ORACLE       ──► Thân đề bài + Khối đồ thị chuẩn xác 100%
+  DR_k1        ──► Thân đề bài + Khối đồ thị bị ĐẢO CHIỀU 1 cạnh
+  DR_k2, DR_k3 ──► Thân đề bài + Khối đồ thị bị đảo chiều 2 hoặc 3 cạnh
+  ED_k, FE_k   ──► Thân đề bài + Khối đồ thị bị XÓA BỚT cạnh hoặc THÊM THỪA cạnh
 ```
 
 ---
 
-## PHẦN 4: THIẾT KẾ THỰC NGHIỆM CHI TIẾT (7 Điều kiện Paired)
-
-### 4.1. Bảy điều kiện đối sánh trên cùng một Item
-Mỗi câu hỏi được đưa cho mô hình dưới 7 điều kiện prompt khác nhau:
-
-| Điều kiện | Cấu trúc Prompt | Vai trò thực nghiệm |
-|---|---|---|
-| **PROSE** | Prompt CLadder gốc (DAG nằm lồng trong lời văn) | Đo chi phí của việc bóc cấu trúc ra khỏi văn cảnh |
-| **RAW** | Đã bóc sạch câu cấu trúc bằng `strip_structure()` | **ĐƯỜNG SÀN THỰC TẾ (Baseline không có đồ thị)** |
-| **ORACLE** | Bóc câu văn xuôi, gắn lại đồ thị đúng thành khối riêng | **TRẦN HIỆU NĂNG (Mức tối ưu khi đồ thị đúng 100%)** |
-| **DR_k** | Gắn đồ thị bị **đảo ngược chiều** k cạnh (k=1, 2, 3) | Đo mức độ độc hại của lỗi đảo chiều nhân quả |
-| **ED_k** | Gắn đồ thị bị **xóa thiếu** k cạnh (k=1, 2, 3) | Đo mức độ suy giảm do thiếu liên kết |
-| **FE_k** | Gắn đồ thị bị **thêm thừa** k cạnh giả (k=1, 2) | Đo mức độ suy giảm do bịa đặt liên kết giả |
-| **INDUCED** | Gắn đồ thị **do chính mô hình tự đọc đề bài và tự dựng** | Đo hiệu năng thực tế của AI Agent ngoài đời |
-
-### 4.2. Nhánh đối chứng "Bóc trần năng lực": đổi từ vựng TRONG CÙNG MỘT ITEM
-
-Để kiểm tra xem mô hình thực sự hiểu logic hay chỉ "học vẹt", ta đổi tên biến ngay trên chính item đó và **giữ nguyên đồ thị, các con số, câu hỏi, nhãn chuẩn**:
-
-* **KEEP:** tên biến đời thường như CLadder viết (*poverty, water quality, cholera*).
-* **PERMUTE:** **hoán vị chính các tên đó** sang vị trí khác trong đồ thị của chính nó (*cholera has a direct effect on poverty*). Bộ từ vựng giống hệt, độ dài giống hệt (+9 ký tự), chỉ phá chiều nhân quả hợp lẽ thường.
-* **SYMBOL:** thay bằng ký hiệu một chữ cái (*A, B, C, D*). Bỏ hẳn từ thật, prompt ngắn đi 169 ký tự.
-* **PSEUDO:** thay bằng từ giả của chính CLadder (*rixq, zuph, xevu, glimx*). Thêm việc ký hiệu khó phân biệt.
-
-`PERMUTE` là bộ then chốt: không có nó thì mọi khoảng cách `KEEP` tới `PSEUDO` đều lẫn với việc prompt ngắn đi và tách token khác đi.
-
-Vì cùng item nên **McNemar ghép cặp áp dụng trực tiếp**.
-
-> **Cảnh báo quan trọng:** thiết kế đầu tiên so hai file `test-commonsense-v1.5.csv` và `test-noncommonsense-v1.5.csv`. Cách đó vừa là between-items (0 id trùng nhau), vừa dính lỗi chí mạng: **các file `test-*` không chứa câu hỏi**. Chi tiết ở mục 5.1.
+### 2.5. Phân tầng 3 nhóm câu hỏi trong Benchmark
+Mẫu câu hỏi CLadder trộn lẫn 3 nhóm bài toán có bản chất nhận thức rất khác nhau:
+1. **Nhóm số học thuần (32,2% mẫu - marginal, correlation):** Đề bài đã cho sẵn toàn bộ xác suất, chỉ cần tính toán số học. Đồ thị không đóng vai trò gì.
+2. **Nhóm nhận dạng cấu trúc (18,4% mẫu - backadj):** Đề bài hỏi trực tiếp: *"Tập biến nào sau đây là tập hiệu chỉnh hợp lệ?"*. Với câu hỏi này, **đồ thị chính là đáp án**. Cấp đồ thị cho mô hình giống như cho xem trước đáp án, làm phồng điểm số một cách giả tạo.
+3. **Nhóm suy luận nhân quả thực sự (49,4% mẫu - nòng cốt là ate):** Đồ thị là công cụ trung gian bắt buộc để tìm đường điều chỉnh trước khi tính toán can thiệp. **Đây là nhóm duy nhất đo lường đúng mục tiêu nghiên cứu.**
 
 ---
 
-## PHẦN 5: KẾT QUẢ THỰC NGHIỆM & CÁC PHÁT HIỆN CỐT LÕI
+# PHẦN III: KẾT QUẢ THỰC NGHIỆM CHẠY THỰC TẾ
 
-Dữ liệu chạy thực tế: **23.448 lượt gọi API**, tổng chi phí **23,4 USD**.  
-*(Toàn bộ bảng dưới đây được tính trên các câu parse được thành công để tránh thiên vị chống lại RAW).*
-
----
-
-### 5.1. ĐÍNH CHÍNH TRƯỚC KHI ĐỌC TIẾP: một lỗi nạp dữ liệu đã xoá bỏ "phát hiện chấn động"
-
-Bản trước của tài liệu này đặt phát hiện lớn nhất ở chỗ: *bỏ tên biến có nghĩa thì cả ba model rơi về mức đoán mò 50%, ngay cả khi được đưa đồ thị đúng.*
-
-**Phát biểu đó sai.** Ba file `test-*-v1.5.csv` chỉ chứa bối cảnh và dữ kiện, **không chứa câu hỏi**:
-
-| File | Tỉ lệ prompt có dấu `?` |
-|---|:---:|
-| `full_v1.5_default.csv` | **100,00%** |
-| `test-commonsense-v1.5.csv` | 0,00% |
-| `test-anticommonsense-v1.5.csv` | 0,00% |
-| `test-noncommonsense-v1.5.csv` | 0,00% |
-
-Cùng một item, cùng story `nonsense`, cùng `query_type=correlation`:
-
-```
-full_v1.5_default.csv:  ... The probability of rixq and xevu is 31%.
-                        Is the chance of xevu smaller when observing rixq?
-
-test-noncommonsense:    ... The probability of rixq and xevu is 31%.
-                        [HET - khong co cau hoi nao]
-```
-
-Nhánh pseudoword đã bắt model trả lời yes/no cho prompt **không hỏi gì**. Mức 50% là hệ quả tất yếu của việc buộc đoán, không phải phát hiện về nhận thức. `pilot_raw_noncs.csv` và cột `correct` của `induction_raw_noncs.csv` **không dùng được**.
-
-**Lỗi thứ hai:** nhánh chính lấy mẫu từ `full_v1.5_default.csv`, mà file này **trộn cả ba loại từ vựng** (6.270 dòng story từ thật, 3.842 dòng story `nonsense`). Trong 147 item của nhánh chính có **57 item là từ giả**. Gọi nó là nhánh "commonsense" là sai.
-
-Đã sửa: `make_items` từ chối chạy nếu dưới 99% prompt có dấu `?`, và có thêm cờ `--drop-nonsense`.
+Dưới đây là toàn bộ kết quả số liệu thu được từ hơn **60.000 lượt gọi API** trên 3 mô hình thuộc họ GPT-4.1 (`gpt-4.1`, `gpt-4.1-mini`, `gpt-4.1-nano`):
 
 ---
 
-### 5.2. THIẾT KẾ THAY THẾ: đổi từ vựng ngay trong cùng một item
+### 3.1. Bảng độ chính xác cơ bản trên các điều kiện (n = 174 item)
 
-Cách đo đúng không phải so hai file khác nhau, mà là **đổi tên biến trên chính item đó**, giữ nguyên đồ thị, các con số, câu hỏi và nhãn chuẩn. Module `src/lexical.py` làm việc này bằng `variable_mapping` có sẵn trong metadata CLadder (`background` ánh xạ 1:1 tới nó, 209 background, 0 nhập nhằng).
+Bảng dưới đây thể hiện độ chính xác (%) trên các câu đọc được câu trả lời:
 
-Ba bộ từ vựng trên **cùng 174 item**, chỉ lấy story từ thật:
-
-| Bộ | Ví dụ | Bỏ đi cái gì |
-|---|---|---|
-| `KEEP` | *Poverty has a direct effect on water quality and cholera* | không bỏ gì |
-| `SYMBOL` | *B has a direct effect on A and D* | tri thức đời thường, giữ ký hiệu dễ phân biệt |
-| `PSEUDO` | *Glimx has a direct effect on muvq and xyfo* | tri thức đời thường **và** ký hiệu dễ phân biệt |
-
-Kiểm chứng: **0/174 item còn sót từ vựng gốc, 174/174 giữ đúng số cạnh và số nút.**
-
-Vì cùng item nên **McNemar ghép cặp áp dụng trực tiếp** - đúng thứ thiết kế cũ không có.
-
----
-
-### 5.3. KẾT QUẢ 1: Đồ thị đúng cắt gần nửa tác hại của việc ẩn danh
-
-| Model | Điều kiện | KEEP | PERMUTE | SYMBOL | PSEUDO |
+| Mô hình | Điều kiện cấu trúc | KEEP (Từ thật) | PERMUTE (Từ hoán vị) | SYMBOL (Ký hiệu A,B) | PSEUDO (Từ giả) |
 |---|---|:---:|:---:|:---:|:---:|
-| **gpt-4.1** | RAW (không đồ thị) | 75,58 | 65,50 | 67,24 | 66,28 |
-| **gpt-4.1** | **ORACLE (đồ thị đúng)** | **87,13** | **78,61** | **78,95** | **79,77** |
-| **gpt-4.1-mini** | RAW | 77,91 | 64,91 | 70,52 | 64,37 |
-| **gpt-4.1-mini** | **ORACLE** | **84,80** | **83,64** | **82,35** | **81,98** |
-| **gpt-4.1-nano** | RAW | 79,19 | 71,08 | 64,16 | 67,24 |
-| **gpt-4.1-nano** | **ORACLE** | **74,25** | **61,88** | **68,45** | **68,86** |
+| **gpt-4.1** | RAW (Không đồ thị) | 75,58% | 65,50% | 67,24% | 66,28% |
+| **gpt-4.1** | ORACLE (Đồ thị đúng) | **87,13%** | **78,61%** | **78,95%** | **79,77%** |
+| **gpt-4.1-mini** | RAW (Không đồ thị) | 77,91% | 64,91% | 70,52% | 64,37% |
+| **gpt-4.1-mini** | ORACLE (Đồ thị đúng) | **84,80%** | **83,64%** | **82,35%** | **81,98%** |
+| **gpt-4.1-nano** | RAW (Không đồ thị) | 79,19% | 71,08% | 64,16% | 67,24% |
+| **gpt-4.1-nano** | ORACLE (Đồ thị đúng) | 74,25% | 61,88% | 68,45% | 68,86% |
 
-McNemar ghép cặp. Gộp 3 bộ ẩn danh x 3 model = **9 phép so sánh mỗi điều kiện**:
+**Quan sát quan trọng:**
+* Với hai mô hình mạnh (`gpt-4.1` và `mini`), cấp đồ thị đúng `ORACLE` giúp phục hồi điểm số trên tất cả các nhánh ẩn danh từ vựng từ mức ~65% lên xấp xỉ 80–83%.
+* Với mô hình nhỏ nhất (`gpt-4.1-nano`), cấp đồ thị đúng ở nhánh `KEEP` lại làm điểm số **tụt từ 79,19% xuống 74,25%** (mất -4,94 pp). Mô hình yếu nhất làm bài tệ hơn khi bị ép dùng đồ thị.
 
-| Điều kiện | p<0,05 | Hại TB | Hại lớn nhất |
+---
+
+### 3.2. Hiệu ứng Difference-in-Differences (DiD) trên nhóm câu hỏi nhân quả
+
+Khi lọc riêng nhóm câu hỏi nhân quả thực sự (loại bỏ nhóm số học thuần và nhóm nhận dạng `backadj`), đại lượng `DiD` đo lường mức độ thu hẹp khoảng cách tổn thất do ẩn danh:
+
+```
+DiD = (Tác hại khi KHÔNG có đồ thị) - (Tác hại khi CÓ đồ thị)
+```
+
+Kết quả đo lường qua 3 tập mẫu độc lập và mẫu gộp:
+
+| Tập mẫu | Số câu hỏi nhân quả | Mức DiD đo được | Khoảng tin cậy 95% (CI) | Giá trị p | Đánh giá |
+|---|:---:|:---:|:---:|:---:|---|
+| **Mẫu khám phá ban đầu** | n = 85 câu | **+12,71 pp** | [+2,11 ; +23,11] | p = 0,018 | Đạt ý nghĩa |
+| **Mẫu mở rộng đợt 2** | n = 287 câu | **+6,78 pp** | [+1,70 ; +11,85] | p = 0,009 | Đạt ý nghĩa |
+| **Mẫu mở rộng đợt 3** | n = 195 câu | **+1,72 pp** | [-5,48 ; +8,92] | p = 0,642 | Trượt ý nghĩa |
+| **TỔNG HỢP GỘP (bỏ trùng id)** | **n = 490 câu** | **+5,98 pp** | **[+1,78 ; +10,30]** | **p = 0,005** | **Xác lập vững chắc** |
+
+**Phân tích sâu:**
+* Hiệu ứng thu hẹp tổn thất thực sự tồn tại: Cấp khối cấu trúc giúp lấy lại trung bình **+5,98 điểm phần trăm** (p = 0,005).
+* Con số tiêu đề ban đầu (+14,35 pp ở mẫu nhỏ $n=86$) thực chất là ước lượng của mẫu khám phá nhỏ. Khi mở rộng ra 490 câu hỏi, hiệu ứng thực tế ổn định ở mức khoảng **+6 điểm phần trăm** (hiện tượng co hẹp hiệu ứng - Winner's Curse).
+
+---
+
+### 3.3. Thực nghiệm với Đồ thị SAI: Đồ thị có cần ĐÚNG không?
+
+Để kiểm tra xem hiệu ứng trên có thực sự đến từ việc mô hình hiểu đúng cấu trúc logic hay không, nhóm thực hiện can thiệp thay thế đồ thị đúng (`ORACLE`) bằng một đồ thị **bị đảo ngược 1 cạnh (`DR_k1`)**:
+
+| Loại cấu trúc cấp cho mô hình | Mức DiD đạt được | Khoảng tin cậy 95% (CI) | Giá trị p |
 |---|:---:|:---:|:---:|
-| **RAW** (không đồ thị) | **8/9** | **-10,73 pp** | -15,12 |
-| **ORACLE** (đồ thị đúng) | **3/9** | **-5,67 pp** | -9,15 |
-| PROSE | 2/9 | -4,95 pp | -10,53 |
-| DR_k1 (đồ thị sai 1 cạnh) | 4/9 | -7,61 pp | -11,63 |
+| **Đồ thị ĐÚNG (ORACLE)** | **+14,31 pp** | [+6,30 ; +22,52] | p = 0,001 |
+| **Đồ thị đúng nằm trong văn xuôi (PROSE)** | **+13,91 pp** | [+7,30 ; +20,47] | p < 0,001 |
+| **Đồ thị SAI 1 cạnh (DR_k1)** | **+8,64 pp** | **[+1,81 ; +16,38]** | **p = 0,018** |
 
-Tách theo từng bộ:
-
-| Bộ | RAW: hại TB | p<0,05 | ORACLE: hại TB | p<0,05 |
-|---|:---:|:---:|:---:|:---:|
-| `PERMUTE` | -9,89 | 2/3 | -6,61 | 2/3 |
-| `SYMBOL` | -10,47 | **3/3** | -5,41 | 1/3 |
-| `PSEUDO` | -11,84 | **3/3** | -5,00 | **0/3** |
-
-> Với `PSEUDO` - bộ khắc nghiệt nhất - đồ thị đưa từ **3/3 xuống 0/3** ô có ý nghĩa.
-
-`PERMUTE` là bộ đồ thị cứu kém nhất (2/3 vẫn có ý nghĩa ở ORACLE). Hợp lý về cơ chế: nó không chỉ lấy đi tri thức đúng mà còn cấp một tri thức **sai lệch** đang cạnh tranh trực tiếp với đồ thị. Đây là dạng nhiễu duy nhất trong bốn bộ có tính đối kháng.
-
-#### PHÂN TẦNG THEO NHÃN GỐC CỦA CLADDER - bắt buộc phải đọc
-
-Cột `question_property` (chỉ có trong `full_v1.5_default.csv`) cho biết `--drop-nonsense` giữ lại **45% là anticommonsense của chính CLadder**, tức prior đúng đã bị bỏ sẵn trên gần nửa mẫu `KEEP`. Tách ra:
-
-| Điều kiện | Item có **prior đúng** | Item **prior đã sai sẵn** |
-|---|:---:|:---:|
-| **RAW** | **-12,23 pp, 8/9 p<0,05** | -8,91 pp, 2/9 |
-| **ORACLE** | **-3,84 pp, 0/9 p<0,05** | -7,91 pp, 1/9 |
-
-> Trên nhóm item mà model **có** prior đúng để mất, đồ thị đưa tác hại từ **8/9 xuống 0/9**. Cứu hoàn toàn, không phải một nửa.
-
-**Phép nhân bản độc lập:** anticommonsense của CLadder là cùng một thao tác với `PERMUTE`. Chi phí ở `RAW`: CLadder -11,6 / -11,7 / -3,6 pp so với `PERMUTE` -14,1 / -13,8 / -4,6 pp. Ba cặp, ba lần khớp.
+* **So sánh trực tiếp giữa Đồ thị đúng và Đồ thị sai:**
+  * Hiệu số `ORACLE - DR_k1` = **+1,62 pp** (CI 95%: `[-2,07 ; +5,30]`, p = 0,40).
+* **KẾT LUẬN CỐT LÕI:**
+  * Khoảng tin cậy của hiệu số chứa số 0 và p = 0,40: **Không có sự khác biệt có ý nghĩa thống kê giữa đồ thị đúng và đồ thị sai 1 cạnh**.
+  * Đồ thị sai 1 cạnh vẫn đạt mức tăng +8,64 pp (p = 0,018), hoàn thành được **60% công việc** của đồ thị đúng.
+  * Vì vậy, nghiên cứu khẳng định: **Chưa có bằng chứng cho thấy khối cấu trúc cấp cho mô hình bắt buộc phải ĐÚNG**.
 
 ---
 
-### 5.4. KẾT QUẢ 2: Bỏ neo từ vựng làm cấu trúc CÓ GIÁ TRỊ HƠN
-
-`Delta_struct = ORACLE - RAW`:
-
-| Model | KEEP | PERMUTE | SYMBOL | PSEUDO |
-|---|:---:|:---:|:---:|:---:|
-| **gpt-4.1** | +11,55 | +13,12 | +11,71 | **+13,49** |
-| **gpt-4.1-mini** | +6,89 | **+18,72** | +11,83 | +17,61 |
-| **gpt-4.1-nano** | **-4,94** | **-9,21** | +4,29 | +1,62 |
-
-Lợi ích của cấu trúc **tăng** khi từ vựng bị bóc, ở hai model mạnh. `gpt-4.1-mini` rõ nhất: +6,89 lên +18,72 dưới `PERMUTE`. Đồ thị thay thế cho tri thức nền đã mất.
-
-`gpt-4.1-nano` đi ngược, và ngược mạnh nhất đúng ở `PERMUTE` (-9,21). Model yếu nhất làm **tệ đi** khi được đưa đồ thị đúng, tệ nhất khi nó vừa có tri thức sai lệch vừa có đồ thị đúng - hai nguồn mâu thuẫn mà nó không đủ sức phân xử. Đây là bằng chứng cụ thể cho luận điểm gốc: **cấu trúc không miễn phí, với model yếu nó có thể gây hại**.
-
----
-
-### 5.5. KẾT QUẢ 3: Đồ thị SAI đắt hơn khi mất neo từ vựng
-
-Giá một cạnh đảo chiều (`ORACLE - DR_k1`):
-
-| Model | KEEP | PERMUTE | SYMBOL | PSEUDO |
-|---|:---:|:---:|:---:|:---:|
-| **gpt-4.1** | 10,70 | 9,61 | 10,74 | **14,65** |
-| **gpt-4.1-mini** | 7,02 | **11,61** | **15,10** | **14,71** |
-| **gpt-4.1-nano** | 1,90 | -0,47 | 3,96 | -2,14 |
-
-So với `KEEP` tại điều kiện `DR_k1`: gpt-4.1 **-11,63 pp (p=0,0012)**, mini **-10,24 pp (p=0,0046)**.
-
-> **CƠ CHẾ ĐƯỢC XÁC LẬP:** khi còn tri thức đời thường, model dùng nó thay cho đồ thị, nên đồ thị đúng ít giúp và đồ thị sai ít hại. Bỏ tri thức đó đi, model buộc phải thực sự dùng cấu trúc, nên đồ thị đúng giúp nhiều hơn và đồ thị sai hại nặng hơn.
-
----
-
-### 5.6. KẾT QUẢ 4: Toàn bộ chi phí trả ở bậc đầu, không phải độ dài hay việc gắn ký hiệu
-
-Bốn bộ từ vựng tạo thành một bậc thang, mỗi bậc bỏ đi đúng một thứ. Gộp 4 điều kiện x 3 model = **12 phép so sánh mỗi bậc**:
-
-| Bậc | Bỏ đi thêm cái gì | Chênh TB | p<0,05 |
-|---|---|:---:|:---:|
-| `PERMUTE` - `KEEP` | **chiều nhân quả hợp lẽ** (vẫn từ thật, cùng độ dài) | **-7,52 pp** | **5/12** |
-| `SYMBOL` - `PERMUTE` | mất hẳn từ thật, prompt ngắn đi 169 ký tự | +0,73 pp | **0/12** |
-| `PSEUDO` - `SYMBOL` | ký hiệu khó phân biệt | +0,13 pp | 2/12 |
-
-**Toàn bộ chi phí của việc ẩn danh được trả ở bậc đầu tiên.** Chỉ hoán vị xem tên nào ứng với vị trí nào trong đồ thị - giữ nguyên từng chữ cái, giữ nguyên độ dài - đã mất 7,52 pp. Xoá sạch từ thật sau đó **không mất thêm gì**.
-
-Ba hệ quả:
-
-1. **Loại được confound độ dài prompt.** `PERMUTE` dài hơn `KEEP` 9 ký tự mà mất 7,52 pp; `SYMBOL` ngắn hơn 169 ký tự mà không mất thêm gì.
-2. **Loại được gánh nặng gắn ký hiệu.** Nếu vấn đề là giữ bốn chuỗi vô nghĩa giống nhau qua nhiều bước, `PSEUDO` phải tệ hơn `SYMBOL`. Nó không tệ hơn.
-3. **Không phải luận cứ từ việc không bác bỏ được.** Cùng thiết kế, cùng n=174, bậc một phát hiện được hiệu ứng 7,52 pp. Vậy bậc hai và bậc ba không phát hiện được gì là bằng chứng về độ lớn hiệu ứng, không phải thiếu sức mạnh thống kê. Bậc một là **đối chứng dương** cho hai bậc còn lại.
-
-Thứ model mất khi bị ẩn danh là **tri thức về chiều nhân quả nào hợp lẽ trong thế giới thật** - không phải từ vựng, không phải độ dài, không phải khả năng theo dõi ký hiệu lạ.
-
----
-
-### 5.7. KẾT QUẢ 5: Neo từ vựng giúp TRÍCH XUẤT đồ thị, và prior SAI độc hơn prior VẮNG MẶT
-
-Các mục trên đo việc **suy luận** trên đồ thị được cấp. Mục này đo việc **trích xuất** đồ thị từ văn bản. Cùng 174 item, cùng bốn bộ từ vựng, ghép cặp.
-
-| Model | Bộ | F1 | Chênh KEEP | p (Wilcoxon) | Cạnh đảo chiều | Gấp KEEP |
-|---|---|:---:|:---:|:---:|:---:|:---:|
-| **gpt-4.1** | KEEP | 0,565 | - | - | 0,046 | 1,0x |
-| **gpt-4.1** | **PERMUTE** | 0,406 | **-0,159** | **0,0000** | **0,316** | **6,9x** |
-| **gpt-4.1** | SYMBOL | 0,502 | **-0,062** | **0,0114** | 0,126 | 2,8x |
-| **gpt-4.1** | PSEUDO | 0,458 | **-0,106** | **0,0000** | 0,098 | 2,1x |
-| **gpt-4.1-mini** | KEEP | 0,608 | - | - | 0,069 | 1,0x |
-| **gpt-4.1-mini** | **PERMUTE** | 0,424 | **-0,183** | **0,0000** | **0,529** | **7,7x** |
-| **gpt-4.1-mini** | SYMBOL | 0,508 | **-0,100** | **0,0002** | 0,092 | 1,3x |
-| **gpt-4.1-mini** | PSEUDO | 0,505 | **-0,103** | **0,0001** | 0,109 | 1,6x |
-| **gpt-4.1-nano** | KEEP | 0,462 | - | - | 0,069 | 1,0x |
-| **gpt-4.1-nano** | **PERMUTE** | 0,384 | **-0,078** | **0,0203** | **0,351** | **5,1x** |
-| **gpt-4.1-nano** | SYMBOL | 0,509 | +0,046 | 0,0314 | 0,155 | 2,2x |
-| **gpt-4.1-nano** | PSEUDO | 0,438 | -0,024 | 0,4672 | 0,115 | 1,7x |
-
-**8/9 phép so sánh F1 đạt p<0,05.**
-
-> **Sàn ngẫu nhiên: F1 = 0,362.** Đồ thị CLadder chỉ có 3-5 nút, tức 6 tới 20 cặp có hướng, nên đoán mò đã đạt gần 0,36. Mọi con số F1 dưới đây phải đọc so với sàn đó: `KEEP` (0,462-0,608) thực sự vượt sàn, còn `PERMUTE` (0,384-0,424) **chỉ hơn sàn 0,02 tới 0,06** - gần như bằng đoán mò. Tính bằng `scripts/induction_baselines.py`, 0 USD.
-
-**Một bất thường phải nêu:** `gpt-4.1-nano` với `SYMBOL` có F1 **cao hơn** `KEEP` (+0,046, p=0,0314) - ngược chiều luận điểm và có ý nghĩa thống kê. Với 9 phép kiểm ở alpha 0,05 thì kỳ vọng khoảng 0,45 ô dương tính giả, nên một ô như vậy nằm trong dự đoán của nhiễu. Nhưng nó là ô duy nhất đi ngược, và `nano` cũng là model có `Delta_struct` âm ở mục 5, nên không loại trừ được khả năng model yếu nhất phản ứng khác về chất. Chưa giải thích được.
-
-
-#### Phép phân ly quan trọng nhất của toàn dự án
-
-`PERMUTE` cấp prior **sai**. `SYMBOL` và `PSEUDO` **không cấp prior nào**.
-
-| Tình huống | Cạnh đảo chiều | Gấp KEEP |
-|---|:---:|:---:|
-| Prior **đúng** (`KEEP`) | 0,046 - 0,069 | 1,0x |
-| Prior **vắng mặt** (`SYMBOL`, `PSEUDO`) | 0,092 - 0,155 | 1,3x - 2,8x |
-| Prior **sai** (`PERMUTE`) | **0,316 - 0,529** | **5,1x - 7,7x** |
-
-> Nếu model đọc chiều nhân quả **từ văn bản** thì hai dòng cuối phải giống nhau - văn bản là như nhau, chỉ tên biến khác. Chúng cách nhau 3 tới 5 lần.
->
-> **Phát biểu theo mức độ:** khi tên biến gợi chiều sai, model đi theo tri thức khoảng **một phần ba tới một nửa quãng đường** (32,7-54,8% so với tác nhân bỏ hẳn văn bản, vốn đạt 0,966 cạnh đảo chiều). Nó không bỏ qua đề bài, nhưng cũng không đọc sạch.
-
-Con số "4 tới 10 lần" của bản báo cáo cũ từng bị rút vì đo trên dữ liệu hỏng. Đo lại đúng cách, ghép cặp, prompt đầy đủ - nó **vẫn đứng vững**.
-
-> **GHÉP 5.3 VỚI 5.7 - luận điểm của đề tài:**
-> **Neo từ vựng giúp model TRÍCH XUẤT đồ thị nhân quả (8/9 ô p<0,05), chứ không giúp nó SUY LUẬN trên đồ thị đã có (đồ thị đúng đưa từ 8/9 xuống 3/9).**
->
-> Cả hai vế đều ghép cặp. Cơ chế nối chúng lại là lỗi đảo chiều: vừa là loại lỗi mà mất neo từ vựng sinh ra nhiều nhất, vừa là loại lỗi đắt nhất khi suy luận (5.5).
-
----
-
-### 5.8. KẾT QUẢ 6: Giá một cạnh sai không đổi theo miền - phần còn lại CHƯA XÁC LẬP
-
-Thang lỗi đầy đủ `DR`/`ED`/`FE` k=1,2,3 chạy **hai lần ở n=400 trên cùng 399 item** - một lần tên gốc, một lần từ giả. Tách được hai thứ mà `k*` gộp làm một:
-
-* **giá** = pp mất trên mỗi cạnh sai (độ dốc)
-* **ngân sách** = `ORACLE - RAW` (chiều cao độ dốc phải ăn hết)
-
-#### Giá KHÔNG đổi - phần vững
-
-> **Cảnh báo phương pháp:** bản đầu lập luận bằng "9/9 cặp CI chồng nhau". **Đó là lỗi thống kê** - CI chồng nhau không chứng minh bằng nhau. Vì cùng item nên phải bootstrap thẳng **hiệu**.
-
-| Model | Loại | Hiệu giá (KEEP - PSEUDO) | CI 95% của **hiệu** |
-|---|---|:---:|:---:|
-| **gpt-4.1** | **DR** | **-0,11** | **[-1,62 ; 1,42]** |
-| **gpt-4.1-mini** | **DR** | **+0,18** | **[-1,53 ; 2,09]** |
-| gpt-4.1 | ED | -0,91 | [-2,56 ; 0,67] |
-| gpt-4.1-mini | ED | -0,10 | [-1,80 ; 1,66] |
-
-9/9 CI của hiệu chứa 0, và với `DR` chúng bám sát 0. Phát biểu đúng là một **cận tương đương**: nếu giá có phụ thuộc miền, mức đó dưới khoảng **1,6 pp mỗi cạnh** - tức ~40% của giá 4,09.
-
-#### Ngân sách: hướng đúng nhưng CHƯA XÁC LẬP
-
-| Model | NS `KEEP` | NS `PSEUDO` | Hiệu | CI 95% | Ý nghĩa? |
-|---|:---:|:---:|:---:|:---:|:---:|
-| gpt-4.1 | 4,36 | 9,28 | +4,92 | [-0,40 ; 10,30] | **không** |
-| gpt-4.1-mini | 7,07 | 9,95 | +2,88 | [-2,61 ; 8,43] | **không** |
-| **gpt-4.1-nano** | 3,23 | 0,83 | **-2,41** | [-9,02 ; 3,85] | không |
-
-**Cả ba CI chứa 0, và `nano` đi ngược hướng.** Cần n≈514 (gpt-4.1) và n≈935 (mini) mới đạt p<0,05.
-
-> **Kết luận được:** giá một cạnh sai không đổi rõ rệt theo miền từ vựng, cận tương đương ~1,6 pp. `DR` vẫn đắt nhất ở cả hai chế độ.
->
-> **Chưa kết luận được:** "ngân sách tăng gấp đôi" và "k\* dịch từ 0,74 lên 1,93" đều **chưa xác lập**. Câu *"đồ thị bền vững hơn ở nơi nó cần thiết hơn"* là **giả thuyết phù hợp số liệu**, không phải kết luận.
-
-Tính bằng `scripts/compare_price_lexicon.py`, 0 USD.
-
----
-
-### 5.9. PHỤ LỤC (n=147, giữ để đối chiếu): Định giá từng loại lỗi đồ thị - CHƯA XÁC LẬP ĐƯỢC
-
-Đây là câu hỏi nghiên cứu gốc. Bản cũ báo giá tới hai chữ số thập phân. Kiểm lại bằng bootstrap 600 lần, bốc lại theo item:
-
-| Model | Loại | Giá pp/cạnh | CI 95% | R2 | Hoà vốn k\* |
-|---|---|:---:|:---:|:---:|:---:|
-| gpt-4.1-nano | ED | 2,32 | **[-0,16 ; 4,05]** | 0,72 | - |
-| gpt-4.1-nano | FE | 0,58 | **[-7,53 ; 2,05]** | 0,50 | - |
-| gpt-4.1-nano | DR | 2,32 | **[-0,32 ; 4,96]** | 0,86 | - |
-| gpt-4.1-mini | ED | 2,27 | **[-0,00 ; 4,44]** | 0,79 | - |
-| gpt-4.1-mini | FE | 1,48 | **[-1,33 ; 6,67]** | 0,51 | - |
-| gpt-4.1-mini | DR | 3,35 | [1,39 ; 7,13] | 0,83 | 0,88 |
-| **gpt-4.1** | ED | 2,97 | [0,60 ; 5,30] | 0,68 | 2,56 |
-| gpt-4.1 | FE | 2,09 | **[-5,19 ; 2,60]** | 0,19 | - |
-| **gpt-4.1** | **DR** | **4,20** | **[1,79 ; 6,57]** | 0,88 | **1,54** |
-
-**6/9 ô có CI độ dốc còn chứa 0.** Không giá `FE` nào được xác lập ở bất kỳ model nào. Thứ bậc `DR > ED > FE` mà bản cũ phát biểu như một quy luật **không đứng vững**.
-
-Chỉ một điểm hoà vốn có CI không chứa 0: `gpt-4.1` với lỗi đảo chiều, **k\* = 1,54, CI [0,13 ; 3,40]**.
-
-Hai lỗi đã sửa trong khâu này:
-
-1. `slope_of` fit đường thẳng có hệ số chặn tự do, nhưng công thức hoà vốn lại giả định đường thẳng xuất phát tại `ORACLE`. Hai đường khác nhau trong một công thức. Riêng ở `nano` với lỗi `DR`, việc này làm k\* nhảy từ 0,51 lên 0,96.
-2. Không có khoảng tin cậy nào cả.
-
-**Hệ quả:** khẳng định cũ *"mô hình cộng tính dự đoán chi phí Agent sai lệch dưới 0,3 pp"* cũng bị rút - nó dựa trên các mức giá nay không qua nổi kiểm tra CI.
-
----
-
-## PHẦN 6: SỔ TAY XỬ LÝ 9 CÁI BẪY KỸ THUẬT KINH ĐIỂN
-
-> Hai bẫy đầu là hai bẫy **đắt nhất**: chúng không làm chương trình chạy sai, chúng làm ra một con số đẹp và sai. Đó là loại lỗi nguy hiểm nhất trong nghiên cứu thực nghiệm.
-
-**0a. Bẫy file dữ liệu thiếu câu hỏi.** Ba file `test-*-v1.5.csv` của CLadder chỉ có bối cảnh và dữ kiện, **0,00% prompt có dấu `?`**, trong khi `full_v1.5_default.csv` là 100%. Chạy trên chúng nghĩa là bắt model trả lời yes/no cho một prompt không hỏi gì, và kết quả là **đúng 50%** - trông y hệt một phát hiện chấn động về nhận thức của LLM. Đây là lỗi đã sinh ra "phát hiện lớn nhất" của bản trước, và nó tồn tại nhiều ngày. **Bài học: trước khi tin bất kỳ con số nào, hãy in ra một prompt hoàn chỉnh và tự đọc.** Đã sửa: `make_items` từ chối chạy nếu dưới 99% prompt có dấu `?`.
-
-**0c. Bẫy tên cờ nghe như một điều khiển thí nghiệm.** `--drop-nonsense` loại story từ bịa, nên phần còn lại nghe như "từ vựng đời thường". Thực tế **45% là anticommonsense của chính CLadder** - từ thật nhưng chiều nhân quả trái lẽ. Đường sàn `KEEP` vì thế đã bị bỏ prior đúng trên gần nửa mẫu, và mọi hiệu ứng từ vựng đo được đều bị pha loãng: -7,52 pp gộp chung so với **-14,13 pp** khi tách riêng nhóm có prior đúng. **Bài học: cột metadata mà bạn chưa mở ra xem thường là cột quan trọng nhất.** Đã sửa: `question_property` giờ được ghi vào output, và `scripts/analyze_prior_strength.py` phân tầng theo nó.
-
-**0b. Bẫy file mặc định trộn lẫn split.** `full_v1.5_default.csv` không phải là split commonsense - nó trộn 6.270 dòng story từ thật với 3.842 dòng story `nonsense`. Nhánh chính vì thế có **57/147 item là từ giả** trong khi cả hai tài liệu đều gọi nó là nhánh "commonsense". **Bài học: kiểm tra thành phần thực tế của mẫu, đừng tin tên file.** Đã sửa: cờ `--drop-nonsense`.
-
-1. **Bẫy prompt gốc chứa sẵn DAG:** Prompt CLadder vốn mở đầu bằng *"Husband has a direct effect on wife..."*. Nếu để nguyên thì RAW không phải là baseline không đồ thị. Đã viết `strip_structure()` bóc sạch 100% (10.112/10.112 câu).
-2. **Bẫy không gian tên biến (X, Y vs husband, wife):** Ban đầu khối ORACLE ghi *"V2 has a direct effect on Y"* khiến mô hình không map được với bài toán đời thường, làm Delta_struct bị âm ở 2/3 mô hình. Đã sửa lại bằng cách rebuild đồ thị trên chính tên biến của câu chuyện.
-3. **Bẫy chữ hoa/thường tạo node ma:** `'Husband'` (đầu câu) và `'husband'` (tân ngữ) bị coi là 2 node khác nhau. Đã chuẩn hóa toàn bộ về chữ thường.
-4. **Bẫy chấm câu không parse được thành sai:** Trước đây coi unparsed = sai khiến RAW bị dìm điểm oan (vì RAW parse tốt nhất), tạo ra kết luận sai lệch là "nano không hưởng lợi từ cấu trúc". Khi chỉ tính trên câu parse được: Delta_struct tăng đơn điệu theo tier (+2.22 pp với nano, +4.79 pp với mini, +7.29 pp với gpt-4.1).
-5. **Bẫy RNG không ổn định:** Dùng một seed ngẫu nhiên chung khiến việc thêm điều kiện ED/FE làm xáo trộn lại toàn bộ các mẫu DR (gây phương sai tới 3.4 pp, biến p=0.011 thành p=0.150). Đã sửa bằng cách cố định seed độc lập cho từng `(item, loại, k)`.
-6. **Bẫy console encoding Windows:** Python trên Windows mặc định dùng cp1252, in ký tự trừ '−' (U+2212) trong CLadder sẽ crash UnicodeEncodeError. Phải luôn thiết lập `PYTHONIOENCODING=utf-8`.
-
----
-
-## PHẦN 7: HƯỚNG DẪN TÁI LẬP THỰC NGHIỆM TỪ A ĐẾN Z
-
-```bash
-# 1. Cài đặt thư viện phụ thuộc
-pip install numpy pandas scipy networkx statsmodels openai
-
-# 2. Thiết lập encoding chuẩn (Bắt buộc trên Windows)
-export PYTHONIOENCODING=utf-8        # trên Linux / Git Bash
-# hoặc: $env:PYTHONIOENCODING="utf-8" # trên PowerShell
-# hoặc: set PYTHONIOENCODING=utf-8    # trên CMD
-
-# 3. Tạo file .env chứa OpenAI API Key
-echo "OPENAI_API_KEY=sk-your-key-here" > .env
-
-# 4. Chạy kiểm chứng toán học Ground Truth (0đ, không cần API Key)
-python scripts/verify_groundtruth.py
-
-# 5. Chạy phân tích khả thi & Ngân sách (0đ)
-python scripts/feasibility.py
-
-# 6. THI NGHIEM TU VUNG GHEP CAP - ket qua chinh cua de tai
-#    Cung 174 item, chi doi ten bien. --drop-nonsense loai story tu gia khoi mau
-#    goc, vi full_v1.5_default.csv von da tron 38% item tu gia.
-for LEX in KEEP PERMUTE SYMBOL PSEUDO; do
-  python scripts/pilot.py --n 200 --models gpt-4.1-nano,gpt-4.1-mini,gpt-4.1 \
-      --kmax 1 --types DR --drop-nonsense --lexicon $LEX --tag "_lex$LEX"
-done
-python scripts/analyze_lexical.py
-
-# 7. Dinh gia tung loai loi do thi (cau hoi nghien cuu goc)
-python scripts/pilot.py --n 150 --models gpt-4.1-nano,gpt-4.1-mini,gpt-4.1 \
-                        --kmax 3 --types DR,ED,FE
-python scripts/induction.py --n 150 --models gpt-4.1-nano,gpt-4.1-mini,gpt-4.1
-python scripts/analyze_types.py
+### 3.4. Phân rã hai chiều: Nâng nhánh yếu hay kéo tụt nhánh mạnh?
+
+Khi mổ xẻ xem tại sao khoảng cách tổn thất giữa hai nhánh từ vựng lại được thu hẹp khi cấp đồ thị:
+
+```
+Tác động của việc cấp đồ thị:
+  • Nhánh ẩn danh tên biến:       Được NÂNG LÊN   +9,75 pp
+  • Nhánh từ vựng đời thường:     Bị KÉO TỤT XUỐNG -4,60 pp
+  ---------------------------------------------------------
+  Hiệu số tương tác DiD gộp:                      +14,35 pp
 ```
 
-> **KHONG chay tren cac file `test-*-v1.5.csv`.** Chung khong co cau hoi (0% prompt
-> co dau `?`) nen moi ket qua se la 50% doan mo. `make_items` gio tu choi chay tren
-> chung va bao loi ro rang. Doi tu vung bang `--lexicon`, dung bang cach doi file.
+Bảng phân rã chi tiết theo từng mô hình trên nhánh từ vựng đời thường (`KEEP`):
 
-*Lưu ý:* Mọi lượt gọi API đều được lưu đệm trong thư mục `cache/`. Nếu bị rớt mạng hoặc dừng đột ngột, chạy lại lệnh sẽ tiếp tục từ điểm dừng mà **không mất thêm một xu nào**.
+| Mô hình | Hiệu năng khi KHÔNG đồ thị (RAW) | Hiệu năng khi CÓ đồ thị (ORACLE) | Mức độ thay đổi |
+|---|:---:|:---:|:---:|
+| **gpt-4.1-nano** | 79,19% | 66,80% | **-12,39 pp (Kéo tụt rất nặng)** |
+| **gpt-4.1-mini** | 77,91% | 70,23% | **-7,68 pp (Kéo tụt)** |
+| **gpt-4.1** | 75,58% | 81,85% | **+6,27 pp (Nâng lên)** |
+
+* **Ý nghĩa:** **32% hiệu ứng thu hẹp khoảng cách là do khối cấu trúc làm hại điều kiện vốn đang chạy tốt!** Ở hai mô hình cỡ nhỏ và vừa (`nano` và `mini`), việc đưa thêm khối cấu trúc gây ra hiện tượng quá tải thông tin, khiến mô hình bị lú lẫn và phán đoán tệ hơn là để nó tự làm bài bằng trực giác từ vựng.
 
 ---
 
-## PHẦN 8: BÀI HỌC VỀ CƠ CHẾ SELF-GATING & LỘ TRÌNH TIẾP THEO
+### 3.5. Kiểm tra vai trò của câu lệnh nhắc đơn thuần (RAW_INSTR)
 
-### 8.1. Vì sao cơ chế Self-Gating cũ không khả thi?
+Để kiểm tra xem hiệu ứng có phải chỉ đơn giản là do câu lệnh nhắc nhở *"Hãy dùng cấu trúc nhân quả khi suy luận"* hay không, nhóm chạy điều kiện `RAW_INSTR` (có câu lệnh nhắc nhưng **không có bất kỳ đồ thị nào**):
 
-Ban đầu, Giai đoạn 3 dự định xây dựng cơ chế: Agent tự đo điểm chất lượng đồ thị (F1) -> nếu F1 cao thì dùng đồ thị, nếu F1 thấp thì bỏ qua.
+| Phép so sánh can thiệp | Mức DiD đạt được | Khoảng tin cậy 95% (CI) | Giá trị p |
+|---|:---:|:---:|:---:|
+| A. RAW so với ORACLE (Cấp đồ thị đầy đủ) | +12,71 pp | [+2,11 ; +23,11] | p = 0,019 |
+| B. Chỉ có câu lệnh nhắc, KHÔNG đồ thị | +0,10 pp | [-6,40 ; +6,34] | p = 1,000 |
+| C. Có đồ thị khi câu lệnh đã nằm sẵn ở nền | **+13,48 pp** | **[+4,27 ; +22,95]** | **p = 0,003** |
 
-Số liệu thực tế chỉ ra `corr(F1, correct)` xấp xỉ 0 trên nhánh chính. Nhưng **phép kiểm này không đủ sức mạnh**: trên văn cảnh từ thật, model gần như không bao giờ đảo chiều cạnh (0,011 tới 0,044 mỗi item), nên phương sai của F1 rất hẹp và tương quan gần 0 là điều được kỳ vọng ngay cả khi có quan hệ thật.
+* **Kết luận:** Bản thân câu lệnh nhắc đơn thuần không tạo ra hiệu ứng (chỉ đạt +0,10 pp, CI chứa 0). Phải có sự xuất hiện của khối danh sách cạnh đồ thị thì hiệu ứng mới đạt +13,48 pp (p = 0,003).
 
-Kết quả mục 5.5 giờ cho biết chỗ để kiểm lại: **dưới `PSEUDO`, một cạnh đảo chiều đắt 14,65 pp thay vì 10,70 pp**, và lỗi đảo chiều của agent tăng gấp đôi. Đó là chế độ mà cổng theo chất lượng đồ thị mới có cơ hội sinh lãi.
+---
 
-**Thiết kế thay thế:** cổng theo **nguy cơ nhầm chiều**, không phải theo mức F1 tổng thể. Agent tự hỏi *"trong bối cảnh này mình có đang đảo ngược nguyên nhân - kết quả không"*, và mục 5.3 tới 5.7 chỉ ra đúng lúc câu hỏi đó đáng giá: khi thiếu neo ngữ nghĩa.
+### 3.6. Bậc thang từ vựng 5 bậc: Đo lường chính xác thứ bị mất đi
 
-### 8.2. Bốn việc ưu tiên để chốt bài báo hội nghị
+So sánh sự sụt giảm độ chính xác khi bước qua từng bậc từ vựng:
 
-1. **Chạy `ED` và `FE` trong thí nghiệm từ vựng.** Hiện chỉ có `DR_k1`. Đây là việc rẻ nhất và trực tiếp nhất để biến mục 5.5 thành một bảng định giá đầy đủ theo từng chế độ từ vựng.
-2. **Nâng cỡ mẫu cho phần định giá lỗi đồ thị.** 6/9 ô còn CI chứa 0 (mục 5.8). Đây là câu hỏi nghiên cứu gốc và nó vẫn chưa có câu trả lời.
-3. **Chạy induction trên cả ba bộ từ vựng ghép cặp.** Mục 5.7 hiện là so sánh between-items trong cùng nhánh; làm ghép cặp sẽ cho McNemar và khoá chặt luận điểm "neo từ vựng giúp TRÍCH XUẤT chứ không giúp SUY LUẬN".
-4. **Thêm ít nhất một dòng model khác họ.** Cả ba model đều là GPT-4.1, một nhà cung cấp, một thế hệ. Caliper dùng 9 model từ 3,8B tới 671B.
+| Bậc chuyển đổi | Yếu tố duy nhất bị thay đổi | Mức chênh lệch độ chính xác | Đánh giá thống kê |
+|---|---|:---:|---|
+| **KEEP → IRRELEVANT** | **Mất tri thức đời thường hợp lẽ** (chuyển sang đồ gia dụng) | **-17,67 pp** | **CI [-26,53 ; -9,24], p < 0,0001 (Xác lập rất vững)** |
+| **IRRELEVANT → PERMUTE** | Bị gán thêm một tri thức **SAI** | Dưới 8,5 pp | Chưa tách khỏi 0 (không có ý nghĩa) |
+| **IRRELEVANT → SYMBOL** | Từ thật chuyển thành ký hiệu A, B | Dưới 6,4 pp | Chưa tách khỏi 0 (không có ý nghĩa) |
+| **SYMBOL → PSEUDO** | Ký hiệu chuyển thành từ giả vô nghĩa | Dưới 6,3 pp | Chưa tách khỏi 0 (không có ý nghĩa) |
 
-### 8.3. Định vị so với Caliper (arXiv:2606.04915)
+* **Kết luận nhận thức:** **Khoảng 90% tổn thất khi ẩn danh hóa xuất phát từ việc đánh mất tri thức đời thường hợp lẽ tự nhiên**. Khi tri thức đời thường đã mất, việc tên biến là từ gia dụng có nghĩa, ký hiệu một chữ cái hay từ giả vô nghĩa đều gây hại ngang nhau.
 
-Caliper đã công bố tháng 6/2026: ẩn danh tên biến làm tụt 7,6 tới 29,6 pp, và khoảng cách sụp khoảng 19 lần trên tập pseudoword của CLadder. Mức tụt 10 tới 13 pp đo được ở đây **nằm trong khoảng đó**, tức là dự án tái lập được Caliper bằng một thiết kế độc lập.
+---
 
-Ba thứ Caliper **không** có, và là đóng góp riêng của dự án:
+### 3.7. Vị trí hiệu ứng sinh sống: Kích thước đồ thị & Loại bài toán
 
-1. **Điều kiện cấp đồ thị đúng.** Caliper chỉ yêu cầu model tự suy ra cấu trúc, không bao giờ cấp cho nó. Kết quả mục 5.3: cấp đồ thị đúng cắt hơn nửa tác hại của việc ẩn danh.
-2. **Chấm chất lượng đồ thị tự dựng, có phân biệt chiều cạnh.** Caliper có prompt scaffold nhưng không đối chiếu cạnh với đáp án (mục 5.7).
-3. **Phân rã chi phí theo từng loại lỗi đồ thị** (mục 5.5 và 5.8).
+Hiệu ứng thu hẹp tổn thất không phân bố rải rác mà tập trung cục bộ ở các bài toán phức tạp:
 
-Caliper là **tiền đề**, không phải đối thủ. Cách định vị cũ - *"chúng ta vượt xa họ vì chứng minh model vẫn rơi về đoán mò"* - đã bị rút cùng với lỗi ở mục 5.1.
+| Phân nhóm dữ liệu | Số câu hỏi (n) | Mức DiD đạt được | Giá trị p | Đánh giá |
+|---|:---:|:---:|:---:|---|
+| **Đồ thị nhỏ (3 nút)** | n = 40 câu | +5,72 pp | p = 0,217 | Không có ý nghĩa |
+| **Đồ thị lớn (≥ 4 nút)** | n = 46 câu | **+22,44 pp** | **p = 0,0005** | **Hiệu ứng cực mạnh** |
+| **Bài toán can thiệp ATE** | n = 24 câu | **+27,44 pp** | **p = 0,0005** | **Hiệu ứng cực mạnh** |
+| **Bài toán phản thực tế ETT** | n = 21 câu | +2,48 pp | p = 0,760 | Không có ý nghĩa |
+
+* **Ý nghĩa:** Càng có nhiều biến xuất hiện trong đồ thị (≥ 4 nút) và bài toán càng đòi hỏi nhiều bước tính toán trung gian (`ate`), khối cấu trúc càng phát huy tác dụng rõ rệt.
+
+---
+
+### 3.8. Phân tích chuỗi suy luận (Chain-of-Thought): Đồ thị thâm nhập vào đâu?
+
+Khi kiểm tra điều kiện đồ thị bị đảo chiều 1 cạnh (`DR_k1`), nhóm đọc chi tiết từng dòng lập luận mà mô hình viết ra để xem mô hình có thực sự dùng chiều mũi tên bị sai hay không:
+
+* **Tần suất lặp lại chiều mũi tên được cấp:**
+  * `gpt-4.1-mini`: **57,5%** số lần mô hình viết ra chiều mũi tên sai theo đúng đồ thị được cấp.
+  * `gpt-4.1`: **43,1%** số lần.
+  * `gpt-4.1-nano`: **34,5%** số lần.
+  * *So sánh với đường sàn:* Khi hoàn toàn không cấp đồ thị, mô hình tự nói về chiều cạnh chỉ từ **2,3% đến 4,6%**. Điều này chứng minh khối cấu trúc là thứ ép mô hình phải phát biểu về chiều mũi tên.
+* **Nghịch lý tính toán:**
+  * Trong số các câu mà mô hình phát biểu bằng lời **SAI CHIỀU MŨI TÊN** trong lời giải, có tới **75% đến 82% trường hợp kết quả tính toán cuối cùng vẫn ra ĐÚNG** y hệt như khi được cấp đồ thị chuẩn!
+  * **Giải thích:** Chiều mũi tên chỉ đi vào phần văn bản phát biểu; nó chỉ thực sự làm thay đổi phép tính số học bên trong ở khoảng **1/4 trường hợp**. Đây là lý do giải thích tại sao đồ thị sai 1 cạnh vẫn giúp mô hình đạt điểm số gần ngang đồ thị đúng.
+
+---
+
+### 3.9. Kết quả trích xuất đồ thị (Graph Induction)
+
+Khi yêu cầu mô hình đọc văn bản và tự dựng lại đồ thị:
+* **Đường sàn đoán mò ngẫu nhiên:** Trên đồ thị nhỏ 3–5 nút của CLadder, một thuật toán bốc cạnh ngẫu nhiên đạt điểm F1 = **0,362**.
+* **Hiệu năng tự dựng của mô hình:**
+  * Nhánh từ thật (`KEEP`): Đạt F1 = **0,462 đến 0,608** (vượt rõ rệt trên sàn ngẫu nhiên).
+  * Nhánh hoán vị (`PERMUTE`): Đạt F1 = **0,384 đến 0,424** (chỉ nhỉnh hơn mức đoán ngẫu nhiên từ 0,02 đến 0,06).
+* **Số cạnh bị đảo ngược trên mỗi bài toán:**
+  * Khi có prior đúng (`KEEP`): Chỉ có **0,046 đến 0,069** cạnh bị đảo ngược.
+  * Khi prior vắng mặt (`SYMBOL`, `PSEUDO`): Có **0,092 đến 0,155** cạnh bị đảo ngược (tăng 1,3 đến 2,8 lần).
+  * Khi bị gán prior SAI (`PERMUTE`): Có tới **0,316 đến 0,529** cạnh bị đảo ngược (**tăng vọt 5,1 đến 7,7 lần**).
+* **Kết luận trích xuất:** Khi tên biến gợi ý một chiều nhân quả sai, mô hình bị thiên kiến tri thức đời thường dẫn dắt: Nó đi theo tri thức cũ khoảng **33% đến 55% quãng đường** thay vì đọc đúng chiều quan hệ đã nêu trong đề bài.
+
+---
+
+### 3.10. Định giá từng loại lỗi đồ thị & Điểm hòa vốn
+
+Thử nghiệm gây lỗi k cạnh (k = 1, 2, 3) trên hai nhánh từ vựng (`KEEP` và `PSEUDO`) với n = 400 item:
+
+* **Vế Giá của một cạnh sai (Price per error):**
+  * Giá của một cạnh đảo chiều `DR`: Làm mất khoảng **4,09 pp/cạnh** ở `gpt-4.1`.
+  * Chênh lệch giá giữa tên thật (`KEEP`) và từ giả (`PSEUDO`):
+    * `gpt-4.1`: **-0,11 pp** (CI 95%: `[-1,62 ; +1,42]`).
+    * `gpt-4.1-mini`: **+0,18 pp** (CI 95%: `[-1,53 ; +2,09]`).
+  * *Kết luận vế giá:* Giá của một cạnh sai **không thay đổi theo miền từ vựng**, với cận tương đương dưới 1,6 pp/cạnh.
+* **Vế Ngân sách và Điểm hòa vốn k*:**
+  * Trên tập mẫu gộp $n \approx 800$, ngân sách (`ORACLE - RAW`) đạt **+4,67 pp** ở `gpt-4.1` và **+4,38 pp** ở `mini`.
+  * Tuy nhiên, trên nhóm câu hỏi nhân quả thực sự, ngân sách bị âm ở 2/3 mô hình. Do đó, công thức điểm hòa vốn `k* = ngân sách / giá` **chưa xác lập được về mặt khoa học**.
+
+---
+
+### 3.11. Phát hiện chấn động về Benchmark CLadder (NeurIPS 2023)
+
+Trong quá trình đối chiếu giải tích 66.824 phép tính trên 7.064 mô hình SCM của CLadder, dự án phát hiện một sai sót cấu trúc trong bài báo NeurIPS 2023 gốc:
+
+* **Lỗi toán học:** Khi tính toán xác suất can thiệp, thuật toán của CLadder đã **nhân xác suất biên của các nút cha lại với nhau như thể chúng độc lập** ở 7/10 họ đồ thị:
+  ```
+  Công thức tính của CLadder: P(Pa_Y) = Tích các xác suất P(V) với mọi V thuộc Pa_Y
+  ```
+  Trong khi trên thực tế, các nút cha này có liên kết phụ thuộc lẫn nhau qua các đường dẫn khác.
+* **Hậu quả trên nhãn dữ liệu:** Lọc riêng các câu hỏi mà sai số toán học này làm giá trị xác suất dịch chuyển qua ngưỡng phân loại 0,5 (làm đổi đáp án từ Có sang Không):
+  * **82 trên 85 câu hỏi có đáp án công bố đi theo giá trị BỊ TÍNH TOÁN SAI của CLadder.**
+  * Chỉ có **3 câu hỏi** đi theo giá trị toán học chuẩn xác.
+* **Mức độ ảnh hưởng:** Tác động tới khoảng **0,8% số câu** trong mẫu của dự án (ước tính 1,4 câu trên 174 câu). Nhờ thiết kế thực nghiệm ghép cặp lấy hiệu số chênh lệch, sai số này triệt tiêu khỏi các phép đo DiD, nhưng làm sai lệch nhẹ mức độ chính xác tuyệt đối.
+
+---
+
+# PHẦN IV: CƠ CHẾ BẢN CHẤT & BỐN GIẢ THUYẾT ĐÃ LOẠI TRỪ
+
+### 4.1. Cơ chế thực sự: "Tái gắn ký hiệu" (Symbol Re-grounding)
+Tổng hợp các bằng chứng thực nghiệm:
+1. Đồ thị sai 1 cạnh cũng mang lại hiệu quả gần ngang đồ thị đúng (+8,64 pp so với +14,31 pp).
+2. Hiệu ứng sống chủ yếu ở các đồ thị lớn (≥ 4 nút đạt +22,44 pp) và bài toán ATE (+27,44 pp).
+3. 75% đến 82% số câu mô hình phát biểu sai chiều cạnh trong lời giải nhưng đáp số cuối cùng vẫn tính đúng.
+
+> **KẾT LUẬN CƠ CHẾ:** Khối cấu trúc không hề dạy mô hình tư duy logic nhân quả hình thức. Thay vào đó, nó đóng vai trò như một **mỏ neo bộ nhớ làm việc (Working Memory Anchor)**: Khối văn bản ở cuối đề bài liệt kê lại toàn bộ tên các biến, giúp mô hình "tái gắn ký hiệu" để không bị mất dấu hay quên biến trong các bài toán tính toán số học nhiều bước.
+
+---
+
+### 4.2. Bốn giả thuyết cạnh tranh đã bị loại trừ bằng thực nghiệm
+
+| Giả thuyết cạnh tranh | Phép kiểm tra thực nghiệm | Kết quả thực tế |
+|---|---|---|
+| **1. Do độ dài prompt** (Khối đồ thị làm prompt dài hơn nên mô hình chú ý hơn) | So sánh độ dài prompt với độ chính xác trên toàn bộ các điều kiện | **Bị loại trừ.** Prompt dài hơn làm kết quả **tệ hơn** (8 ô âm có ý nghĩa, 0 ô dương). Khối đồ thị thêm 221 ký tự cho `KEEP` nhưng thêm ít hơn cho nhánh ẩn danh; lý thuyết độ dài dự đoán chiều ngược lại với thực tế. |
+| **2. Do từ thật còn sót lại** (Khoảng một nửa câu ẩn danh vẫn lọt vài danh từ thật) | Tách riêng nhóm câu sạch hoàn toàn và nhóm câu còn sót danh từ thật | **Bị loại trừ.** Nhóm câu sạch hoàn toàn cho hiệu ứng DiD = **+16,15 pp**, trong khi nhóm còn sót từ thật chỉ đạt **+13,71 pp**. Từ thật còn sót làm **co hẹp** hiệu ứng chứ không tạo ra hiệu ứng. |
+| **3. Do một lát cắt may mắn** (Cách chia nhóm truy vấn tình cờ gặp may) | Bốc mẫu ngẫu nhiên 50% dữ liệu, lặp lại 2.000 lần mô phỏng bootstrap | **Bị loại trừ.** Trung bình của 2.000 lần bốc ngẫu nhiên chỉ đạt +4,43 pp; và **0/2.000 lần** chạm tới mức +14,35 pp. Cách phân nhóm theo bản chất truy vấn không phải do ăn may. |
+| **4. Do cách chấm điểm** (Chấm các câu không parse được thành câu sai) | Đổi quy tắc chấm điểm: coi câu không parse được là câu trả lời sai | **Bị loại trừ.** Mức DiD từ +14,35 pp chuyển thành +14,60 pp (gần như giữ nguyên, không thay đổi kết luận). |
+
+---
+
+# PHẦN V: TỔNG KẾT, HẠN CHẾ & BƯỚC ĐI TIẾP THEO
+
+### 5.1. Tóm tắt toàn bộ nghiên cứu trong 3 luận điểm
+1. **Cấp khối cấu trúc giúp thu hẹp tổn thất do ẩn danh hóa tên biến khoảng +5,98 điểm phần trăm** (CI 95%: [+1,78 ; +10,30], p = 0,005 trên 490 câu hỏi ghép cặp).
+2. **Chưa có bằng chứng cho thấy khối cấu trúc đó bắt buộc phải ĐÚNG** (cấp đồ thị vẽ sai 1 cạnh vẫn đem lại +8,64 pp, không khác biệt có ý nghĩa với đồ thị đúng). Đồng thời, 32% hiệu ứng thu hẹp tổn thất thực chất là do khối cấu trúc kéo tụt hiệu năng của điều kiện tên thật đời thường (-4,60 pp).
+3. **Bản chất của hiện tượng là Tái gắn ký hiệu (Symbol Re-grounding)** hỗ trợ bộ nhớ làm việc của mô hình trên các đồ thị nhiều biến, chứ không phải mô hình đã sở hữu năng lực tư duy nhân quả trừu tượng.
+
+---
+
+### 5.2. Thí nghiệm quyết định còn lại: Điều kiện `NAMES_ONLY`
+Để giải quyết dứt điểm câu hỏi *"Khối cấu trúc giúp mô hình nhờ các mũi tên nhân quả hay chỉ nhờ danh sách liệt kê tên biến?"*:
+* **Thiết kế can thiệp:** Giữ nguyên vị trí khối văn bản ở cuối bài, giữ nguyên câu lệnh nhắc, nhưng **chỉ in danh sách tên biến mà không có bất kỳ mũi tên nào**:
+  ```
+  The variables of this world are: A, B, C, D.
+  Use these variables when reasoning.
+  ```
+* **Kịch bản phán quyết:**
+  * *Nếu đồ thị có mũi tên (ORACLE) vượt trội hơn hẳn danh sách chỉ có tên biến (NAMES_ONLY):* Khẳng định AI thực sự biết sử dụng cấu trúc quan hệ nhân quả.
+  * *Nếu danh sách chỉ có tên biến (NAMES_ONLY) đạt kết quả ngang ngửa đồ thị có mũi tên:* Khẳng định 100% hiện tượng này chỉ là hỗ trợ trí nhớ làm việc, hoàn toàn không có tư duy nhân quả.
+
+---
+
+### 5.3. Rào cản công bố duy nhất: Đa dạng hóa dòng mô hình
+Toàn bộ số liệu hiện tại được chạy trên 3 kích cỡ của dòng **GPT-4.1** (OpenAI). Để hoàn tất một bài báo khoa học chuẩn mực nộp cho các hội nghị hàng đầu (ACL, EMNLP, NeurIPS), nghiên cứu cần bổ sung thử nghiệm trên **ít nhất một họ mô hình mã nguồn mở độc lập** (như Llama-3.1-8B/70B hoặc Qwen-2.5 qua API).

@@ -46,6 +46,29 @@ PSEUDOWORDS = [
 
 SYMBOLS = ["A", "B", "C", "D", "E", "F"]
 
+# IRRELEVANT: real English nouns, high frequency, concrete, and drawn from one
+# domain that has no causal story of its own. This is the lexicon that separates
+# the three things PERMUTE changes at once (REPORT.md section 7.1).
+#
+#   KEEP        correct prior, real words
+#   PERMUTE     WRONG prior, real words, item's own vocabulary
+#   IRRELEVANT  NO prior, real words, ordinary English
+#   SYMBOL      no prior, single letters
+#   PSEUDO      no prior, pronounceable nonsense
+#
+# PERMUTE minus IRRELEVANT isolates being handed a wrong prior from merely
+# losing the right one, with word realness and English frequency held fixed.
+# IRRELEVANT minus SYMBOL isolates real words from symbols.
+#
+# Chosen to carry as little relational suggestion as possible: no pair of these
+# has a conventional cause-effect reading, none is an agent or an event, and all
+# are inanimate household objects. "Does the lamp have a direct effect on the
+# spoon" is odd, but it is odd in the same way for every pair, which is what the
+# condition needs.
+IRRELEVANT_WORDS = [
+    "lamp", "spoon", "curtain", "kettle", "ladder", "basket",
+]
+
 # Xname/X1/X0, V2name/V21/V20, ...
 VAR_RE = re.compile(r"^(X|Y|V\d+)(name|0|1)$")
 
@@ -130,6 +153,10 @@ def build_lexicon(vm: dict, lexicon: str, seed: str = "") -> dict[str, str]:
         words = pool[:len(syms)]
     elif lexicon == "SYMBOL":
         words = SYMBOLS[:len(syms)]
+    elif lexicon == "IRRELEVANT":
+        pool = list(IRRELEVANT_WORDS)
+        random.Random(f"irrelevant:{seed}").shuffle(pool)
+        words = pool[:len(syms)]
     else:
         raise ValueError(f"unknown lexicon {lexicon!r}")
 
@@ -202,3 +229,54 @@ def relabel_item(prompt: str, lexicon: str, seed: str = "") -> tuple[str, bool]:
     if vm is None:
         return prompt, False
     return relabel(prompt, vm, build_lexicon(vm, lexicon, seed))
+
+
+# ---------------------------------------------------------------------------
+# Second-layer check: residue the variable_mapping cannot see.
+#
+# `clean` above only proves that no phrase LISTED IN variable_mapping survived.
+# CLadder also refers to the same variables through grammatical variants that
+# are not in the mapping - "husbands" beside "husband", "husbands that set the
+# alarm" beside "alarm set by husband" - and those pass the first check
+# untouched. Review round 6 measured the result: 61.5% of SYMBOL/PSEUDO items
+# still carry real-world nouns, and the bias runs TOWARD KEEP, which is the
+# direction that manufactures the null results at rungs 2 and 3.
+#
+# Detection uses no hand-built word list, which would only ever give a lower
+# bound that depends on the list. The separator is how many distinct STORIES a
+# word appears in. CLadder's template wording varies with query_type, so a
+# template word like "smaller" or "observed" sits in a minority of PROMPTS and
+# would be misread as story vocabulary; across STORIES it is everywhere. A word
+# confined to a handful of the 37 stories is story vocabulary, and if it
+# survives relabelling it is residue.
+# ---------------------------------------------------------------------------
+WORD_RE = re.compile(r"[a-z]{3,}")
+
+
+@lru_cache(maxsize=4)
+def story_vocab(max_stories: int = 3, data: str = "full_v1.5_default.csv") -> frozenset[str]:
+    """Words confined to at most `max_stories` distinct stories."""
+    import csv
+    seen: dict[str, set] = {}
+    with (ROOT / "data" / data).open(encoding="utf-8", newline="") as fh:
+        for row in csv.DictReader(fh):
+            sid = row.get("story_id", "")
+            for w in set(WORD_RE.findall(row.get("prompt", "").lower())):
+                seen.setdefault(w, set()).add(sid)
+    return frozenset(w for w, ss in seen.items() if len(ss) <= max_stories)
+
+
+def residue(original: str, relabelled: str, lexicon: str,
+            max_stories: int = 3) -> set[str]:
+    """Story-specific words that survived the swap.
+
+    Empty for KEEP (nothing was meant to change) and for PERMUTE (a derangement
+    reuses the item's own words on purpose, so every one of them survives by
+    design - that is the point of the condition, not a defect). The measure is
+    about SYMBOL and PSEUDO, which claim to remove real words.
+    """
+    if lexicon in ("KEEP", "PERMUTE"):
+        return set()
+    vocab = story_vocab(max_stories)
+    before = set(WORD_RE.findall(original.lower())) & vocab
+    return before & set(WORD_RE.findall(relabelled.lower()))

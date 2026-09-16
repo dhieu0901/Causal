@@ -1,0 +1,4 @@
+model,ngan_sach_KEEP,n_KEEP,ngan_sach_PSEUDO,n_PSEUDO
+gpt-4.1,4.36,390,9.28,388
+gpt-4.1-mini,7.07,382,9.95,382
+gpt-4.1-nano,3.23,371,0.83,363

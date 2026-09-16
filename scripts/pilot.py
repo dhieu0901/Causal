@@ -19,8 +19,8 @@ sys.path.insert(0, str(ROOT / "src"))
 import pandas as pd
 from perturb import FAMILY_STRUCTURE, to_edges, max_k, ENUMERATORS
 from prompts import build, parse_answer, strip_structure, parse_prose_graph
-from lexical import relabel_item
-from runner import run_batch, usage_summary
+from lexical import relabel_item, residue
+from runner import run_batch, usage_summary, guard_errors, is_ok
 from stats import mcnemar_exact_p
 
 
@@ -89,7 +89,8 @@ def make_items(n, seed, kmax=3, data="full_v1.5_default.csv", pair_to=None,
     return d.loc[picked].reset_index(drop=True)
 
 
-def build_jobs(items, kmax=3, seed=0, types=("DR",), lexicon="KEEP"):
+def build_jobs(items, kmax=3, seed=0, types=("DR",), lexicon="KEEP",
+               drop_residue=False, with_instr=False):
     """Every graph is built over the story's own variable names.
 
     Using the symbol DAG (X -> V2 -> Y) beside a body about husbands and wives
@@ -105,7 +106,7 @@ def build_jobs(items, kmax=3, seed=0, types=("DR",), lexicon="KEEP"):
     p-value fell from 0.011 to 0.150. Seeding per (item, type, k) keeps each draw
     independent of what else the run happens to request.
     """
-    jobs, dropped, unrelabelled = [], 0, 0
+    jobs, dropped, unrelabelled, dirty = [], 0, 0, 0
     for i, r in items.iterrows():
         # KEEP returns the prompt unchanged, so a default run stays byte-identical
         # to earlier ones and reuses their cache entries.
@@ -116,6 +117,16 @@ def build_jobs(items, kmax=3, seed=0, types=("DR",), lexicon="KEEP"):
             # to remove. Drop rather than score it.
             unrelabelled += 1
             continue
+
+        # `clean` only proves no variable_mapping phrase survived. Grammatical
+        # variants outside the mapping survive it; see src/lexical.py. Reporting
+        # is the default and dropping is opt-in, because dropping changes the
+        # sample and would silently break comparability with every result
+        # already in REPORT.md.
+        if residue(r.prompt, prompt, lexicon):
+            dirty += 1
+            if drop_residue:
+                continue
 
         _, removed = strip_structure(prompt)
         edges = parse_prose_graph(removed)
@@ -136,6 +147,11 @@ def build_jobs(items, kmax=3, seed=0, types=("DR",), lexicon="KEEP"):
         jobs.append(dict(cond="PROSE", prompt=build(prompt, "PROSE"), **meta))
         jobs.append(dict(cond="RAW", prompt=build(prompt, "RAW"), **meta))
         jobs.append(dict(cond="ORACLE", prompt=build(prompt, "ORACLE", edges), **meta))
+        if with_instr:
+            # Opt-in: it adds a paid call per item and no existing analysis
+            # reads it. See src/prompts.py for what the condition separates.
+            jobs.append(dict(cond="RAW_INSTR", prompt=build(prompt, "RAW_INSTR"),
+                             **meta))
         nodes = sorted({n for e in edges for n in e})
         for t in types:
             for k in range(1, kmax + 1):
@@ -147,6 +163,13 @@ def build_jobs(items, kmax=3, seed=0, types=("DR",), lexicon="KEEP"):
                                  prompt=build(prompt, "PERTURB", bad), **meta))
     if unrelabelled:
         print(f"    [lexicon {lexicon}] bo {unrelabelled} item khong thay het duoc tu vung")
+    if dirty:
+        verb = "da BO" if drop_residue else "GIU (chi bao cao)"
+        print(f"    [lexicon {lexicon}] {dirty} item con residue ngoai variable_mapping"
+              f" - {verb}")
+        if not drop_residue:
+            print(f"    [lexicon {lexicon}] residue lam dieu kien nay lech VE PHIA KEEP;"
+                  f" xem REPORT.md muc 7.2")
     return jobs
 
 
@@ -164,16 +187,22 @@ def main():
                     help="reuse the ids sampled from this split, so the two runs "
                          "are paired item by item")
     ap.add_argument("--lexicon", default="KEEP",
-                    choices=["KEEP", "PERMUTE", "SYMBOL", "PSEUDO"],
+                    choices=["KEEP", "PERMUTE", "IRRELEVANT", "SYMBOL", "PSEUDO"],
                     help="swap variable names within item (see src/lexical.py)")
     ap.add_argument("--drop-nonsense", action="store_true", dest="drop_nonsense",
                     help="keep only the real-word stories; full_v1.5_default.csv "
                          "is 38%% pseudoword otherwise")
+    ap.add_argument("--with-instr", action="store_true", dest="with_instr",
+                    help="them dieu kien RAW_INSTR: cau lenh suy luan nhan qua nhung KHONG co khoi do thi, de tach hai hieu ung trong Delta_struct")
+    ap.add_argument("--drop-residue", action="store_true", dest="drop_residue",
+                    help="bo item con danh tu that ngoai variable_mapping. Doi "
+                         "mau, nen KHONG so sanh truc tiep voi ket qua cu")
     a = ap.parse_args()
 
     items = make_items(a.n, a.seed, a.kmax, a.data, a.pair_to, a.drop_nonsense)
     jobs = build_jobs(items, a.kmax, a.seed,
-                      tuple(t.strip() for t in a.types.split(",")), a.lexicon)
+                      tuple(t.strip() for t in a.types.split(",")), a.lexicon,
+                      drop_residue=a.drop_residue, with_instr=a.with_instr)
     print(f"items={len(items)}  jobs/model={len(jobs)}  lexicon={a.lexicon}  "
           f"paired_to={a.pair_to}  families={sorted(items.graph_id.unique())}")
 
@@ -185,7 +214,12 @@ def main():
                          on_tick=lambda d, t: print(f"    {d}/{t}", flush=True))
         u = usage_summary(recs)
         print(f"    done: {u}")
+        guard_errors(recs, label=model)
         for r in recs:
+            # A call that never reached the model is dropped, not scored. Scoring
+            # it would enter an infrastructure failure as a wrong answer.
+            if not is_ok(r["result"]):
+                continue
             pred = parse_answer(r["result"]["text"])
             allrows.append({"model": model, "item": r["item"], "cond": r["cond"],
                             "graph_id": r["graph_id"], "rung": r["rung"],
