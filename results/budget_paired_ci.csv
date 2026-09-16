@@ -1,0 +1,4 @@
+model,n_chung,ngan_sach_KEEP,ngan_sach_PSEUDO,hieu_pp,ci_lo,ci_hi,se,xac_lap,n_can_de_p05
+gpt-4.1,382,4.45,9.16,4.71,-0.52,10.21,2.75,khong,502
+gpt-4.1-mini,371,6.47,9.97,3.5,-2.16,9.16,2.84,khong,935
+gpt-4.1-nano,343,2.33,0.58,-1.75,-8.16,4.96,3.41,khong,4998

@@ -67,7 +67,7 @@ def fit_of(acc, t, kmax=3):
     return -b, a0, r2, int(ks.max()), monotone
 
 
-def bootstrap_fit(df_model, t, kmax=3, boot=600, seed=0):
+def bootstrap_fit(df_model, t, kmax=3, boot=600, seed=0, base="RAW"):
     """Percentile CIs for the slope and for k*, resampling items.
 
     Every condition is answered by the same items, so the curve and the RAW
@@ -84,9 +84,9 @@ def bootstrap_fit(df_model, t, kmax=3, boot=600, seed=0):
     rng = np.random.default_rng(seed)
     wide = df_model.pivot_table(index="item", columns="cond",
                                 values="correct", aggfunc="first")
-    need = ["ORACLE", "RAW"] + [f"{t}_k{k}" for k in range(1, kmax + 1)]
+    need = ["ORACLE", base] + [f"{t}_k{k}" for k in range(1, kmax + 1)]
     wide = wide[[c for c in need if c in wide.columns]].dropna()
-    if len(wide) < 20 or "ORACLE" not in wide or "RAW" not in wide:
+    if len(wide) < 20 or "ORACLE" not in wide or base not in wide:
         return {}
     idx = np.arange(len(wide))
     slopes, kstars = [], []
@@ -98,7 +98,7 @@ def bootstrap_fit(df_model, t, kmax=3, boot=600, seed=0):
             continue
         slopes.append(slope)
         if slope > 0:
-            kstars.append((a0 - acc_b["RAW"]) / slope)
+            kstars.append((a0 - acc_b[base]) / slope)
     if len(slopes) < boot // 4:
         return {}
     q = lambda v, p: float(np.percentile(v, p))
@@ -116,7 +116,13 @@ def main():
     ap.add_argument("--pilot", default="pilot_raw.csv")
     ap.add_argument("--induction", default="induction_raw.csv")
     ap.add_argument("--tag", default="")
+    ap.add_argument("--baseline", default="RAW", choices=["RAW", "RAW_INSTR"],
+                    help="nen de tinh ngan sach va diem hoa von. RAW la nen cu; "
+                         "RAW_INSTR tru bo phan hieu ung cau lenh ra khoi tu so, "
+                         "vi ORACLE cong vao CA khoi do thi LAN cau lenh - xem "
+                         "scripts/analyze_instruction.py")
     a = ap.parse_args()
+    base = a.baseline
 
     df = pd.read_csv(ROOT / "results" / a.pilot)
     models = [m for m in TIER if m in set(df.model)] or sorted(df.model.unique())
@@ -152,11 +158,11 @@ def main():
     rows = []
     for m in models:
         r = acc.loc[m]
-        budget = r["ORACLE"] - r["RAW"]
+        budget = r["ORACLE"] - r[base]
         for t in TYPES:
             s, a0, r2, kmax_seen, _ = fit_of(r, t)
             ok = bool(s and s > 0)
-            bs = bootstrap_fit(parsed[parsed.model == m], t)
+            bs = bootstrap_fit(parsed[parsed.model == m], t, base=base)
             # The price stands only if the slope CI clears zero. Everything
             # downstream - the break-even, the additive prediction - is built on
             # that slope, so an unresolved slope has to stop here.
@@ -172,7 +178,7 @@ def main():
                 "chan_fit": round(a0, 2) if pd.notna(a0) else None,
                 # Solved against the fitted line, not against ORACLE, so the
                 # break-even and the curve it comes from are the same line.
-                "hoa_von_k": round((a0 - r["RAW"]) / s, 2) if ok and solid else None,
+                "hoa_von_k": round((a0 - r[base]) / s, 2) if ok and solid else None,
                 "hoa_von_lo": round(bs["k_lo"], 2) if solid and "k_lo" in bs else None,
                 "hoa_von_hi": round(bs["k_hi"], 2) if solid and "k_hi" in bs else None,
                 "canh_bao": "" if solid else "CI do doc chua tach khoi 0",

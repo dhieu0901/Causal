@@ -1,4 +1,96 @@
-graph_id,checked,skipped,max_abs_err,mean_abs_err,all_match
-mediation,1008,0,6.661e-16,1.511e-16,True
-chain,624,0,6.661e-16,1.562e-16,True
-confounding,552,200,4.441e-16,1.408e-16,True
+ho,dai_luong,n,lech_max,khop
+IV,ATE(Y | X),880,6.661e-16,True
+IV,ETT(Y | X),880,1.887e-15,True
+IV,NDE(Y | X),880,6.661e-16,True
+IV,NIE(Y | X),880,2.220e-16,True
+IV,P(V1=1),880,8.882e-16,True
+IV,P(V2=1),880,6.661e-16,True
+IV,P(X=1),880,6.661e-16,True
+IV,P(Y=1 | X=0),880,6.661e-16,True
+IV,P(Y=1 | X=1),880,1.055e-15,True
+IV,P(Y=1),880,1.694e-01,False
+arrowhead,ATE(Y | X),1008,2.492e-01,False
+arrowhead,ETT(Y | X),1008,2.492e-01,False
+arrowhead,NDE(Y | X),1008,2.492e-01,False
+arrowhead,NIE(Y | X),1008,2.492e-01,False
+arrowhead,P(V2=1),1008,7.772e-16,True
+arrowhead,P(V3=1),1008,8.882e-16,True
+arrowhead,P(X=1),1008,7.772e-16,True
+arrowhead,P(Y=1 | X=0),1008,2.492e-01,False
+arrowhead,P(Y=1 | X=1),1008,2.492e-01,False
+arrowhead,P(Y=1),1008,2.498e-01,False
+chain,ATE(Y | X),624,6.661e-16,True
+chain,ETT(Y | X),624,6.661e-16,True
+chain,NDE(Y | X),624,3.886e-16,True
+chain,NIE(Y | X),624,8.882e-16,True
+chain,P(V2=1),624,6.661e-16,True
+chain,P(X=1),624,5.551e-16,True
+chain,P(Y=1 | X=0),624,4.441e-16,True
+chain,P(Y=1 | X=1),624,4.441e-16,True
+chain,P(Y=1),624,4.441e-16,True
+collision,ATE(Y | X),716,3.331e-16,True
+collision,ETT(Y | X),716,5.551e-16,True
+collision,NDE(Y | X),716,3.331e-16,True
+collision,NIE(Y | X),716,0.000e+00,True
+collision,P(V3=1),716,5.551e-16,True
+collision,P(X=1),716,6.661e-16,True
+collision,P(Y=1 | X=0),716,6.661e-16,True
+collision,P(Y=1 | X=1),716,5.551e-16,True
+collision,P(Y=1),716,6.661e-16,True
+confounding,ATE(Y | X),752,5.551e-16,True
+confounding,ETT(Y | X),752,1.610e-15,True
+confounding,NDE(Y | X),752,5.551e-16,True
+confounding,NIE(Y | X),752,1.665e-16,True
+confounding,P(V1=1),752,7.772e-16,True
+confounding,P(X=1),752,8.882e-16,True
+confounding,P(Y=1 | X=0),752,1.138e-15,True
+confounding,P(Y=1 | X=1),752,9.437e-16,True
+confounding,P(Y=1),752,2.341e-01,False
+diamond,ATE(Y | X),624,6.661e-16,True
+diamond,ETT(Y | X),624,6.661e-16,True
+diamond,NDE(Y | X),624,4.718e-16,True
+diamond,NIE(Y | X),624,1.055e-15,True
+diamond,P(V2=1),624,8.882e-16,True
+diamond,P(V3=1),624,8.882e-16,True
+diamond,P(X=1),624,7.772e-16,True
+diamond,P(Y=1 | X=0),624,4.441e-16,True
+diamond,P(Y=1 | X=1),624,4.441e-16,True
+diamond,P(Y=1),624,1.091e-01,False
+diamondcut,ATE(Y | X),368,7.772e-16,True
+diamondcut,ETT(Y | X),368,9.992e-16,True
+diamondcut,NDE(Y | X),368,7.772e-16,True
+diamondcut,NIE(Y | X),368,2.220e-16,True
+diamondcut,P(V1=1),368,7.772e-16,True
+diamondcut,P(V3=1),368,8.882e-16,True
+diamondcut,P(X=1),368,8.882e-16,True
+diamondcut,P(Y=1 | X=0),368,5.551e-16,True
+diamondcut,P(Y=1 | X=1),368,6.661e-16,True
+diamondcut,P(Y=1),368,1.125e-01,False
+fork,ATE(Y | X),716,6.661e-16,True
+fork,ETT(Y | X),716,7.772e-16,True
+fork,NDE(Y | X),716,6.661e-16,True
+fork,NIE(Y | X),716,2.220e-16,True
+fork,P(V2=1),716,5.551e-16,True
+fork,P(X=1),716,6.661e-16,True
+fork,P(Y=1 | X=0),716,4.441e-16,True
+fork,P(Y=1 | X=1),716,4.441e-16,True
+fork,P(Y=1),716,5.551e-16,True
+frontdoor,ATE(Y | X),368,6.661e-16,True
+frontdoor,ETT(Y | X),368,7.772e-16,True
+frontdoor,NDE(Y | X),368,5.551e-16,True
+frontdoor,NIE(Y | X),368,7.772e-16,True
+frontdoor,P(V1=1),368,8.882e-16,True
+frontdoor,P(V3=1),368,1.055e-15,True
+frontdoor,P(X=1),368,8.882e-16,True
+frontdoor,P(Y=1 | X=0),368,6.661e-16,True
+frontdoor,P(Y=1 | X=1),368,7.772e-16,True
+frontdoor,P(Y=1),368,1.271e-01,False
+mediation,ATE(Y | X),1008,6.661e-16,True
+mediation,ETT(Y | X),1008,6.661e-16,True
+mediation,NDE(Y | X),1008,8.882e-16,True
+mediation,NIE(Y | X),1008,9.992e-16,True
+mediation,P(V2=1),1008,9.992e-16,True
+mediation,P(X=1),1008,7.772e-16,True
+mediation,P(Y=1 | X=0),1008,4.441e-16,True
+mediation,P(Y=1 | X=1),1008,4.441e-16,True
+mediation,P(Y=1),1008,1.624e-01,False

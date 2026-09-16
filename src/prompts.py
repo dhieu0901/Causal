@@ -78,10 +78,25 @@ def describe_graph(edges, var_names: dict[str, str] | None = None) -> str:
 
 
 def build(prompt: str, condition: str, edges=None, var_names=None) -> str:
-    """condition: RAW | ORACLE | PERTURB (edges = the graph to show) | PROSE.
+    """condition: RAW | RAW_INSTR | ORACLE | PERTURB (edges) | PROSE.
 
     PROSE reproduces the untouched CLadder prompt, as a sanity anchor showing how
     much the stripping itself costs.
+
+    RAW_INSTR exists because ORACLE adds two things at once - a block of graph
+    content AND a line telling the model to reason causally - so Delta_struct =
+    ORACLE - RAW has been charging the whole gap to the graph when part of it
+    may be the instruction. RAW_INSTR carries the instruction with no graph, so
+    the gap splits:
+
+        RAW_INSTR - RAW    what telling the model to think causally is worth
+        ORACLE - RAW_INSTR what the graph CONTENT is worth on top of that
+
+    The wording cannot be byte-identical: ORACLE says "this causal structure"
+    and there is no "this" without a block. The instruction is reworded to point
+    at the world instead of at a block, which keeps its function and changes its
+    surface. That residual wording difference is the ablation's known limit and
+    is reported with the result rather than papered over.
     """
     if condition == "PROSE":
         return prompt + ANSWER_RULE
@@ -89,6 +104,9 @@ def build(prompt: str, condition: str, edges=None, var_names=None) -> str:
     stripped, _ = strip_structure(prompt)
     if condition == "RAW":
         return stripped + ANSWER_RULE
+    if condition == "RAW_INSTR":
+        return (stripped + "\n\nReason about the causal structure of this world "
+                "when answering." + ANSWER_RULE)
 
     desc = describe_graph(edges, var_names)
     block = (f"\n\nThe causal structure of this world is:\n{desc}\n"

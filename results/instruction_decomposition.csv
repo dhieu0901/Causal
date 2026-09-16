@@ -1,0 +1,4 @@
+model,RAW,RAW_INSTR,ORACLE,cau_lenh,noi_dung_do_thi,tong
+gpt-4.1-nano,80.0,72.84,70.0,-7.16,-2.84,-10.0
+gpt-4.1-mini,85.71,87.95,77.11,2.24,-10.84,-8.61
+gpt-4.1,76.47,80.0,83.13,3.53,3.13,6.66

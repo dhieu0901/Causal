@@ -1,0 +1,13 @@
+lexicon,loai,nghia,chi_phi_pp,ci_lo,ci_hi,xac_lap,can_tuong_duong
+KEEP,DR,dao chieu canh,2.48,-2.9,7.95,khong,7.95
+KEEP,ED,thua mot canh,1.24,-4.86,6.96,khong,6.96
+KEEP,FE,thieu mot canh,2.12,-4.23,8.76,khong,8.76
+PERMUTE,DR,dao chieu canh,5.39,-1.63,12.34,khong,12.34
+PERMUTE,ED,thua mot canh,4.96,-0.82,10.61,khong,10.61
+PERMUTE,FE,thieu mot canh,0.0,-5.95,6.15,khong,6.15
+SYMBOL,DR,dao chieu canh,11.84,5.42,18.6,co,18.6
+SYMBOL,ED,thua mot canh,3.67,-2.89,10.7,khong,10.7
+SYMBOL,FE,thieu mot canh,1.55,-5.24,8.81,khong,8.81
+PSEUDO,DR,dao chieu canh,7.38,0.41,14.23,co,14.23
+PSEUDO,ED,thua mot canh,3.64,-2.38,9.76,khong,9.76
+PSEUDO,FE,thieu mot canh,6.7,-0.52,14.07,khong,14.07

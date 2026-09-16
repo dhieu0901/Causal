@@ -1,4 +1,4 @@
-model,ngan_sach_KEEP,ngan_sach_PSEUDO,kstar_KEEP_DR,kstar_PSEUDO_DR
-gpt-4.1-nano,3.93,1.92,chua xac lap,"0.34 [-3.57, 2.64]"
-gpt-4.1-mini,7.53,10.74,"1.10 [0.45, 2.01]","2.02 [1.00, 2.66]"
-gpt-4.1,4.95,9.87,"0.74 [-0.21, 1.40]","1.93 [0.74, 2.71]"
+model,ngan_sach_KEEP,ngan_sach_PSEUDO,kstar_KEEP_DR,kstar_PSEUDO_DR,canh_bao
+gpt-4.1-nano,3.93,1.92,chua xac lap,"0.34 [-3.57, 2.64]","hieu ngan sach CHUA XAC LAP, ca ba CI chua 0, nano di nguoc - xem REPORT.md muc 8.3"
+gpt-4.1-mini,7.53,10.74,"1.10 [0.45, 2.01]","2.02 [1.00, 2.66]","hieu ngan sach CHUA XAC LAP, ca ba CI chua 0, nano di nguoc - xem REPORT.md muc 8.3"
+gpt-4.1,4.95,9.87,"0.74 [-0.21, 1.40]","1.93 [0.74, 2.71]","hieu ngan sach CHUA XAC LAP, ca ba CI chua 0, nano di nguoc - xem REPORT.md muc 8.3"

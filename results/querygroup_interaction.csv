@@ -1,0 +1,17 @@
+nhom,pham_vi,did_pp,ci_lo,ci_hi,p_boot
+gop tat ca,gop 9 o,4.5,-0.32,9.4,0.0695
+gop tat ca,gpt-4.1-nano,3.78,-4.09,11.7,0.363
+gop tat ca,gpt-4.1-mini,7.92,0.37,15.81,0.036
+gop tat ca,gpt-4.1,1.8,-5.0,8.75,0.608
+nhan qua that,gop 9 o,14.35,6.65,22.8,0.0003
+nhan qua that,gpt-4.1-nano,14.0,1.78,26.15,0.0235
+nhan qua that,gpt-4.1-mini,21.53,9.71,33.69,0.0003
+nhan qua that,gpt-4.1,7.53,-4.15,19.58,0.192
+backadj nhan dang,gop 9 o,-5.9,-18.06,6.94,0.3915
+backadj nhan dang,gpt-4.1-nano,-6.25,-27.08,15.62,0.641
+backadj nhan dang,gpt-4.1-mini,-6.25,-26.04,15.62,0.555
+backadj nhan dang,gpt-4.1,-5.21,-26.04,15.62,0.672
+rung-1 so hoc,gop 9 o,-3.38,-7.36,0.41,0.0855
+rung-1 so hoc,gpt-4.1-nano,-4.61,-14.19,4.38,0.3365
+rung-1 so hoc,gpt-4.1-mini,-3.09,-10.15,3.11,0.348
+rung-1 so hoc,gpt-4.1,-2.45,-5.48,0.02,0.1005

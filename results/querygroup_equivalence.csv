@@ -1,0 +1,7 @@
+bac,nhom,hieu_pp,ci_lo,ci_hi
+PERMUTE-KEEP,gop tat ca,-7.53,-11.41,-3.81
+PERMUTE-KEEP,nhan qua that,-8.23,-13.51,-3.23
+SYMBOL-PERMUTE,gop tat ca,0.73,-2.43,3.74
+SYMBOL-PERMUTE,nhan qua that,0.12,-4.71,5.08
+PSEUDO-SYMBOL,gop tat ca,0.13,-1.85,2.05
+PSEUDO-SYMBOL,nhan qua that,0.22,-2.45,3.02
