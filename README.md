@@ -9,22 +9,34 @@ Xây trên [CLadder](https://github.com/causalNLP/cladder) (Jin et al., NeurIPS 
 
 ## Kết quả chính
 
-**Cấp đồ thị nhân quả đúng cắt gần một nửa tác hại của việc ẩn danh tên biến.**
+**Cấp một khối cấu trúc làm giảm tác hại của việc ẩn danh tên biến, trên nhóm câu hỏi thực sự cần suy luận nhân quả.**
 
-| Điều kiện | Số ô đạt p<0,05 | Tác hại trung bình |
-|---|---|---|
-| Không đồ thị (`RAW`) | **8/9** | **-10,73 pp** |
-| Có đồ thị đúng (`ORACLE`) | **3/9** | **-5,67 pp** |
+**+5,98 pp, CI 95% [+1,78 ; +10,30], p = 0,005, n = 490 item** (gộp ba mẫu, bỏ trùng theo id gốc).
 
-**Toàn bộ chi phí đó trả ở bậc đầu tiên của bậc thang từ vựng**, không phải ở độ dài prompt hay việc gắn ký hiệu:
+Ba điều phải đọc kèm, tất cả đều do hội đồng phản biện vòng 7 tìm ra:
 
-| Bậc | Bỏ đi thêm cái gì | Chênh TB | p<0,05 |
+| | |
+|---|---|
+| **Đồ thị có cần ĐÚNG không** | **Chưa chứng minh được.** Đồ thị đảo chiều một cạnh cũng đạt ngưỡng: +8,64 pp [+1,81 ; +16,38], p=0,018. Hiệu giữa hai bên không tách khỏi 0 |
+| **Có "xoá sạch tác hại" không** | **Không.** Đồ thị nâng nhánh ẩn danh +9,75 pp nhưng hạ nhánh `KEEP` -4,60 pp. **32% hiệu ứng là do làm hại điều kiện vốn đang ổn** |
+| **Con số +14,35 pp cũ** | Tái lập chính xác, nhưng đó là ước lượng của **mẫu khám phá n=86**. Hai mẫu lớn hơn cho +6,78 (p=0,009) và +1,72 (p=0,642) |
+
+**Bốn giả thuyết cạnh tranh đã loại trừ được:** độ dài prompt (prompt dài hơn làm *tệ* hơn, 8 ô âm có ý nghĩa, 0 dương), residue từ thật còn sót (làm *co* hiệu ứng), một lát cắt may mắn (0/2.000 lần bốc ngẫu nhiên chạm tới +14,35), và độ nhạy chấm điểm.
+
+**Cái gì mất đi khi ẩn danh: tri thức, không phải sự quen mắt.** Bậc thang năm bậc:
+
+| Bậc | Đổi đúng một thứ | Chênh | Trạng thái |
 |---|---|---|---|
-| `PERMUTE` - `KEEP` | chiều nhân quả hợp lẽ thường | **-7,52 pp** | **5/12** |
-| `SYMBOL` - `PERMUTE` | mất hẳn từ thật (prompt ngắn 169 ký tự) | +0,73 pp | 0/12 |
-| `PSEUDO` - `SYMBOL` | ký hiệu khó phân biệt | +0,13 pp | 2/12 |
+| `KEEP` sang `IRRELEVANT` | mất prior đúng | **+17,67 pp** [+9,24 ; +26,53] | xác lập |
+| `IRRELEVANT` sang `PERMUTE` | bị gán prior **sai** | dưới 8,5 pp | chưa phân giải |
+| `IRRELEVANT` sang `SYMBOL` | từ thật sang ký hiệu | dưới 6,4 pp | chưa phân giải |
+| `SYMBOL` sang `PSEUDO` | ký hiệu sang từ giả | dưới 6,3 pp | chưa phân giải |
 
-n=174 item ghép cặp, 3 model, 19.901 lượt gọi API.
+Khi prior đã mất thì từ có thật hay không không còn quan trọng.
+
+**Một phát hiện về chính benchmark:** CLadder tính nhãn chuẩn bằng cách nhân xác suất biên của các nút cha **như thể chúng độc lập**, ở 7/10 họ đồ thị. Trên các câu mà điều đó quyết định nhãn, **82/85 nhãn đi theo giá trị hỏng**. Ước 0,8% mẫu của dự án bị ảnh hưởng; phần này gần như triệt tiêu khỏi các hiệu ghép cặp nhưng không khỏi các mức tuyệt đối. Xem REPORT.md mục 10c.
+
+n = 490 item ghép cặp qua ba mẫu, 3 model của **một họ** (giới hạn duy nhất đủ nghiêm trọng để chặn công bố), hơn 60.000 lượt gọi API.
 
 ## Thiết kế
 
@@ -79,23 +91,28 @@ Dữ liệu CLadder không nằm trong repo. Tải từ [causalNLP/cladder](http
 | File | Nội dung |
 |---|---|
 | [REPORT.md](REPORT.md) | Báo cáo kết quả, kèm phần đính chính những gì đã bị rút và vì sao |
-| [WALKTHROUGH.md](WALKTHROUGH.md) | Cẩm nang toàn dự án, gồm sổ tay 8 cái bẫy kỹ thuật |
-| [REVIEW.md](REVIEW.md) | Phản biện hội đồng 5 ghế, hai vòng, có cả phần tự rút lại của chính bản phản biện |
+| [PRESENT.md](PRESENT.md) | Kịch bản thuyết trình, đánh số khớp từng slide |
+| [REVIEW.md](REVIEW.md) | Phản biện hội đồng 5 ghế, **bảy vòng**, có cả phần tự rút lại của chính bản phản biện |
+| [WALKTHROUGH.md](WALKTHROUGH.md) | Cẩm nang toàn diện về đề tài: từ bối cảnh, nghịch lý, phương pháp luận đến kết quả thực nghiệm chi tiết |
+| [retracted/](retracted/) | Tài liệu đã rút, giữ lại để lịch sử sửa đổi không bị xoá |
 
 ## Việc chưa xong
 
-- Định giá từng loại lỗi đồ thị **chưa xác lập được**: 6/9 ô có CI độ dốc còn chứa 0. Cần cỡ mẫu lớn hơn.
-- Nửa "neo từ vựng giúp trích xuất đồ thị" vẫn là so sánh between-items. Cần chạy `induction.py` trên cả bốn bộ ghép cặp.
-- Cả ba model đều thuộc dòng GPT-4.1. Cần ít nhất một dòng khác họ.
+- **Điều kiện `NAMES_ONLY`** - việc quan trọng nhất còn lại. Khối liệt kê đúng tên biến nhưng **không một mũi tên nào**. Đây là phép kiểm duy nhất có thể cứu lại chữ "đúng" trong "đồ thị đúng". Ước 1-2 USD, **và nó có thể thất bại**.
+- **Bảng chín CI ở REPORT mục 8.1 chưa có script sinh ra** - hiện là chuỗi in cứng. Cùng loại: mục 4.1 và ICC ở mục 10b.
+- **Cả ba model đều thuộc dòng GPT-4.1.** Giới hạn duy nhất đủ nghiêm trọng để chặn công bố. Cần ít nhất một dòng khác họ, và một model có suy luận mở rộng kèm nhánh `ORACLE`.
+- Điểm hoà vốn `k*` vẫn **chưa xác lập**: vế giá vững, vế ngân sách đạt ở 2/3 model trên mẫu gộp, nhưng `k*` cần cả hai và tử số của nó phần lớn là `backadj`.
+- `analyze_types.bootstrap_fit` chạy 600 lần - quá thô, hai ô đổi phán quyết theo seed.
 
 ## Cấu trúc
 
 ```
-src/       lexical.py (đổi từ vựng trong item), perturb.py (làm hỏng DAG),
-           prompts.py, induce.py, noise.py, runner.py, stats.py
-scripts/   pilot.py, induction.py, analyze_lexical.py, analyze_types.py,
-           verify_groundtruth.py, feasibility.py
+src/       lexical.py (đổi từ vựng, 5 bộ), perturb.py (làm hỏng DAG),
+           prompts.py (RAW / RAW_INSTR / ORACLE / PERTURB), induce.py,
+           noise.py, runner.py (có guard lỗi API), stats.py
+scripts/   pilot.py, induction.py, và 15 script phân tích - xem REPORT.md muc 13
 results/   các bảng CSV kết quả và log chạy thật
+retracted/ tài liệu đã bị thay thế
 ```
 
 Các file mang tiền tố `INVALID_no_question_` là kết quả hỏng, giữ lại để đối chiếu chứ không dùng để báo cáo.
