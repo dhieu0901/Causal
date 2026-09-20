@@ -1,0 +1,11 @@
+ho,n_scm,lech_max_P(Y=1),lech_max_ATE,lech_max_ETT,lech_max_NDE,lech_max_NIE,PY_theo_phep_naive_pct,ATE_theo_phep_naive_pct,du_doan_khop
+IV,880,0.169443,0.0,0.0,0.0,0.0,100.0,0.0,False
+arrowhead,1008,0.24984,0.249163,0.249163,0.249163,0.249163,100.0,100.0,False
+chain,624,0.0,0.0,0.0,0.0,0.0,100.0,100.0,True
+collision,716,0.0,0.0,0.0,0.0,0.0,100.0,100.0,True
+confounding,752,0.234137,0.0,0.0,0.0,0.0,100.0,0.0,False
+diamond,624,0.109105,0.0,0.0,0.0,0.0,100.0,100.0,False
+diamondcut,368,0.112469,0.0,0.0,0.0,0.0,100.0,0.0,False
+fork,716,0.0,0.0,0.0,0.0,0.0,100.0,100.0,True
+frontdoor,368,0.127132,0.0,0.0,0.0,0.0,100.0,0.0,False
+mediation,1008,0.162417,0.0,0.0,0.0,0.0,100.0,100.0,False

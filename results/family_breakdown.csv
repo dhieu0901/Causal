@@ -1,0 +1,18 @@
+lat_cat,ho,so_nut,so_canh,nhanh,nghi_ngo,uoc_luong_pp,ci_lo,ci_hi,p_boot,n_item
+"chain (3 nut, 2 canh)",chain,3,2,ORACLE,False,0.0,-15.24,16.19,1.0255,35
+"collision (3 nut, 2 canh)",collision,3,2,ORACLE,False,10.84,1.19,21.95,0.045,29
+"fork (3 nut, 2 canh)",fork,3,2,ORACLE,False,6.14,-5.0,17.95,0.309,36
+"confounding (3 nut, 3 canh)",confounding,3,3,ORACLE,False,17.06,2.35,32.76,0.0235,59
+"mediation (3 nut, 3 canh)",mediation,3,3,ORACLE,False,-9.36,-23.12,2.98,0.164,61
+"IV (4 nut, 4 canh)",IV,4,4,ORACLE,False,11.48,1.45,21.72,0.029,44
+"diamond (4 nut, 4 canh)",diamond,4,4,ORACLE,False,4.5,-3.05,11.62,0.2625,66
+"diamondcut (4 nut, 4 canh)",diamondcut,4,4,ORACLE,False,5.48,-4.91,15.79,0.359,51
+"frontdoor (4 nut, 4 canh)",frontdoor,4,4,ORACLE,False,16.3,3.3,30.0,0.015,69
+"arrowhead (4 nut, 5 canh)",arrowhead,4,5,ORACLE,True,-4.05,-21.27,13.02,0.6775,40
+"2 canh: chain, collision, fork",chain+collision+fork,,2,ORACLE,False,5.3,-2.03,12.91,0.156,100
+"3 canh: confounding, mediation",confounding+mediation,,3,ORACLE,False,3.81,-6.75,14.41,0.482,120
+"4 canh: IV, diamond, diamondcu",IV+diamond+diamondcut+frontdoor,,4,ORACLE,False,9.61,4.41,15.16,0.001,230
+5 canh: arrowhead,arrowhead,,5,ORACLE,True,-4.05,-21.27,13.02,0.6775,40
+3 nut (5 ho),chain+collision+confounding+fork+mediation,3,,ORACLE,False,4.51,-1.99,11.3,0.1835,220
+4 nut (5 ho),IV+arrowhead+diamond+diamondcut+frontdoor,4,,ORACLE,True,7.02,1.52,12.56,0.016,270
+"4 nut, khong arrowhead",IV+diamond+diamondcut+frontdoor,4,,ORACLE,False,9.61,4.41,15.16,0.001,230

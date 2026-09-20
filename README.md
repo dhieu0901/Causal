@@ -13,13 +13,15 @@ Xây trên [CLadder](https://github.com/causalNLP/cladder) (Jin et al., NeurIPS 
 
 **+5,98 pp, CI 95% [+1,78 ; +10,30], p = 0,005, n = 490 item** (gộp ba mẫu, bỏ trùng theo id gốc).
 
-Ba điều phải đọc kèm:
+Ba điều phải đọc kèm. Cả ba tính trên **cùng mẫu gộp n=490** của con số tiêu đề:
 
 | | |
 |---|---|
-| **Đồ thị có cần ĐÚNG không** | **Chưa chứng minh được.** Đồ thị đảo chiều một cạnh cũng đạt ngưỡng: +8,64 pp [+1,81 ; +16,38], p=0,018. Hiệu giữa hai bên không tách khỏi 0 |
-| **Có "xoá sạch tác hại" không** | **Không.** Đồ thị nâng nhánh ẩn danh +9,75 pp nhưng hạ nhánh `KEEP` -4,60 pp. **32% hiệu ứng là do làm hại điều kiện vốn đang ổn** |
-| **Hiệu ứng nằm ở đâu** | Tập trung ở đồ thị từ 4 nút trở lên (+22,44 pp, p=0,0005). Trên đồ thị 3 nút thì không tách khỏi 0 (+5,72 pp, p=0,217) |
+| **Đồ thị có cần ĐÚNG không** | **Chưa chứng minh được.** Đồ thị đảo chiều một cạnh cũng đạt ngưỡng: +4,78 pp [+0,66 ; +8,93], p=0,022. Hiệu giữa hai bên không tách khỏi 0 (+1,49 pp, p=0,41) |
+| **Có "xoá sạch tác hại" không** | **Hiệu ứng gần như toàn bộ là nâng thật.** Đồ thị nâng nhánh ẩn danh +5,12 pp và hạ nhánh `KEEP` chỉ -0,50 pp, tức 9% - mà vế "hạ" không tách khỏi 0 (CI [-3,43 ; +2,36]). Chạy `scripts/analyze_structure_arms.py` |
+| **Hiệu ứng nằm ở đâu** | **Không đơn điệu theo độ phức tạp.** Dồn vào nhóm đồ thị 4 cạnh (+9,61 pp, p=0,001, n=230); nhóm 3 cạnh +3,81 và nhóm 2 cạnh +5,30 đều không tách khỏi 0; nhóm 5 cạnh âm (-4,05 pp, n=40). Thứ hạng **giữa từng họ** thì không tái lập được giữa các mẫu. Chạy `scripts/analyze_by_family.py` |
+
+Con số tiêu đề tái lập bằng `scripts/pool_samples.py`, script này cũng phục hồi ánh xạ item sang id gốc CLadder mà `pilot.py` không ghi vào CSV.
 
 **Bốn giả thuyết cạnh tranh đã loại trừ được:** độ dài prompt (prompt dài hơn làm *tệ* hơn, 8 ô âm có ý nghĩa, 0 dương), residue từ thật còn sót (làm *co* hiệu ứng), một lát cắt may mắn (0/2.000 lần bốc ngẫu nhiên chạm tới mức ban đầu), và độ nhạy chấm điểm.
 
@@ -34,9 +36,11 @@ Ba điều phải đọc kèm:
 
 Khi prior đã mất thì từ có thật hay không không còn quan trọng.
 
-**Một phát hiện về chính benchmark:** CLadder tính nhãn chuẩn bằng cách nhân xác suất biên của các nút cha **như thể chúng độc lập**, ở 7/10 họ đồ thị. Trên các câu mà điều đó quyết định nhãn, **82/85 nhãn đi theo giá trị hỏng**. Ước 0,8% mẫu của dự án bị ảnh hưởng; phần này gần như triệt tiêu khỏi các hiệu ghép cặp nhưng không khỏi các mức tuyệt đối. Chạy `scripts/verify_groundtruth.py` để tái lập.
+**Một phát hiện về chính benchmark:** CLadder tính nhãn chuẩn bằng cách nhân xác suất biên của các nút cha **như thể chúng độc lập**, ở 7/10 họ đồ thị. Trên các câu mà điều đó quyết định nhãn, **83/91 nhãn đi theo giá trị hỏng**. Ước 0,8% mẫu của dự án bị ảnh hưởng; phần này gần như triệt tiêu khỏi các hiệu ghép cặp nhưng không khỏi các mức tuyệt đối. Chạy `scripts/verify_labels.py` để tái lập con số này, `scripts/audit_cladder_arithmetic.py` để xem phạm vi chính xác của lỗi, và `scripts/verify_groundtruth.py` để kiểm lại toàn bộ 7.064 SCM. Đã báo lên nhóm tác giả ngày 20/09/2026: [issue #15](https://github.com/causalNLP/cladder/issues/15) và [#16](https://github.com/causalNLP/cladder/issues/16).
 
-n = 490 item ghép cặp qua ba mẫu, 3 model của **một họ** (giới hạn duy nhất đủ nghiêm trọng để chặn công bố), hơn 60.000 lượt gọi API.
+**Mọi nhãn dự án chấm điểm đều đã tính lại độc lập.** Ba loại truy vấn từng bỏ trống - `det-counterfactual`, `collider_bias`, `exp_away`, cộng 1.812 câu và 28 trong 86 item của nhóm nhân quả - nay đã kiểm: **1.812/1.812 nhãn tái lập chính xác**. Chạy `scripts/verify_counterfactual.py`.
+
+n = 490 item ghép cặp qua ba mẫu, 3 model của **một họ** (giới hạn duy nhất đủ nghiêm trọng để chặn công bố), **73.365** lượt chấm điểm (đếm từ `results/*_raw*.csv`, đã trừ dữ liệu cách ly).
 
 ## Thiết kế
 
@@ -77,7 +81,15 @@ export PYTHONIOENCODING=utf-8          # bắt buộc trên Windows
 echo "OPENAI_API_KEY=sk-..." > .env
 
 # Không cần API key
-python scripts/verify_groundtruth.py   # kiểm chứng nhãn CLadder bằng giải tích
+python scripts/verify_groundtruth.py   # kiểm chứng 7.064 SCM bằng giải tích
+python scripts/verify_labels.py        # nhãn yes/no đi theo giá trị nào
+python scripts/verify_counterfactual.py   # bậc 3 và va chạm: 1.812 nhãn còn lại
+python scripts/audit_cladder_arithmetic.py  # phạm vi chính xác của lỗi CLadder
+python scripts/pool_samples.py         # gộp ba mẫu, tái lập con số tiêu đề
+python scripts/analyze_structure_arms.py  # các nhánh ORACLE/PROSE/DR_k1
+python scripts/analyze_by_family.py    # DiD theo từng họ đồ thị, theo nút, theo cạnh
+python scripts/analyze_dose.py         # liều hay cấu trúc mới là biến giải thích
+python scripts/make_figures.py         # sinh hình cho slide từ CSV
 python scripts/feasibility.py          # khả thi, độ phân giải mẫu, dự toán
 
 # Thí nghiệm từ vựng ghép cặp - kết quả chính

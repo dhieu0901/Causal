@@ -139,9 +139,12 @@ class SCM:
         """P(node = 1 | parents as assigned). Index order follows the key.
 
         Root nodes are stored inconsistently in cladder-meta.json: sometimes as
-        a bare float, sometimes wrapped in a one-element list. 1,400 of the
-        7,064 SCMs use the wrapped form, spread over seven of the ten families,
-        so silently skipping them would have dropped a fifth of the corpus.
+        a bare float, sometimes wrapped in a one-element list. Counted on
+        2026-09-20: 2,800 root-node entries across 2,000 of the 7,064 SCMs use
+        the wrapped form, exactly 200 SCMs in each of the ten families, so
+        silently skipping them would have dropped more than a quarter of the
+        corpus. An earlier version of this docstring said 1,400 over seven
+        families; that was never measured and does not hold.
         """
         t = self.table[node]
         for p in self.parents[node]:
@@ -437,13 +440,31 @@ def main():
         explained = all(r["PY_gia_dinh_doc_lap"] == "100.0%" for r in rows)
         print("\n  Doc bang: cot 'gia dinh doc lap' cao va cot 'cong thuc dung' thap")
         print("  nghia la gia tri cong bo sinh ra tu phep tinh SAI, khong phai tu SCM.")
-        print("\n  LUU Y PHAM VI. Sai lech nam o truong `groundtruth` trong metadata.")
-        print("  NHAN yes/no dung de cham diem KHONG bi anh huong: chung suy ra tu")
-        print("  chuoi `reasoning`, von dung dung luat xac suat toan phan. Kiem rieng")
-        print("  tren 1.580 cau marginal: nhan khop cong thuc dung 99,05%, va ca 15")
-        print("  truong hop lech deu roi dung vao gia tri 0,50 - tuc lam tron hai chu")
-        print("  so thap phan, khong phai sai nhan. Ai dung `meta.groundtruth` lam")
-        print("  muc tieu hoi quy hay de phan tich thi bi sai; ai cham yes/no thi khong.")
+        print("\n  PHAM VI. Sai lech nam o truong `groundtruth` trong metadata, va")
+        print("  no CO cham toi nhan yes/no dung de cham diem.")
+        print("\n  DINH CHINH 2026-09-20. Ban truoc cua khoi nay in ra khang dinh")
+        print("  nguoc lai - rang nhan yes/no khong bi anh huong, dan mot phep kiem")
+        print("  99,05% tren 1.580 cau marginal. Phep kiem do so nhan voi gia tri in")
+        print("  trong chuoi `reasoning` DA LAM TRON HAI CHU SO, ma lam tron xoa sach")
+        print("  khac biet dung o vung sat nguong. Va khang dinh do la mot CHUOI KY TU")
+        print("  CUNG, khong phai mot phep tinh.")
+        print("\n  Con so that, TINH TAI CHO chu khong phai chuoi cung:")
+        try:
+            import importlib.util as _il
+            _sp = _il.spec_from_file_location(
+                "vl", str(Path(__file__).resolve().parent / "verify_labels.py"))
+            _vl = _il.module_from_spec(_sp)
+            _sp.loader.exec_module(_vl)
+            _brk, _tot, _per = _vl.count_label_flips(verbose=False, write_csv=True)
+            print(f"  tren {_tot} cau ma gia tri dung va gia tri cong bo nam HAI PHIA")
+            print(f"  nguong, {_brk}/{_tot} nhan di theo gia tri HONG "
+                  f"({100.0 * _brk / _tot:.1f}%).")
+            print("  Phan ra theo query_type: " +
+                  ", ".join(f"{k} {v.get('hong', 0)}/{sum(v.values())}"
+                            for k in sorted(_per) for v in [_per[k]]))
+        except Exception as _e:
+            print(f"  (khong chay duoc verify_labels.py: {_e})")
+            print("  Chay tay `python scripts/verify_labels.py` de co con so.")
 
     print("\n" + "=" * W)
     n_ok = int(df.khop.sum())
@@ -456,13 +477,15 @@ def main():
     if clean:
         print("\nGROUND TRUTH DUNG TOAN BO")
     elif explained:
-        # Every mismatch is accounted for by the diagnosed upstream defect, and
-        # none of it reaches the yes/no labels this project scores against. That
-        # is a finding to report, not a reason to abort the pipeline, so the
-        # exit code stays 0 and run_full.sh continues.
+        # Every mismatch is accounted for by the diagnosed upstream defect. It
+        # DOES reach the yes/no labels near the decision threshold - see
+        # scripts/verify_labels.py, which counts how many decisive labels
+        # follow the broken value. That is a finding to report, not a reason
+        # to abort, so the exit code stays 0 and run_full.sh continues.
         print("\nDAI LUONG NHAN QUA DUNG TOAN BO tren 9/10 ho.")
-        print("Sai lech con lai DA GIAI THICH HET bang loi thuong nguon o muc 4,")
-        print("va khong cham toi nhan yes/no. Khong phai loi cua du an nay.")
+        print("Sai lech con lai DA GIAI THICH HET bang loi thuong nguon o muc 4.")
+        print("No KHONG phai loi cua du an nay, nhung no CO cham toi nhan yes/no")
+        print("o vung sat nguong - xem scripts/verify_labels.py.")
     else:
         print("\nCO SAI LECH CHUA GIAI THICH DUOC - DIEU TRA THEM")
     print(f"da ghi {out}")
