@@ -155,7 +155,7 @@ def main():
     print(comp.round(2).to_string())
     comp.round(2).to_csv(ROOT / "results" / f"induction_vs_curve{a.tag}.csv")
 
-    print("\n  INDUCED so voi cac moc:")
+    print("\n  INDUCED against the reference points:")
     for m in comp.index:
         if m not in acc_ind:
             continue

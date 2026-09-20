@@ -1,4 +1,4 @@
-loai,ho,so_canh,k,ty_le_canh_hong,mat_pp,ci_lo,ci_hi,n_item
+error_type,family,n_edges,k,frac_edges_corrupted,loss_pp,ci_lo,ci_hi,n_items
 DR,confounding,3,1,0.333,4.68,-0.58,10.53,57
 DR,confounding,3,2,0.667,16.67,8.48,24.85,57
 DR,confounding,3,3,1.0,13.45,4.68,22.81,57

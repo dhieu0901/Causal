@@ -1,23 +1,26 @@
-"""Tach ket qua cau truc theo TUNG HO DO THI, tren mau GOP n=490.
+"""Break the structure result down BY GRAPH FAMILY, on the POOLED n=490 sample.
 
-Vi sao co file nay, va vi sao no da duoc viet lai. Ban dau no chay tren mau
-kham pha n=86 - dung mau ma REPORT muc 4.0 da RUT vi loi nguyen nguoi thang
-cuoc: DiD cua no la +12,71 trong khi uoc luong gop la +5,98. Voi 7 den 10 item
-moi ho, khoang tin cay tung ho rong ±20 den ±40 pp, nen bang do chi la manh moi.
+Why this file exists, and why it was rewritten. It originally ran on the
+exploratory sample, n=86 - the very sample REPORT section 4.0 RETRACTED for
+winner's curse: its DiD is +12.71 against a pooled estimate of +5.98. With 7 to
+10 items per family the confidence intervals were +-20 to +-40 pp, so that table
+was a lead, not a result.
 
-`pool_samples.py` phuc hoi duoc anh xa item -> id goc CLadder, nen ba mau gop
-lai duoc. Tren mau gop, moi ho co khoang 30 den 70 item thay vi 7 den 10. Day
-la phep kiem bien manh moi thanh ket qua - hoac giet no gon gang.
+`pool_samples.py` recovers the item -> CLadder id map, so the three samples can
+be pooled. On the pooled sample each family has roughly 30 to 70 items instead of
+7 to 10. That is the test that turns the lead into a result, or kills it cleanly.
 
-PHEP SO SANH DUNG PSEUDO o ca ba mau, vi hai mau lon chi co tu vung do. Mau
-kham pha co ba tu vung an danh nhung dung ca ba se khong so sanh duoc.
+THE CONTRAST USES PSEUDO in all three samples, because the two large samples have
+only that lexicon. The exploratory sample also has PERMUTE and SYMBOL, but using
+all three would not be comparable across samples.
 
-LUU Y PHAM VI. Mau `price400` chay voi kmax=3 nen chi phu 7 ho; ba ho hai canh
-(chain, collision, fork) chi den tu `lex` va `n600`. So item moi ho vi the khong
-deu, va cot n phai doc kem moi o.
+SCOPE WARNING. The `price400` sample ran with kmax=3 and therefore covers only 7
+families; the three two-edge families (chain, collision, fork) come from `lex` and
+`n600` alone. Items per family are uneven, so the n column has to be read with
+every cell.
 
-Chay:  python scripts/analyze_by_family.py
-Ket qua: in bang, ghi results/family_breakdown.csv
+Run:  python scripts/analyze_by_family.py
+Writes: results/family_breakdown.csv
 """
 
 from __future__ import annotations
@@ -30,18 +33,18 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
-
 import pandas as pd
 
-from pool_samples import LEX_GOP, MAU, SEED, boot, did_mau, kiem_anh_xa, _pilot
+from pool_samples import (POOL_LEXICON, SAMPLES, SEED, boot, did_sample,
+                          verify_item_map, _pilot)
 
-# Ho duy nhat ma CLadder tinh sai CA BON dai luong nhan qua, khong chi P(Y=1).
-# Xem scripts/audit_cladder_arithmetic.py.
-NGHI_NGO = {"arrowhead"}
+# The one family where CLadder miscomputes ALL FOUR causal quantities, not just
+# P(Y=1). See scripts/audit_cladder_arithmetic.py.
+SUSPECT = {"arrowhead"}
 
 
-def cau_truc():
-    """(so nut, so canh) moi ho, doc thang tu khoa tham so trong cladder-meta."""
+def structure():
+    """(n_nodes, n_edges) per family, read straight off CLadder's parameter keys."""
     import importlib.util
     spec = importlib.util.spec_from_file_location(
         "vg", str(ROOT / "scripts" / "verify_groundtruth.py"))
@@ -57,90 +60,90 @@ def cau_truc():
     return out
 
 
-def ma_tran_gop():
-    """Ma tran DiD (id x o) gop ca ba mau, va anh xa id -> graph_id."""
+def pooled_matrix():
+    """The DiD matrix (id x cell) pooled over all three samples, plus id -> family."""
     pilot = _pilot()
     full = pd.read_csv(ROOT / "data" / "full_v1.5_default.csv")
     per = {}
-    for tag, n, kmax, drop in MAU:
-        amap = kiem_anh_xa(tag, n, kmax, drop, full, pilot)
-        W = did_mau(tag, amap, [LEX_GOP])
+    for tag, n, kmax, drop in SAMPLES:
+        imap = verify_item_map(tag, n, kmax, drop, full, pilot)
+        W = did_sample(tag, imap, [POOL_LEXICON])
         if not W.empty:
             per[tag] = W.rename(columns=lambda c: f"{tag}|{c}")
     if not per:
-        raise SystemExit("khong dung duoc ma tran DiD")
-    G = pd.concat(per.values(), axis=1)
-    ho = full.set_index("id").graph_id
-    return G, ho
+        raise SystemExit("could not build the DiD matrix")
+    return pd.concat(per.values(), axis=1), full.set_index("id").graph_id
 
 
-def bao(ten, W, extra, rows):
+def report(label, W, extra, rows):
     n = len(W.index.unique())
     if W.empty or n < 5:
-        print(f"  {ten:30s} chi {n} item, bo qua")
+        print(f"  {label:30s} only {n} items, skipped")
         return
     est, lo, hi, p = boot(W)
-    co = "  <- nhan CLadder hong" if extra.get("nghi_ngo") else ""
-    print(f"  {ten:30s} {est:+7.2f}  [{lo:+7.2f} ; {hi:+7.2f}]  p={p:.4f}  n={n}{co}")
-    rows.append({"lat_cat": ten, **extra, "uoc_luong_pp": round(est, 2),
+    flag = "  <- CLadder labels broken" if extra.get("suspect_labels") else ""
+    print(f"  {label:30s} {est:+7.2f}  [{lo:+7.2f} ; {hi:+7.2f}]  p={p:.4f}  n={n}{flag}")
+    rows.append({"slice": label, **extra, "estimate_pp": round(est, 2),
                  "ci_lo": round(lo, 2), "ci_hi": round(hi, 2),
-                 "p_boot": round(p, 4), "n_item": n})
+                 "p_boot": round(p, 4), "n_items": n})
 
 
 def main():
-    G, ho = ma_tran_gop()
-    st = cau_truc()
-    fam = ho.reindex(G.index)
+    G, fam_of = pooled_matrix()
+    st = structure()
+    fam = fam_of.reindex(G.index)
     if fam.isna().any():
-        raise SystemExit("co id khong tra duoc graph_id")
+        raise SystemExit("some ids have no graph_id")
 
     print("=" * 88)
-    print("DiD THEO CAU TRUC DO THI - mau GOP ba nguon, bo trung theo id goc")
+    print("DiD BY GRAPH STRUCTURE - three samples pooled, de-duplicated by id")
     print("=" * 88)
     print("  DiD_i = [(KEEP - PSEUDO) | RAW] - [(KEEP - PSEUDO) | ORACLE]")
-    print("  nhom cau hoi nhan qua that, bootstrap cum theo item, 4000 lan, seed", SEED)
-    print(f"  tong {len(G)} item tren {G.shape[1]} o (mau x model)\n")
+    print("  genuinely-causal query group, cluster bootstrap over items, 4000 draws,"
+          " seed", SEED)
+    print(f"  {len(G)} items over {G.shape[1]} cells (sample x model)\n")
 
     rows = []
-    print("1. TUNG HO DO THI  (sap theo so canh, roi ten)")
-    print(f"  {'ho':30s} {'DiD':>7s}  {'khoang tin cay 95%':>20s}")
+    print("1. BY FAMILY  (ordered by edge count, then name)")
+    print(f"  {'family':30s} {'DiD':>7s}  {'95% CI':>20s}")
     for g in sorted(st, key=lambda x: (st[x][1], st[x][0], x)):
         nn, ne = st[g]
         idx = fam.index[fam == g]
-        bao(f"{g} ({nn} nut, {ne} canh)", G.loc[G.index.isin(idx)],
-            {"ho": g, "so_nut": nn, "so_canh": ne, "nhanh": "ORACLE",
-             "nghi_ngo": g in NGHI_NGO}, rows)
+        report(f"{g} ({nn} nodes, {ne} edges)", G.loc[G.index.isin(idx)],
+               {"family": g, "n_nodes": nn, "n_edges": ne, "arm": "ORACLE",
+                "suspect_labels": g in SUSPECT}, rows)
 
-    print("\n2. GOP THEO SO CANH")
+    print("\n2. GROUPED BY EDGE COUNT")
     for ne in sorted({v[1] for v in st.values()}):
         gs = [g for g in st if st[g][1] == ne]
         idx = fam.index[fam.isin(gs)]
-        bao(f"{ne} canh: {', '.join(sorted(gs))}"[:30], G.loc[G.index.isin(idx)],
-            {"ho": "+".join(sorted(gs)), "so_nut": "", "so_canh": ne,
-             "nhanh": "ORACLE", "nghi_ngo": bool(set(gs) & NGHI_NGO)}, rows)
+        report(f"{ne} edges: {', '.join(sorted(gs))}"[:30], G.loc[G.index.isin(idx)],
+               {"family": "+".join(sorted(gs)), "n_nodes": "", "n_edges": ne,
+                "arm": "ORACLE", "suspect_labels": bool(set(gs) & SUSPECT)}, rows)
 
-    print("\n3. GOP THEO SO NUT")
+    print("\n3. GROUPED BY NODE COUNT")
     for nn in sorted({v[0] for v in st.values()}):
         gs = [g for g in st if st[g][0] == nn]
         idx = fam.index[fam.isin(gs)]
-        bao(f"{nn} nut ({len(gs)} ho)", G.loc[G.index.isin(idx)],
-            {"ho": "+".join(sorted(gs)), "so_nut": nn, "so_canh": "",
-             "nhanh": "ORACLE", "nghi_ngo": bool(set(gs) & NGHI_NGO)}, rows)
+        report(f"{nn} nodes ({len(gs)} families)", G.loc[G.index.isin(idx)],
+               {"family": "+".join(sorted(gs)), "n_nodes": nn, "n_edges": "",
+                "arm": "ORACLE", "suspect_labels": bool(set(gs) & SUSPECT)}, rows)
 
-    print("\n4. KIEM DO NHAY: bo ho arrowhead khoi nhom 4 nut")
-    gs = [g for g in st if g not in NGHI_NGO and st[g][0] == 4]
+    print("\n4. SENSITIVITY: drop arrowhead from the four-node group")
+    gs = [g for g in st if g not in SUSPECT and st[g][0] == 4]
     idx = fam.index[fam.isin(gs)]
-    bao("4 nut, khong arrowhead", G.loc[G.index.isin(idx)],
-        {"ho": "+".join(sorted(gs)), "so_nut": 4, "so_canh": "",
-         "nhanh": "ORACLE", "nghi_ngo": False}, rows)
+    report("4 nodes, without arrowhead", G.loc[G.index.isin(idx)],
+           {"family": "+".join(sorted(gs)), "n_nodes": 4, "n_edges": "",
+            "arm": "ORACLE", "suspect_labels": False}, rows)
 
     out = ROOT / "results" / "family_breakdown.csv"
     pd.DataFrame(rows).to_csv(out, index=False)
-    print(f"\nda ghi {out.relative_to(ROOT)}")
-    print("\nDOC BANG. Day la mau GOP n=490, khong phai mau kham pha n=86 ma cac")
-    print("ban truoc cua file nay dung. Khoang tin cay hep hon dang ke, nhung 16")
-    print("lat cat nay KHONG hieu chinh da so sanh, nen tung o van la tham do.")
-    print("O nao co arrowhead phai doc kem luu y ve nhan CLadder.")
+    print(f"\nwrote {out.relative_to(ROOT)}")
+    print("\nHOW TO READ THIS. These are the POOLED n=490 numbers, not the n=86")
+    print("exploratory sample earlier versions of this file used. The intervals are")
+    print("markedly tighter, but these 16 slices are NOT corrected for multiple")
+    print("comparisons, so any single cell remains exploratory. Cells that include")
+    print("arrowhead must be read with the CLadder label caveat.")
     return 0
 
 

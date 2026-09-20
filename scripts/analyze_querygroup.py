@@ -72,8 +72,8 @@ TIER = ["gpt-4.1-nano", "gpt-4.1-mini", "gpt-4.1"]
 ARITH = {"marginal", "correlation"}
 IDENT = {"backadj"}
 GROUPS = {"rung1_arith": ARITH, "identify": IDENT, "causal": None}
-NHAN = {"rung1_arith": "rung-1 so hoc", "identify": "backadj nhan dang",
-        "causal": "nhan qua that", "all": "gop tat ca"}
+NHAN = {"rung1_arith": "rung-1 so hoc", "identify": "backadj identification",
+        "causal": "genuinely causal", "all": "all pooled"}
 
 
 def load():
@@ -81,7 +81,7 @@ def load():
     for lex in LEXICONS:
         p = ROOT / "results" / f"pilot_raw_lex{lex}.csv"
         if not p.exists():
-            raise SystemExit(f"thieu {p.name}: chay pilot.py --lexicon {lex}")
+            raise SystemExit(f"{p.name} missing: run pilot.py --lexicon {lex}")
         out[lex] = pd.read_csv(p)
     return out
 
@@ -167,14 +167,14 @@ def main():
     W = 88
 
     print("=" * W)
-    print("0. THANH PHAN MAU THEO NHOM TRUY VAN")
+    print("0. SAMPLE COMPOSITION BY QUERY GROUP")
     print("=" * W)
     one = base[(base.model == TIER[0]) & (base.cond == "RAW")]
     rows = []
     for g in ["rung1_arith", "identify", "causal"]:
         qs = qset(base, g)
         n = int(one.query_type.isin(qs).sum())
-        rows.append({"nhom": NHAN[g], "n": n, "phan_tram": round(100 * n / len(one), 1),
+        rows.append({"group": NHAN[g], "n": n, "percent": round(100 * n / len(one), 1),
                      "query_type": ", ".join(sorted(qs & set(one.query_type)))})
     comp = pd.DataFrame(rows)
     print(comp.to_string(index=False))
@@ -183,8 +183,9 @@ def main():
     print("\n" + "=" * W)
     print("1. Delta_struct = ORACLE - RAW, PHAN RA THEO NHOM  (dieu kien KEEP)")
     print("=" * W)
-    print("  Ky vong ly thuyet: rung-1 phai bang 0 (Causal Hierarchy Theorem),")
-    print("  backadj phai rat lon (do thi LA dap an), nhan qua that la phan dang do.\n")
+    print("  Theory says: rung-1 must be 0 (Causal Hierarchy Theorem), backadj must be")
+    print("  very large (the graph IS the answer), and the genuinely-causal group is")
+    print("  the part worth measuring.\n")
     rows = []
     for m in TIER:
         r = {"model": m}
@@ -198,11 +199,11 @@ def main():
     dec = pd.DataFrame(rows)
     print(dec.to_string(index=False))
     dec.to_csv(ROOT / "results" / "querygroup_delta_struct.csv", index=False)
-    print("\n  backadj chiem 18,4% mau nhung chi phoi Delta_struct gop. Voi")
-    print("  gpt-4.1-mini, bo no ra thi Delta_struct DOI DAU.")
+    print("\n  backadj is 18.4% of the sample but dominates the pooled Delta_struct.")
+    print("  For gpt-4.1-mini, removing it FLIPS the sign of Delta_struct.")
 
     print("\n" + "=" * W)
-    print("2. McNEMAR: an danh ten bien hai bao nhieu, TRONG TUNG NHOM")
+    print("2. McNEMAR: what anonymising variable names costs, WITHIN EACH GROUP")
     print("=" * W)
     rows = []
     for g in ["all", "causal", "identify", "rung1_arith"]:
@@ -214,24 +215,24 @@ def main():
                     n, dl, p = paired(d[lex], d["KEEP"], m, cond, qs)
                     ds.append(dl)
                     ps.append(p)
-                    rows.append({"nhom": NHAN[g], "cond": cond, "model": m,
+                    rows.append({"group": NHAN[g], "cond": cond, "model": m,
                                  "lexicon": lex, "n": n,
                                  "delta_pp": None if pd.isna(dl) else round(dl, 2),
                                  "p": None if pd.isna(p) else round(p, 4)})
             sig = int(np.nansum([p < 0.05 for p in ps]))
             sig_bh = int(bh(ps).sum())
             print(f"  {NHAN[g]:16} {cond:7} tho {sig}/9   BH q=.05 {sig_bh}/9   "
-                  f"hai TB {np.nanmean(ds):+7.2f} pp")
+                  f"mean harm {np.nanmean(ds):+7.2f} pp")
         print()
     mc = pd.DataFrame(rows)
     mc.to_csv(ROOT / "results" / "querygroup_mcnemar.csv", index=False)
 
     print("=" * W)
-    print("3. PHEP KIEM TUONG TAC - luan diem tieu de, kiem dung cach")
+    print("3. THE INTERACTION TEST - the headline claim, tested properly")
     print("=" * W)
-    print("  DiD = [(KEEP-LEX)|RAW] - [(KEEP-LEX)|ORACLE], ghep cap tren giao bon o.")
-    print("  Duong > 0 nghia la do thi dung LAM GIAM tac hai cua an danh.")
-    print(f"  Bootstrap boc lai theo ITEM, {a.boot} lan.\n")
+    print("  DiD = [(KEEP-LEX)|RAW] - [(KEEP-LEX)|ORACLE], paired on the intersection")
+    print("  of the four cells. A value > 0 means the correct graph REDUCES the harm")
+    print(f"  of anonymising. Bootstrap resamples ITEMS, {a.boot} draws.\n")
     rows = []
     for g in ["all", "causal", "identify", "rung1_arith"]:
         qs = qset(base, g)
@@ -240,9 +241,9 @@ def main():
             continue
         est, lo, hi, p = boot_mean(Wd, a.seed, a.boot)
         star = "  <-- xac lap" if lo > 0 else ""
-        print(f"  {NHAN[g]:16} gop 9 o: {est:+7.2f} pp  CI 95% [{lo:+7.2f} ; {hi:+7.2f}]"
+        print(f"  {NHAN[g]:16} 9 cells pooled: {est:+7.2f} pp  95% CI [{lo:+7.2f} ; {hi:+7.2f}]"
               f"  p={p:.4f}{star}")
-        rows.append({"nhom": NHAN[g], "pham_vi": "gop 9 o", "did_pp": round(est, 2),
+        rows.append({"group": NHAN[g], "scope": "9 cells pooled", "did_pp": round(est, 2),
                      "ci_lo": round(lo, 2), "ci_hi": round(hi, 2), "p_boot": round(p, 4)})
         for m in TIER:
             sub = Wd[[c for c in Wd.columns if c.startswith(m + "|")]].dropna(how="all")
@@ -250,7 +251,7 @@ def main():
                 continue
             e2, l2, h2, p2 = boot_mean(sub, a.seed, a.boot)
             print(f"      {m:16} {e2:+7.2f} pp  CI [{l2:+7.2f} ; {h2:+7.2f}]  p={p2:.4f}")
-            rows.append({"nhom": NHAN[g], "pham_vi": m, "did_pp": round(e2, 2),
+            rows.append({"group": NHAN[g], "scope": m, "did_pp": round(e2, 2),
                          "ci_lo": round(l2, 2), "ci_hi": round(h2, 2),
                          "p_boot": round(p2, 4)})
         print()
@@ -258,10 +259,10 @@ def main():
     did.to_csv(ROOT / "results" / "querygroup_interaction.csv", index=False)
 
     print("=" * W)
-    print("4. BAC THANG TU VUNG: CAN TUONG DUONG thay cho viec dem o")
+    print("4. THE LEXICAL LADDER: EQUIVALENCE BOUNDS instead of counting cells")
     print("=" * W)
-    print("  Dem o khong tach duoc 'bang 0' khoi 'thieu cong suat'. CI tren hieu")
-    print("  gop thi tach duoc, va no CO THE SAI.\n")
+    print("  Counting cells cannot separate 'zero' from 'underpowered'. A CI on the")
+    print("  pooled difference can, and it CAN BE WRONG.\n")
     rows = []
     for x, y in [("PERMUTE", "KEEP"), ("SYMBOL", "PERMUTE"), ("PSEUDO", "SYMBOL")]:
         for g in ["all", "causal"]:
@@ -279,25 +280,26 @@ def main():
             est, lo, hi, p = boot_mean(Wd, a.seed, a.boot)
             print(f"  {x:8}-{y:8} [{NHAN[g]:14}] {est:+6.2f} pp  "
                   f"CI 95% [{lo:+6.2f} ; {hi:+6.2f}]")
-            rows.append({"bac": f"{x}-{y}", "nhom": NHAN[g], "hieu_pp": round(est, 2),
+            rows.append({"rung": f"{x}-{y}", "group": NHAN[g], "delta_pp": round(est, 2),
                          "ci_lo": round(lo, 2), "ci_hi": round(hi, 2)})
         print()
     eq = pd.DataFrame(rows)
     eq.to_csv(ROOT / "results" / "querygroup_equivalence.csv", index=False)
-    print("  Bac 1 la hieu ung that; bac 2 va bac 3 bi chan chat quanh 0. Do la")
-    print("  can tuong duong, khong phai luan cu tu viec khong bac bo duoc.")
+    print("  Rung 1 is a real effect; rungs 2 and 3 are tightly bounded around zero.")
+    print("  That is an equivalence bound, not an argument from failure to reject.")
 
     print("\n" + "=" * W)
     print("KET LUAN")
     print("=" * W)
-    allrow = did[(did.nhom == NHAN["all"]) & (did.pham_vi == "gop 9 o")].iloc[0]
-    caurow = did[(did.nhom == NHAN["causal"]) & (did.pham_vi == "gop 9 o")].iloc[0]
-    print(f"  Gop ca mau      : DiD {allrow.did_pp:+.2f} pp  "
+    allrow = did[(did.group == NHAN["all"]) & (did.scope == "9 cells pooled")].iloc[0]
+    caurow = did[(did.group == NHAN["causal"]) & (did.scope == "9 cells pooled")].iloc[0]
+    print(f"  Whole sample      : DiD {allrow.did_pp:+.2f} pp  "
           f"CI [{allrow.ci_lo:+.2f} ; {allrow.ci_hi:+.2f}]  p={allrow.p_boot:.4f}")
-    print(f"  Chi nhan qua that: DiD {caurow.did_pp:+.2f} pp  "
+    print(f"  Genuinely causal  : DiD {caurow.did_pp:+.2f} pp  "
           f"CI [{caurow.ci_lo:+.2f} ; {caurow.ci_hi:+.2f}]  p={caurow.p_boot:.4f}")
-    print("\n  Loc backadj va rung-1 ra thi luan diem tieu de MANH LEN, khong yeu di.")
-    print("  Da ghi: results/querygroup_*.csv")
+    print("\n  Filtering out backadj and rung-1 STRENGTHENS the headline claim rather")
+    print("  than weakening it.")
+    print("  Wrote: results/querygroup_*.csv")
 
 
 if __name__ == "__main__":

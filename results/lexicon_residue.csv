@@ -1,4 +1,4 @@
-lexicon,n_item,item_con_residue,phan_tram,tu_sot_hay_gap
-PERMUTE,174,170,97.7,"smoking, being, employee, are, lung, cancer, gender, treatment"
-SYMBOL,174,120,69.0,"are, smokers, nonsmokers, patients, patient, positively, students, larger"
-PSEUDO,174,120,69.0,"are, smokers, nonsmokers, patients, patient, positively, students, larger"
+lexicon,n_item,items_with_residue,percent,tu_sot_hay_gap
+PERMUTE,174,162,93.1,"employee, lung, cancer, smokers, nonsmokers, patients, deposit, tar"
+SYMBOL,174,107,61.5,"smokers, nonsmokers, patients, students, don, sign, letters, termination"
+PSEUDO,174,107,61.5,"smokers, nonsmokers, patients, students, don, sign, letters, termination"

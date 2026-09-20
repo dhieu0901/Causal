@@ -1,6 +1,6 @@
-buoc,doi_gi,chenh_pp,ci_lo,ci_hi,p,xac_lap,can_tuong_duong
-KEEP -> IRRELEVANT,"mat prior DUNG, tu van la that",17.67,9.24,26.53,0.0,co,26.53
-IRRELEVANT -> PERMUTE,bi gan prior SAI,2.83,-2.4,8.48,0.326,khong,8.48
-IRRELEVANT -> SYMBOL,tu that -> ky hieu,0.4,-5.56,6.37,0.969,khong,6.37
-SYMBOL -> PSEUDO,ky hieu -> tu gia,-0.39,-6.32,5.51,0.9605,khong,6.32
-KEEP -> PERMUTE,"bac 1 cu, doi BA thu cung luc",19.68,11.69,28.51,0.0,co,28.51
+step,changes,delta_pp,ci_lo,ci_hi,p,established,equivalence_bound
+KEEP -> IRRELEVANT,"loses the CORRECT prior, words stay real",17.67,9.24,26.53,0.0,yes,26.53
+IRRELEVANT -> PERMUTE,handed a WRONG prior,2.83,-2.4,8.48,0.326,no,8.48
+IRRELEVANT -> SYMBOL,real words -> bare symbols,0.4,-5.56,6.37,0.969,no,6.37
+SYMBOL -> PSEUDO,bare symbols -> pseudowords,-0.39,-6.32,5.51,0.9605,no,6.32
+KEEP -> PERMUTE,"the old rung 1, changes THREE things at once",19.68,11.69,28.51,0.0,yes,28.51

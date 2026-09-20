@@ -27,7 +27,7 @@ from stats import mcnemar_exact_p
 
 TIER = ["gpt-4.1-nano", "gpt-4.1-mini", "gpt-4.1"]
 TYPES = ["ED", "FE", "DR"]
-LABEL = {"ED": "thieu canh", "FE": "thua canh", "DR": "dao chieu"}
+LABEL = {"ED": "missing edge", "FE": "spurious edge", "DR": "reversed"}
 
 
 def paired(df, model):
@@ -117,9 +117,10 @@ def main():
     ap.add_argument("--induction", default="induction_raw.csv")
     ap.add_argument("--tag", default="")
     ap.add_argument("--baseline", default="RAW", choices=["RAW", "RAW_INSTR"],
-                    help="nen de tinh ngan sach va diem hoa von. RAW la nen cu; "
-                         "RAW_INSTR tru bo phan hieu ung cau lenh ra khoi tu so, "
-                         "vi ORACLE cong vao CA khoi do thi LAN cau lenh - xem "
+                    help="baseline for the budget and the break-even point. RAW is the old "
+                         "baseline; RAW_INSTR removes the instruction effect from the "
+                         "numerator, because ORACLE adds BOTH the graph block AND the "
+                         "instruction - see "
                          "scripts/analyze_instruction.py")
     a = ap.parse_args()
     base = a.baseline
@@ -138,14 +139,14 @@ def main():
     prate = (df.groupby(["model", "cond"]).parsed.mean().unstack() * 100).round(1)
 
     print("=" * 80)
-    print("1. DO CHINH XAC THEO TUNG LOAI LOI  (chi tren cau parse duoc)")
+    print("1. ACCURACY BY ERROR TYPE  (parsed answers only)")
     print("=" * 80)
     order = ["PROSE", "RAW", "ORACLE"] + [f"{t}_k{k}" for t in TYPES for k in (1, 2, 3)]
     order = [c for c in order if c in acc.columns]
     print(acc.reindex(index=models, columns=order).to_string())
     print("\n-- parse rate (%) --")
     print(prate.reindex(index=models, columns=order).to_string())
-    print("\n-- de doi chieu: cham ca cau khong parse duoc thanh sai --")
+    print("\n-- for contrast: unparseable answers scored as wrong --")
     print(acc_all.reindex(index=models, columns=order).to_string())
     acc.reindex(index=models, columns=order).to_csv(
         ROOT / "results" / f"types_accuracy{a.tag}.csv")
@@ -153,7 +154,7 @@ def main():
         ROOT / "results" / f"types_parserate{a.tag}.csv")
 
     print("\n" + "=" * 80)
-    print("2. GIA MOI CANH LOI, VA DIEM HOA VON SO VOI DUONG SAN RAW")
+    print("2. PRICE PER WRONG EDGE, AND THE BREAK-EVEN POINT AGAINST THE RAW FLOOR")
     print("=" * 80)
     rows = []
     for m in models:
@@ -168,27 +169,28 @@ def main():
             # that slope, so an unresolved slope has to stop here.
             solid = bool(bs) and bs["slope_lo"] > 0
             rows.append({
-                "model": m, "loai": f"{t} ({LABEL[t]})",
-                "gia_pp_moi_canh": round(s, 2) if ok else None,
-                "gia_lo": round(bs["slope_lo"], 2) if bs else None,
-                "gia_hi": round(bs["slope_hi"], 2) if bs else None,
+                "model": m, "error_type": f"{t} ({LABEL[t]})",
+                "price_pp_per_edge": round(s, 2) if ok else None,
+                "price_lo": round(bs["slope_lo"], 2) if bs else None,
+                "price_hi": round(bs["slope_hi"], 2) if bs else None,
                 "r2": round(r2, 2) if pd.notna(r2) else None,
-                "k_do_toi": kmax_seen,
-                "ngan_sach_pp": round(budget, 2),
-                "chan_fit": round(a0, 2) if pd.notna(a0) else None,
+                "k_measured": kmax_seen,
+                "budget_pp": round(budget, 2),
+                "fit_intercept": round(a0, 2) if pd.notna(a0) else None,
                 # Solved against the fitted line, not against ORACLE, so the
                 # break-even and the curve it comes from are the same line.
-                "hoa_von_k": round((a0 - r[base]) / s, 2) if ok and solid else None,
-                "hoa_von_lo": round(bs["k_lo"], 2) if solid and "k_lo" in bs else None,
-                "hoa_von_hi": round(bs["k_hi"], 2) if solid and "k_hi" in bs else None,
-                "canh_bao": "" if solid else "CI do doc chua tach khoi 0",
+                "breakeven_k": round((a0 - r[base]) / s, 2) if ok and solid else None,
+                "breakeven_lo": round(bs["k_lo"], 2) if solid and "k_lo" in bs else None,
+                "breakeven_hi": round(bs["k_hi"], 2) if solid and "k_hi" in bs else None,
+                "warning": "" if solid else "CI do doc chua tach khoi 0",
             })
     pr = pd.DataFrame(rows)
     print(pr.to_string(index=False))
-    print("\n  hoa_von_k giai tu chinh duong fit: (chan_fit - RAW) / gia.")
+    print("\n  breakeven_k is solved from the fitted line itself: (fit_intercept - RAW) / price.")
     print("  gia_lo/gia_hi = CI 95% bootstrap 600 lan, boc lai theo item.")
-    print("  canh_bao khi CI do doc con chua 0: khong co gia moi canh nao duoc xac lap,")
-    print("  nen hoa_von_k de trong thay vi bao mot con so khong co co so.")
+    print("  A warning is raised when the slope CI still contains 0: no price per edge")
+    print("  is established, so break-even k is left blank rather than reporting a")
+    print("  number with nothing behind it.")
     pr.to_csv(ROOT / "results" / f"types_price{a.tag}.csv", index=False)
 
     print("\n" + "=" * 80)
@@ -208,7 +210,7 @@ def main():
             delta = float(acc.loc[m, c]) - float(acc.loc[m, "RAW"])
             sig.append({"model": m, "dieu_kien": c, "n": len(i),
                         "delta_pp": round(delta, 2),
-                        "p": round(p, 4), "y_nghia": "*" if p < .05 else ""})
+                        "p": round(p, 4), "meaning": "*" if p < .05 else ""})
     sg = pd.DataFrame(sig)
     print(sg.to_string(index=False))
     sg.to_csv(ROOT / "results" / f"types_mcnemar{a.tag}.csv", index=False)
@@ -216,7 +218,7 @@ def main():
     # ---- 4. do the prices explain what induction actually costs? -----------
     ipath = ROOT / "results" / a.induction
     if not ipath.exists():
-        print(f"\n(chua co {ipath.name} - bo qua muc 4)")
+        print(f"\n({ipath.name} not present - skipping section 4)")
         return
 
     ind = pd.read_csv(ipath)
@@ -230,18 +232,19 @@ def main():
     shared = set(ind.item) & set(df.item)
     cover = len(shared) / max(1, len(set(df.item)))
     if cover < 0.9:
-        print(f"\n[BO QUA MUC 4] {ipath.name} chi trung {100*cover:.0f}% item voi "
-              f"{a.pilot}. Hai file nay khong cung mau, tru nhau se ra so vo nghia.")
-        print(f"  Chay induction.py voi cung --n, --lexicon va --tag roi truyen "
+        print(f"\n[SKIPPING SECTION 4] {ipath.name} shares only {100*cover:.0f}% of its "
+              f"items with {a.pilot}. These two files are not the same sample, so "
+              f"subtracting one from the other would be meaningless.")
+        print(f"  Run induction.py with the same --n, --lexicon and --tag, then pass "
               f"--induction cho khop.")
         return
     print("\n" + "=" * 80)
-    print("4. GIA x HO SO LOI THUC TE  ->  CO DU DOAN DUOC CHI PHI INDUCTION KHONG?")
+    print("4. PRICE x OBSERVED ERROR PROFILE  ->  DOES IT PREDICT THE INDUCTION COST?")
     print("=" * 80)
     # A price whose own fit was flagged weak is not a price. Feeding it into the
     # additive prediction would hide the uncertainty inside a number that then
     # gets compared to the observed loss as if both were solid.
-    price = {(r.model, str(r.loai).split()[0]): (None if r.canh_bao else r.gia_pp_moi_canh)
+    price = {(r.model, str(r.error_type).split()[0]): (None if r.warning else r.price_pp_per_edge)
              for r in pr.itertuples()}
     out = []
     for m in models:
@@ -265,19 +268,19 @@ def main():
             "model": m,
             **{f"so_canh_{t}": round(counts[t], 2) for t in TYPES},
             **{f"gia_{t}": price.get((m, t)) for t in TYPES},
-            "du_doan_mat_pp": round(pred_loss, 2),
-            "thuc_te_mat_pp": round(obs, 2),
-            "lech": round(obs - pred_loss, 2),
-            "chua_dinh_gia": ",".join(unpriced) or "-",
+            "predicted_loss_pp": round(pred_loss, 2),
+            "actual_loss_pp": round(obs, 2),
+            "gap": round(obs - pred_loss, 2),
+            "unpriced": ",".join(unpriced) or "-",
         })
     od = pd.DataFrame(out)
     print(od.to_string(index=False))
     od.to_csv(ROOT / "results" / f"types_prediction{a.tag}.csv", index=False)
 
-    print("\n  du_doan_mat_pp = tong(gia moi canh x so canh loi loai do) tren do thi induced")
+    print("\n  predicted_loss_pp = sum(price per edge x count of that error type) on the induced graph")
     print("  thuc_te_mat_pp = ORACLE - INDUCED")
-    print("  lech nho  -> chi phi do thi phan ra duoc theo loai loi")
-    print("  lech lon  -> con co che khac dang chi phoi")
+    print("  a small gap -> the graph cost decomposes by error type")
+    print("  a large gap -> some other mechanism is dominating")
 
 
 if __name__ == "__main__":

@@ -1,44 +1,48 @@
-"""Kiem ba loai truy van ma verify_labels.py bo trong: bac 3 va va cham.
+"""Check the three query types verify_labels.py leaves out: rung 3 and collision.
 
-Vi sao co file nay. `verify_labels.py` khai bao thang la bo giai chua ho tro
-`det-counterfactual` va `exp_away`, va no cung khong cham toi `collider_bias`
-vi truong `groundtruth` cua loai do la chuoi chu khong phai so. Cong lai la
-1.812 cau tren toan bo CLadder, va - nang hon - **28 trong 86 item cua nhom
-`causal`**, tuc nhom mang ket qua chinh cua de tai. Mo issue bat loi nhan cua
-nguoi khac ma nhan minh dung thi chua kiem la mot lo hong phai bit.
+Why this file exists. `verify_labels.py` states outright that its solver does not
+cover `det-counterfactual` or `exp_away`, and it never touches `collider_bias`
+either, because that type's `groundtruth` field is a string rather than a number.
+Together that is 1,812 questions across CLadder and - worse - **28 of the 86 items
+in the `causal` group**, the group carrying this project's headline result. Filing
+an issue about someone else's labels while one's own labels are unverified is a
+hole that has to be closed.
 
-Ba loai doi ba bo may khac nhau:
+The three types need three different machines:
 
-  exp_away          P(Y=1 | X=1, V3=1) - P(Y=1 | V3=1). Thuan quan sat, bo giai
-                    SCM san co tinh duoc ngay.
+  exp_away          P(Y=1 | X=1, V3=1) - P(Y=1 | V3=1). Purely observational, so
+                    the existing SCM solver handles it directly.
 
-  collider_bias     Cau hoi la "X co tac dong len Y khong", tren do thi va cham
-                    X->V3<-Y. Tac dong nhan qua that bang 0 dung nghia, vi Y la
-                    nut goc va do(X) khong cham toi no. Luu y: truong
-                    `formal_form` cua CLadder ghi
-                    `E[Y|do(X=1),V3=1] - E[Y|do(X=0),V3=1]`, dai luong nay KHAC 0
-                    o ca 168 cau vi dieu kien theo va cham sinh ra lien he gia.
-                    Dap an di theo tac dong nhan qua, khong di theo cong thuc do.
+  collider_bias     The question is "does X affect Y", on the collision graph
+                    X->V3<-Y. The true causal effect is exactly zero, because Y is
+                    a root and do(X) does not touch it. Note: CLadder's
+                    `formal_form` field writes
+                    `E[Y|do(X=1),V3=1] - E[Y|do(X=0),V3=1]`, and that quantity is
+                    NOT zero in any of the 168 items, because conditioning on a
+                    collider creates a spurious association. The answer follows the
+                    causal effect, not that formula.
 
-  det-counterfactual  SCM tat dinh. Co che khong phai bang xac suat ma la bieu
-                    thuc boolean in trong `reasoning.step4`, kieu `V2 = not X`,
-                    `Y = X or V2`. Tinh bang ba buoc Pearl: khu nhieu (do gia tri
-                    nut goc khop bang chung), can thiep, du doan.
+  det-counterfactual  A deterministic SCM. The mechanisms are not probability
+                    tables but boolean expressions printed in `reasoning.step4`,
+                    such as `V2 = not X`, `Y = X or V2`. Computed with Pearl's
+                    three steps: abduction (find the root values consistent with
+                    the evidence), action, prediction.
 
-Bieu thuc boolean duoc duyet bang `ast`, chi cho phep and/or/not/ten bien/hang
-so. Khong dung `eval`.
+The boolean expressions are walked with `ast`, allowing only and/or/not, variable
+names and constants. No `eval`.
 
-MOT LOI HIEN THI CUA CLADDER, tim ra khi lam file nay. O ho `diamondcut`,
-`step1` neu do thi `V1->V3, V1->X, X->Y, V3->Y`, tuc cha cua V3 la V1. Nhung
-`step4` lai viet `V3 = X` o 132 cau. Hai cach doc cho cung ket qua o the gioi
-that vi khi do X va V1 trung gia tri, nhung KHAC nhau duoi can thiep do(X): neu
-cha cua V3 la V1 thi do(X) khong lam V3 doi. Thay bang phuong trinh dung theo do
-thi thi ca 1.476 cau tai lap chuan xac; giu nguyen thi 29 cau lech. Nghia la
-DAP AN CUA CLADDER DUNG, dong phuong trinh in ra moi sai - nguoc voi issue #15,
-noi gia tri sai con cach nhan dang dung.
+A CLADDER DISPLAY BUG, found while writing this file. In the `diamondcut` family,
+`step1` states the graph as `V1->V3, V1->X, X->Y, V3->Y`, so V3's parent is V1.
+But `step4` writes `V3 = X` in 132 questions. The two readings agree in the actual
+world, because X and V1 take the same value there, but they DIFFER under the
+intervention do(X): if V3's parent is V1, then do(X) leaves V3 unchanged.
+Substituting the graph-consistent equation reproduces all 1,476 answers exactly;
+leaving it as printed leaves 29 mismatched. So CLADDER'S ANSWERS ARE RIGHT and the
+printed equation is wrong - the opposite way round from issue #15, where the value
+was wrong and the labelling rule was right.
 
-Chay:  python scripts/verify_counterfactual.py
-Ket qua: in bang, ghi results/counterfactual_verification.csv
+Run:  python scripts/verify_counterfactual.py
+Writes: results/counterfactual_verification.csv
 """
 
 from __future__ import annotations
@@ -59,9 +63,9 @@ import pandas as pd
 
 TOL = 1e-9
 FORM = re.compile(r"^Y_\{X=(\d)\}\s*=\s*(\d)\s*\|\s*(.*)$")
-# Chi ho diamondcut, chi ve phai cua V3. Hep co y: mot phep sua rong hon lam
-# hong 40 cau von dang dung.
-DIAMONDCUT_SAI = re.compile(r"^V3 = (not )?X$", re.M)
+# diamondcut only, and only the right-hand side of V3. Deliberately narrow: a
+# broader fix rewrote 288 equations and broke 40 questions that were already right.
+DIAMONDCUT_BUG = re.compile(r"^V3 = (not )?X$", re.M)
 
 
 def load_solver():
@@ -73,10 +77,10 @@ def load_solver():
 
 
 # --------------------------------------------------------------------------
-# SCM tat dinh
+# Deterministic SCM
 # --------------------------------------------------------------------------
 def bool_eval(node, env):
-    """Danh gia bieu thuc boolean. Chi and/or/not/ten bien/hang so, khong hon."""
+    """Evaluate a boolean expression. Only and/or/not, names and constants."""
     if isinstance(node, ast.BoolOp):
         vals = [bool_eval(v, env) for v in node.values]
         return int(all(vals) if isinstance(node.op, ast.And) else any(vals))
@@ -86,7 +90,7 @@ def bool_eval(node, env):
         return int(env[node.id])
     if isinstance(node, ast.Constant):
         return int(node.value)
-    raise ValueError("bieu thuc khong cho phep: %s" % ast.dump(node))
+    raise ValueError("expression not allowed: %s" % ast.dump(node))
 
 
 def parse_eqs(step4):
@@ -100,7 +104,7 @@ def parse_eqs(step4):
 
 
 def forward(eqs, roots, do=None):
-    """Chay xuoi. Bien bi can thiep khong con phuong trinh - cat nhanh."""
+    """Run the equations forward. An intervened node loses its equation."""
     env, do = dict(roots), do or {}
     env.update(do)
     for lhs, tree in eqs:
@@ -111,39 +115,39 @@ def forward(eqs, roots, do=None):
 
 
 def counterfactual(eqs, evidence, x_val, target):
-    """Ba buoc Pearl. Tra 1/0, hoac None neu bang chung khong xac dinh duy nhat."""
+    """Pearl's three steps. Returns 1/0, or None if the evidence is not decisive."""
     lhss = {l for l, _ in eqs}
     allv = set(lhss)
     for _, t in eqs:
         allv |= {n.id for n in ast.walk(t) if isinstance(n, ast.Name)}
     roots = sorted(allv - lhss)
 
-    khop = []                                     # buoc 1: khu nhieu
+    consistent = []                               # step 1: abduction
     for vals in itertools.product((0, 1), repeat=len(roots)):
         r = dict(zip(roots, vals))
         if all(forward(eqs, r).get(k) == v for k, v in evidence.items()):
-            khop.append(r)
-    if not khop:
+            consistent.append(r)
+    if not consistent:
         return None
-    res = {forward(eqs, r, do={"X": x_val})["Y"] for r in khop}   # buoc 2 va 3
+    res = {forward(eqs, r, do={"X": x_val})["Y"] for r in consistent}  # steps 2, 3
     if len(res) > 1:
         return None
     return 1 if res.pop() == target else 0
 
 
-def kiem_det(qs, rows):
+def check_deterministic(qs, rows):
     print("=" * 84)
-    print("1. DET-COUNTERFACTUAL - SCM tat dinh, ba buoc Pearl")
+    print("1. DET-COUNTERFACTUAL - deterministic SCM, Pearl's three steps")
     print("=" * 84)
     st = collections.Counter()
     for q in qs:
         m = q["meta"]
         if m["query_type"] != "det-counterfactual":
             continue
-        st["tong"] += 1
+        st["total"] += 1
         fm = FORM.match(m["formal_form"].strip())
         if not fm:
-            st["khong doc duoc formal_form"] += 1
+            st["formal_form unreadable"] += 1
             continue
         x_val, target = int(fm.group(1)), int(fm.group(2))
         evidence = {}
@@ -152,38 +156,37 @@ def kiem_det(qs, rows):
             evidence[k.strip()] = int(v)
 
         txt = str(q["reasoning"].get("step4", ""))
-        sua = m["graph_id"] == "diamondcut" and DIAMONDCUT_SAI.search(txt)
-        if sua:
-            st["phuong trinh V3 in sai, da thay theo do thi"] += 1
-            txt = DIAMONDCUT_SAI.sub(
+        if m["graph_id"] == "diamondcut" and DIAMONDCUT_BUG.search(txt):
+            st["V3 equation misprinted, replaced per the graph"] += 1
+            txt = DIAMONDCUT_BUG.sub(
                 lambda s: "V3 = %sV1" % (s.group(1) or ""), txt)
         try:
             eqs = parse_eqs(txt)
         except Exception:
-            st["khong doc duoc step4"] += 1
+            st["step4 unreadable"] += 1
             continue
         if not eqs:
-            st["step4 rong"] += 1
+            st["step4 empty"] += 1
             continue
         got = counterfactual(eqs, evidence, x_val, target)
         if got is None:
-            st["khong xac dinh duy nhat"] += 1
+            st["evidence not decisive"] += 1
         elif got == m["groundtruth"]:
-            st["KHOP"] += 1
+            st["MATCH"] += 1
         else:
-            st["LECH"] += 1
-    for k in ("tong", "KHOP", "LECH", "khong xac dinh duy nhat",
-              "phuong trinh V3 in sai, da thay theo do thi"):
+            st["MISMATCH"] += 1
+    for k in ("total", "MATCH", "MISMATCH", "evidence not decisive",
+              "V3 equation misprinted, replaced per the graph"):
         if st[k]:
             print(f"  {k:46s} {st[k]}")
-    rows.append({"loai": "det-counterfactual", "n": st["tong"],
-                 "khop": st["KHOP"], "lech": st["LECH"]})
+    rows.append({"query_type": "det-counterfactual", "n": st["total"],
+                 "match": st["MATCH"], "mismatch": st["MISMATCH"]})
     return st
 
 
-def kiem_quan_sat(vg, meta, qs, rows):
+def check_collision(vg, meta, qs, rows):
     print("\n" + "=" * 84)
-    print("2. EXP_AWAY va COLLIDER_BIAS - do thi va cham X->V3<-Y")
+    print("2. EXP_AWAY and COLLIDER_BIAS - the collision graph X->V3<-Y")
     print("=" * 84)
     scms = {m["model_id"]: m for m in meta}
     st = collections.Counter()
@@ -192,62 +195,66 @@ def kiem_quan_sat(vg, meta, qs, rows):
         qt = m["query_type"]
         if qt not in ("exp_away", "collider_bias"):
             continue
-        st[qt + " tong"] += 1
+        st[qt + " total"] += 1
         s = vg.SCM(scms[m["model_id"]]["params"])
         if qt == "exp_away":
             val = (s.prob({"Y": 1}, given={"X": 1, "V3": 1})
                    - s.prob({"Y": 1}, given={"V3": 1}))
             if abs(val - m["groundtruth"]) < TOL:
-                st["exp_away gia tri KHOP"] += 1
+                st["exp_away value MATCH"] += 1
             lab = "yes" if ((val > 0) == bool(m["polarity"])) else "no"
-            st["exp_away nhan KHOP" if lab == q["answer"]
-               else "exp_away nhan LECH"] += 1
+            st["exp_away label MATCH" if lab == q["answer"]
+               else "exp_away label MISMATCH"] += 1
         else:
             ate = s.prob({"Y": 1}, do={"X": 1}) - s.prob({"Y": 1}, do={"X": 0})
             if abs(ate) < TOL:
-                st["collider_bias tac dong = 0 chuan xac"] += 1
+                st["collider_bias causal effect is exactly 0"] += 1
             cond = (s.prob({"Y": 1}, do={"X": 1}, given={"V3": 1})
                     - s.prob({"Y": 1}, do={"X": 0}, given={"V3": 1}))
             if abs(cond) > TOL:
-                st["collider_bias cong thuc CLadder khac 0"] += 1
-            # Phai so voi NGUONG, khong so voi 0. Tac dong that bang 0, nhung
-            # phep liet ke tra ve co khi +1e-17, va `> 0` khi do cho True, lat
-            # nhan o 17 cau. Day la nhieu dau cham dong, khong phai tin hieu.
+                st["collider_bias CLadder's formal_form is nonzero"] += 1
+            # Compare against a TOLERANCE, not against 0. The true effect is zero,
+            # but the enumeration returns values like +1e-17, and `> 0` is then
+            # True, which flipped the label on 17 items. That is floating-point
+            # noise, not signal.
             lab = "yes" if ((ate > TOL) == bool(m["polarity"])) else "no"
-            st["collider_bias nhan KHOP" if lab == q["answer"]
-               else "collider_bias nhan LECH"] += 1
+            st["collider_bias label MATCH" if lab == q["answer"]
+               else "collider_bias label MISMATCH"] += 1
     for k in sorted(st):
         print(f"  {k:46s} {st[k]}")
-    print("\n  Luu y ve `collider_bias`. `formal_form` cua CLadder ghi")
-    print("  E[Y|do(X=1),V3=1] - E[Y|do(X=0),V3=1], va dai luong do khac 0 o ca")
-    print("  168 cau. Dap an lai di theo tac dong nhan qua khong dieu kien, von")
-    print("  bang 0 dung nghia. Dap an DUNG; ky hieu trong formal_form moi lech.")
+    print("\n  A note on `collider_bias`. CLadder's `formal_form` field reads")
+    print("  E[Y|do(X=1),V3=1] - E[Y|do(X=0),V3=1], and that quantity is nonzero in")
+    print("  all 168 items, because conditioning on a collider creates a spurious")
+    print("  association. The answer follows the UNCONDITIONAL causal effect, which is")
+    print("  exactly zero. The answer is RIGHT; only the notation in formal_form is off.")
     for qt in ("exp_away", "collider_bias"):
-        rows.append({"loai": qt, "n": st[qt + " tong"],
-                     "khop": st[qt + " nhan KHOP"], "lech": st[qt + " nhan LECH"]})
+        rows.append({"query_type": qt, "n": st[qt + " total"],
+                     "match": st[qt + " label MATCH"],
+                     "mismatch": st[qt + " label MISMATCH"]})
     return st
 
 
-def pham_vi_mau():
-    """Ba loai nay chiem bao nhieu trong nhom `causal` cua chinh de tai."""
+def coverage_in_sample():
+    """How much of this project's own `causal` group do these three types cover?"""
     print("\n" + "=" * 84)
-    print("3. PHAM VI TRONG MAU CUA DE TAI")
+    print("3. COVERAGE WITHIN THIS PROJECT'S SAMPLE")
     print("=" * 84)
     sys.path.insert(0, str(ROOT / "scripts"))
     try:
         from analyze_querygroup import load, qset
     except Exception as e:
-        print("  khong doc duoc mau:", e)
+        print("  could not read the sample:", e)
         return
     d = load()
     qs_set = qset(d["KEEP"], "causal")
     k = d["KEEP"]
     sub = k[k.query_type.isin(qs_set)]
     c = sub.groupby("query_type")["item"].nunique()
-    ba = [x for x in c.index if x in ("det-counterfactual", "collider_bias", "exp_away")]
-    print(f"  nhom `causal` co {sub.item.nunique()} item")
-    print(f"  trong do ba loai vua kiem: {int(c[ba].sum())} item")
-    for x in ba:
+    three = [x for x in c.index
+             if x in ("det-counterfactual", "collider_bias", "exp_away")]
+    print(f"  the `causal` group has {sub.item.nunique()} items")
+    print(f"  of which these three types account for: {int(c[three].sum())}")
+    for x in three:
         print(f"    {x:20s} {int(c[x])}")
 
 
@@ -257,26 +264,28 @@ def main():
     qs = json.loads((ROOT / "data" / "cladder-questions.json").read_text(encoding="utf-8"))
 
     rows = []
-    kiem_det(qs, rows)
-    kiem_quan_sat(vg, meta, qs, rows)
-    pham_vi_mau()
+    check_deterministic(qs, rows)
+    check_collision(vg, meta, qs, rows)
+    coverage_in_sample()
 
     df = pd.DataFrame(rows)
     out = ROOT / "results" / "counterfactual_verification.csv"
     df.to_csv(out, index=False)
 
-    tong = int(df.n.sum())
-    khop = int(df.khop.sum())
+    total = int(df.n.sum())
+    match = int(df.match.sum())
     print("\n" + "=" * 84)
-    print("KET LUAN")
+    print("CONCLUSION")
     print("=" * 84)
-    print(f"  {khop}/{tong} nhan tai lap chuan xac tren ba loai truy van con lai.")
-    if khop == tong:
-        print("  Khong con loai truy van nao chua duoc kiem doc lap. Moi nhan ma")
-        print("  de tai cham diem deu da tinh lai tu SCM hoac tu phuong trinh cau truc.")
-    print("\n  Rieng ho `diamondcut`, phuong trinh V3 in trong step4 khong khop do")
-    print("  thi in trong step1. Do la loi HIEN THI: dap an cua CLadder dung.")
-    print(f"\nda ghi {out.relative_to(ROOT)}")
+    print(f"  {match}/{total} labels reproduce exactly across the three remaining types.")
+    if match == total:
+        print("  No query type is left unverified. Every label this project scores")
+        print("  against has been recomputed, either from the SCM or from the structural")
+        print("  equations.")
+    print("\n  Separately, in the `diamondcut` family the V3 equation printed in step4")
+    print("  contradicts the graph printed in step1. That is a DISPLAY bug: CLadder's")
+    print("  answers are correct.")
+    print(f"\nwrote {out.relative_to(ROOT)}")
     return 0
 
 

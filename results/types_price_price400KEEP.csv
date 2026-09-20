@@ -1,10 +1,10 @@
-model,loai,gia_pp_moi_canh,gia_lo,gia_hi,r2,k_do_toi,ngan_sach_pp,chan_fit,hoa_von_k,hoa_von_lo,hoa_von_hi,canh_bao
-gpt-4.1-nano,ED (thieu canh),1.93,0.28,3.31,0.76,3,3.93,77.98,1.75,-2.87,6.6,
-gpt-4.1-nano,FE (thua canh),3.05,-2.07,3.63,0.99,2,3.93,78.35,,,,CI do doc chua tach khoi 0
-gpt-4.1-nano,DR (dao chieu),1.08,-0.72,2.12,0.17,3,3.93,75.59,,,,CI do doc chua tach khoi 0
-gpt-4.1-mini,ED (thieu canh),2.59,1.27,3.69,0.9,3,7.53,86.69,2.51,1.27,4.36,
-gpt-4.1-mini,FE (thua canh),3.23,-0.24,4.29,0.69,2,7.53,86.49,,,,CI do doc chua tach khoi 0
-gpt-4.1-mini,DR (dao chieu),4.88,3.23,6.57,0.88,3,7.53,85.57,1.1,0.45,2.01,
-gpt-4.1,ED (thieu canh),2.55,0.84,3.29,0.9,3,4.95,86.57,1.76,-0.62,3.63,
-gpt-4.1,FE (thua canh),1.77,-2.53,1.15,0.52,2,4.95,86.05,,,,CI do doc chua tach khoi 0
-gpt-4.1,DR (dao chieu),4.09,2.97,5.88,0.86,3,4.95,85.08,0.74,-0.21,1.4,
+model,error_type,price_pp_per_edge,price_lo,price_hi,r2,k_measured,budget_pp,fit_intercept,breakeven_k,breakeven_lo,breakeven_hi,warning
+gpt-4.1-nano,ED (missing edge),1.93,0.28,3.31,0.76,3,3.93,77.98,1.75,-2.87,6.6,
+gpt-4.1-nano,FE (spurious edge),3.05,-2.07,3.63,0.99,2,3.93,78.35,,,,CI do doc chua tach khoi 0
+gpt-4.1-nano,DR (reversed),1.08,-0.72,2.12,0.17,3,3.93,75.59,,,,CI do doc chua tach khoi 0
+gpt-4.1-mini,ED (missing edge),2.59,1.27,3.69,0.9,3,7.53,86.69,2.51,1.27,4.36,
+gpt-4.1-mini,FE (spurious edge),3.23,-0.24,4.29,0.69,2,7.53,86.49,,,,CI do doc chua tach khoi 0
+gpt-4.1-mini,DR (reversed),4.88,3.23,6.57,0.88,3,7.53,85.57,1.1,0.45,2.01,
+gpt-4.1,ED (missing edge),2.55,0.84,3.29,0.9,3,4.95,86.57,1.76,-0.62,3.63,
+gpt-4.1,FE (spurious edge),1.77,-2.53,1.15,0.52,2,4.95,86.05,,,,CI do doc chua tach khoi 0
+gpt-4.1,DR (reversed),4.09,2.97,5.88,0.86,3,4.95,85.08,0.74,-0.21,1.4,

@@ -57,9 +57,9 @@ def make_items(n, seed, kmax=3, data="full_v1.5_default.csv", pair_to=None,
     has_q = d.prompt.str.contains(r"\?", regex=True).mean()
     if has_q < 0.99:
         raise SystemExit(
-            f"{data}: chi {100*has_q:.1f}% prompt co cau hoi. File nay bi cat mat "
-            f"phan cau hoi, khong dung de cham diem duoc. Dung "
-            f"full_v1.5_default.csv, va doi tu vung bang --lexicon.")
+            f"{data}: only {100*has_q:.1f}% of prompts contain a question. This file "
+            f"has had its question removed and cannot be scored. Use "
+            f"full_v1.5_default.csv and change the lexicon with --lexicon.")
 
     if drop_nonsense:
         d = d[~d.story_id.astype(str).str.startswith("nonsense")]
@@ -90,7 +90,7 @@ def make_items(n, seed, kmax=3, data="full_v1.5_default.csv", pair_to=None,
 
 
 def build_jobs(items, kmax=3, seed=0, types=("DR",), lexicon="KEEP",
-               drop_residue=False, with_instr=False):
+               drop_residue=False, with_instr=False, with_names=False):
     """Every graph is built over the story's own variable names.
 
     Using the symbol DAG (X -> V2 -> Y) beside a body about husbands and wives
@@ -152,6 +152,13 @@ def build_jobs(items, kmax=3, seed=0, types=("DR",), lexicon="KEEP",
             # reads it. See src/prompts.py for what the condition separates.
             jobs.append(dict(cond="RAW_INSTR", prompt=build(prompt, "RAW_INSTR"),
                              **meta))
+        if with_names:
+            # The matched control for ORACLE: same block, same instruction, same
+            # set of variable names, NOT ONE ARROW. ORACLE minus NAMES_ONLY
+            # isolates what the edges are worth. Opt-in, because it adds a call
+            # per item and no existing analysis reads it.
+            jobs.append(dict(cond="NAMES_ONLY",
+                             prompt=build(prompt, "NAMES_ONLY", edges), **meta))
         nodes = sorted({n for e in edges for n in e})
         for t in types:
             for k in range(1, kmax + 1):
@@ -162,14 +169,15 @@ def build_jobs(items, kmax=3, seed=0, types=("DR",), lexicon="KEEP",
                 jobs.append(dict(cond=f"{t}_k{k}",
                                  prompt=build(prompt, "PERTURB", bad), **meta))
     if unrelabelled:
-        print(f"    [lexicon {lexicon}] bo {unrelabelled} item khong thay het duoc tu vung")
+        print(f"    [lexicon {lexicon}] dropped {unrelabelled} items that could not be "
+              f"fully relabelled")
     if dirty:
-        verb = "da BO" if drop_residue else "GIU (chi bao cao)"
-        print(f"    [lexicon {lexicon}] {dirty} item con residue ngoai variable_mapping"
+        verb = "DROPPED" if drop_residue else "KEPT (reported only)"
+        print(f"    [lexicon {lexicon}] {dirty} items carry residue outside variable_mapping"
               f" - {verb}")
         if not drop_residue:
-            print(f"    [lexicon {lexicon}] residue lam dieu kien nay lech VE PHIA KEEP;"
-                  f" xem REPORT.md muc 7.2")
+            print(f"    [lexicon {lexicon}] residue biases this condition TOWARDS KEEP;"
+                  f" see REPORT.md section 7.2")
     return jobs
 
 
@@ -193,16 +201,20 @@ def main():
                     help="keep only the real-word stories; full_v1.5_default.csv "
                          "is 38%% pseudoword otherwise")
     ap.add_argument("--with-instr", action="store_true", dest="with_instr",
-                    help="them dieu kien RAW_INSTR: cau lenh suy luan nhan qua nhung KHONG co khoi do thi, de tach hai hieu ung trong Delta_struct")
+                    help="add the RAW_INSTR condition: a causal-reasoning instruction with NO graph block, to split the two effects inside Delta_struct")
+    ap.add_argument("--names-only", action="store_true", dest="with_names",
+                    help="add the NAMES_ONLY condition: the variable names listed and not one arrow. The matched control for ORACLE, isolating what the EDGES are worth")
     ap.add_argument("--drop-residue", action="store_true", dest="drop_residue",
-                    help="bo item con danh tu that ngoai variable_mapping. Doi "
-                         "mau, nen KHONG so sanh truc tiep voi ket qua cu")
+                    help="drop items that still carry real nouns outside "
+                         "variable_mapping. This CHANGES the sample, so results are "
+                         "NOT directly comparable with earlier runs")
     a = ap.parse_args()
 
     items = make_items(a.n, a.seed, a.kmax, a.data, a.pair_to, a.drop_nonsense)
     jobs = build_jobs(items, a.kmax, a.seed,
                       tuple(t.strip() for t in a.types.split(",")), a.lexicon,
-                      drop_residue=a.drop_residue, with_instr=a.with_instr)
+                      drop_residue=a.drop_residue, with_instr=a.with_instr,
+                      with_names=a.with_names)
     print(f"items={len(items)}  jobs/model={len(jobs)}  lexicon={a.lexicon}  "
           f"paired_to={a.pair_to}  families={sorted(items.graph_id.unique())}")
 
@@ -262,7 +274,7 @@ def main():
                 print(f"  {c}: {sub.loc[c,'acc']:.2f}  (vs RAW {sub.loc[c,'acc']-raw:+.2f} pp)")
 
     print("\n" + "=" * 70)
-    print("McNEMAR EXACT (paired, tren cung item)")
+    print("McNEMAR EXACT (paired, on the same items)")
     print("=" * 70)
     for m in df.model.unique():
         s = df[df.model == m].pivot_table(index="item", columns="cond",

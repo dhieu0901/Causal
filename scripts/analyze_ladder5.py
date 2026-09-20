@@ -55,11 +55,11 @@ IDENT = {"backadj"}
 # The three steps IRRELEVANT makes interpretable, plus the two the old ladder
 # already had, so the whole thing can be read in one table.
 STEPS = [
-    ("KEEP -> IRRELEVANT", "KEEP", "IRRELEVANT", "mat prior DUNG, tu van la that"),
-    ("IRRELEVANT -> PERMUTE", "IRRELEVANT", "PERMUTE", "bi gan prior SAI"),
-    ("IRRELEVANT -> SYMBOL", "IRRELEVANT", "SYMBOL", "tu that -> ky hieu"),
-    ("SYMBOL -> PSEUDO", "SYMBOL", "PSEUDO", "ky hieu -> tu gia"),
-    ("KEEP -> PERMUTE", "KEEP", "PERMUTE", "bac 1 cu, doi BA thu cung luc"),
+    ("KEEP -> IRRELEVANT", "KEEP", "IRRELEVANT", "loses the CORRECT prior, words stay real"),
+    ("IRRELEVANT -> PERMUTE", "IRRELEVANT", "PERMUTE", "handed a WRONG prior"),
+    ("IRRELEVANT -> SYMBOL", "IRRELEVANT", "SYMBOL", "real words -> bare symbols"),
+    ("SYMBOL -> PSEUDO", "SYMBOL", "PSEUDO", "bare symbols -> pseudowords"),
+    ("KEEP -> PERMUTE", "KEEP", "PERMUTE", "the old rung 1, changes THREE things at once"),
 ]
 
 
@@ -104,18 +104,18 @@ def main():
     ap.add_argument("--seed", type=int, default=20260907)
     ap.add_argument("--boot", type=int, default=4000)
     ap.add_argument("--cond", default="RAW",
-                    help="dieu kien cau truc de so tren do (mac dinh RAW)")
+                    help="the structure condition to compare within (default RAW)")
     ap.add_argument("--all-queries", action="store_true",
-                    help="dung ca mau thay vi chi nhom cau hoi nhan qua")
+                    help="use the whole sample instead of the genuinely-causal group only")
     a = ap.parse_args()
     causal = not a.all_queries
     D = {lex: load(lex) for lex in LADDER}
     W = 96
 
     print("=" * W)
-    print("1. THANG NAM BAC - do chinh xac theo tung bo tu vung")
+    print("1. THE FIVE-RUNG LADDER - accuracy per lexicon")
     print("=" * W)
-    scope = "chi nhom cau hoi nhan qua that" if causal else "ca mau"
+    scope = "genuinely-causal group only" if causal else "whole sample"
     print(f"  Dieu kien {a.cond}, {scope}.\n")
     rows = []
     for m in TIER:
@@ -130,9 +130,9 @@ def main():
     acc.to_csv(ROOT / "results" / "ladder5_accuracy.csv", index=False)
 
     print("\n" + "=" * W)
-    print("2. TUNG BAC DOI DUNG MOT THU - day la diem cua IRRELEVANT")
+    print("2. EACH RUNG CHANGES EXACTLY ONE THING - this is what IRRELEVANT buys")
     print("=" * W)
-    print(f"  Ghep cap theo item, bootstrap boc lai theo ITEM {a.boot} lan.\n")
+    print(f"  Paired within item, bootstrap resamples ITEMS, {a.boot} draws.\n")
     rows = []
     for label, hi, lo, what in STEPS:
         by = {m: paired(D[hi], D[lo], m, a.cond, causal) for m in TIER}
@@ -142,49 +142,52 @@ def main():
         est, bs = boot(by, a.seed, a.boot)
         clo, chi = np.percentile(bs, [2.5, 97.5])
         p = min(1.0, 2 * min((bs <= 0).mean(), (bs >= 0).mean()))
-        rows.append({"buoc": label, "doi_gi": what, "chenh_pp": round(est, 2),
+        rows.append({"step": label, "changes": what, "delta_pp": round(est, 2),
                      "ci_lo": round(clo, 2), "ci_hi": round(chi, 2),
                      "p": round(p, 4),
-                     "xac_lap": "co" if clo > 0 or chi < 0 else "khong",
-                     "can_tuong_duong": round(max(abs(clo), abs(chi)), 2)})
+                     "established": "yes" if clo > 0 or chi < 0 else "no",
+                     "equivalence_bound": round(max(abs(clo), abs(chi)), 2)})
     st = pd.DataFrame(rows)
     print(st.to_string(index=False))
     st.to_csv(ROOT / "results" / "ladder5_steps.csv", index=False)
-    print("\n  'can_tuong_duong' la cai phai doc khi mot buoc KHONG xac lap: no noi")
-    print("  hieu ung that co the lon toi dau, thay vi chi noi 'khong bac bo duoc'.")
+    print("\n  Read 'equivalence_bound' whenever a step is NOT established: it says")
+    print("  how large the true effect could still be, instead of only reporting a")
+    print("  failure to reject.")
 
     print("\n" + "=" * W)
-    print("3. DOC KET QUA")
+    print("3. READING THE RESULT")
     print("=" * W)
-    g = {r["buoc"]: r for r in rows}
+    g = {r["step"]: r for r in rows}
     k_i = g.get("KEEP -> IRRELEVANT")
     i_p = g.get("IRRELEVANT -> PERMUTE")
     i_s = g.get("IRRELEVANT -> SYMBOL")
     k_p = g.get("KEEP -> PERMUTE")
     if k_i and i_p and k_p:
-        print(f"  Bac 1 cu (KEEP -> PERMUTE) la {k_p['chenh_pp']:+.2f} pp, va no tach ra:")
-        print(f"    mat prior DUNG      {k_i['chenh_pp']:+.2f} pp  "
-              f"CI [{k_i['ci_lo']:+.2f}; {k_i['ci_hi']:+.2f}]  {k_i['xac_lap']}")
-        print(f"    bi gan prior SAI    {i_p['chenh_pp']:+.2f} pp  "
-              f"CI [{i_p['ci_lo']:+.2f}; {i_p['ci_hi']:+.2f}]  {i_p['xac_lap']}")
-        if i_p["xac_lap"] == "co" and i_p["chenh_pp"] > 0:
-            print("\n  Bi gan prior SAI co chi phi RIENG, ngoai viec mat prior dung.")
-            print("  Cung huong voi muc 9 (prior sai doc hon prior vang mat khi TRICH")
-            print("  XUAT do thi), nen bat doi xung nay dung tren CA HAI nhiem vu.")
-        elif i_p["xac_lap"] == "khong":
-            print(f"\n  Bi gan prior SAI KHONG co chi phi rieng do duoc (can tuong duong "
-                  f"{i_p['can_tuong_duong']:.2f} pp).")
-            print("  Nghia la o nhiem vu SUY LUAN, gan prior sai khong te hon chi bo")
-            print("  prior dung. Bat doi xung o muc 9 chi ap dung cho viec TRICH XUAT")
-            print("  do thi, va phai phat bieu gioi han o do.")
+        print(f"  The old rung 1 (KEEP -> PERMUTE) is {k_p['delta_pp']:+.2f} pp, and it splits:")
+        print(f"    losing a CORRECT prior   {k_i['delta_pp']:+.2f} pp  "
+              f"CI [{k_i['ci_lo']:+.2f}; {k_i['ci_hi']:+.2f}]  {k_i['established']}")
+        print(f"    being handed a WRONG one {i_p['delta_pp']:+.2f} pp  "
+              f"CI [{i_p['ci_lo']:+.2f}; {i_p['ci_hi']:+.2f}]  {i_p['established']}")
+        if i_p["established"] == "yes" and i_p["delta_pp"] > 0:
+            print("\n  Being handed a WRONG prior carries its OWN cost, beyond losing the")
+            print("  correct one. Same direction as section 9 (wrong priors are more toxic")
+            print("  than absent ones for graph EXTRACTION), so the asymmetry holds on BOTH")
+            print("  tasks.")
+        elif i_p["established"] == "no":
+            print(f"\n  Being handed a WRONG prior has NO separately measurable cost "
+                  f"(equivalence bound {i_p['equivalence_bound']:.2f} pp).")
+            print("  So on the REASONING task, a wrong prior is no worse than simply")
+            print("  removing the correct one. The asymmetry in section 9 applies to graph")
+            print("  EXTRACTION only, and must be stated with that limit.")
     if i_s:
-        tag = "co" if i_s["xac_lap"] == "co" else "khong"
-        print(f"\n  Tu that so voi ky hieu: {i_s['chenh_pp']:+.2f} pp, xac lap: {tag}.")
-        if i_s["xac_lap"] == "khong":
-            print(f"  Can tuong duong {i_s['can_tuong_duong']:.2f} pp. Khi prior da vang")
-            print("  mat o ca hai ben, viec tu co that hay khong KHONG con quan trong -")
-            print("  ung ho lap luan rang cai mat di la TRI THUC, khong phai do quen mat.")
-    print("\n  Da ghi: results/ladder5_accuracy.csv, results/ladder5_steps.csv")
+        tag = i_s["established"]
+        print(f"\n  Real words versus bare symbols: {i_s['delta_pp']:+.2f} pp, established: {tag}.")
+        if i_s["established"] == "no":
+            print(f"  Equivalence bound {i_s['equivalence_bound']:.2f} pp. Once the prior is")
+            print("  gone on both sides, whether the words are real no longer matters -")
+            print("  which supports the claim that what was lost is KNOWLEDGE, not")
+            print("  familiarity of surface form.")
+    print("\n  Wrote: results/ladder5_accuracy.csv, results/ladder5_steps.csv")
 
 
 if __name__ == "__main__":

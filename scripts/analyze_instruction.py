@@ -117,9 +117,9 @@ def main():
     W = 94
 
     print("=" * W)
-    print("1. TACH Delta_struct: bao nhieu la CAU LENH, bao nhieu la NOI DUNG DO THI")
+    print("1. SPLITTING Delta_struct: how much is the INSTRUCTION, how much the GRAPH")
     print("=" * W)
-    print("  Tren nhanh KEEP, chi nhom cau hoi nhan qua that.\n")
+    print("  On the KEEP branch, genuinely-causal query group only.\n")
     rows = []
     for m in TIER:
         s = subset(K, None)
@@ -129,18 +129,18 @@ def main():
                      "RAW": round(acc["RAW"], 2),
                      "RAW_INSTR": round(acc["RAW_INSTR"], 2),
                      "ORACLE": round(acc["ORACLE"], 2),
-                     "cau_lenh": round(acc["RAW_INSTR"] - acc["RAW"], 2),
-                     "noi_dung_do_thi": round(acc["ORACLE"] - acc["RAW_INSTR"], 2),
+                     "instruction": round(acc["RAW_INSTR"] - acc["RAW"], 2),
+                     "graph_content": round(acc["ORACLE"] - acc["RAW_INSTR"], 2),
                      "tong": round(acc["ORACLE"] - acc["RAW"], 2)})
     dec = pd.DataFrame(rows)
     print(dec.to_string(index=False))
     dec.to_csv(ROOT / "results" / "instruction_decomposition.csv", index=False)
 
     print("\n" + "=" * W)
-    print("2. PHEP KIEM QUYET DINH: cau lenh khong co do thi co tu dong")
-    print("   duoc khoang cach tu vung khong?")
+    print("2. THE DECISIVE TEST: can the instruction alone, with no graph, close")
+    print("   the lexical gap?")
     print("=" * W)
-    print("  Cung phep kiem tuong tac, cung nhom cau hoi, chi doi mot canh.")
+    print("  Same interaction test, same query group, one arm swapped.")
     print(f"  Bootstrap boc lai theo ITEM, {a.boot} lan.\n")
 
     tests = [("A. tieu de   RAW  vs ORACLE", "RAW", "ORACLE"),
@@ -159,18 +159,18 @@ def main():
             # round above 0.5 and the doubled value exceeds 1, which is not a
             # p-value and reads as a bug to anyone checking the table.
             p = min(1.0, 2 * min((bs <= 0).mean(), (bs >= 0).mean()))
-            rows.append({"nhom": gname, "phep_kiem": label.split(".")[1].strip(),
+            rows.append({"group": gname, "test": label.split(".")[1].strip(),
                          "ma": label[0], "DiD_pp": round(est, 2),
                          "ci_lo": round(clo, 2), "ci_hi": round(chi, 2),
                          "p": round(p, 4),
-                         "xac_lap": "co" if clo > 0 or chi < 0 else "khong"})
+                         "established": "yes" if clo > 0 or chi < 0 else "no"})
     res = pd.DataFrame(rows)
     for g in GROUPS:
-        sub = res[res.nhom == g]
+        sub = res[res.group == g]
         if not len(sub):
             continue
         print(f"  -- {g} --")
-        print(sub[["ma", "phep_kiem", "DiD_pp", "ci_lo", "ci_hi", "p", "xac_lap"]]
+        print(sub[["ma", "test", "DiD_pp", "ci_lo", "ci_hi", "p", "established"]]
               .to_string(index=False))
         print()
     res.to_csv(ROOT / "results" / "instruction_interaction.csv", index=False)
@@ -178,27 +178,27 @@ def main():
     print("=" * W)
     print("3. DOC KET QUA")
     print("=" * W)
-    c = res[(res.nhom == "causal")].set_index("ma")
+    c = res[(res.group == "causal")].set_index("ma")
     if {"A", "B", "C"} <= set(c.index):
         A, B, C = c.loc["A"], c.loc["B"], c.loc["C"]
         share = 100 * B.DiD_pp / A.DiD_pp if A.DiD_pp else float("nan")
         print(f"  Tuong tac tieu de (A):            {A.DiD_pp:+.2f} pp  "
               f"CI [{A.ci_lo:+.2f}; {A.ci_hi:+.2f}]  p={A.p}")
-        print(f"  Cau lenh KHONG co do thi (B):     {B.DiD_pp:+.2f} pp  "
+        print(f"  Instruction with NO graph (B):    {B.DiD_pp:+.2f} pp  "
               f"CI [{B.ci_lo:+.2f}; {B.ci_hi:+.2f}]  p={B.p}")
-        print(f"  Noi dung do thi con lai (C):      {C.DiD_pp:+.2f} pp  "
+        print(f"  Graph content on top of it (C):   {C.DiD_pp:+.2f} pp  "
               f"CI [{C.ci_lo:+.2f}; {C.ci_hi:+.2f}]  p={C.p}")
-        print(f"\n  Cau lenh tai tao {share:.0f}% do lon cua tuong tac tieu de.")
-        if C.xac_lap == "co":
-            print("  C VAN XAC LAP: noi dung do thi lam duoc mot viec rieng, ngoai")
-            print("  phan cau lenh lam duoc. Luan diem tieu de song, nhung phai phat")
-            print("  bieu lai theo C chu khong theo A.")
+        print(f"\n  The instruction alone reproduces {share:.0f}% of the headline interaction.")
+        if C.established == "yes":
+            print("  C STILL HOLDS: the graph content does something of its own, beyond")
+            print("  what the instruction does. The headline claim survives, but must be")
+            print("  restated in terms of C rather than A.")
         else:
-            print("  C KHONG XAC LAP: khi da co cau lenh trong nen, them noi dung do")
-            print("  thi KHONG con dong gop do duoc. Luan diem tieu de phai doi thanh")
-            print("  mot menh de ve viec YEU CAU model suy luan nhan qua, khong phai")
-            print("  ve viec CAP cho no cau truc. Day la mot phat hien am, va no phai")
-            print("  vao bao cao truoc khi bat ky ban thao nao duoc gui di.")
+            print("  C DOES NOT HOLD: once the instruction is in the baseline, adding the")
+            print("  graph content contributes nothing measurable. The headline claim must")
+            print("  become a statement about ASKING the model to reason causally, not")
+            print("  about SUPPLYING it with structure. This is a negative finding, and it")
+            print("  has to go into the report before any draft is submitted anywhere.")
     print("\n  Da ghi: results/instruction_decomposition.csv,")
     print("          results/instruction_interaction.csv")
 

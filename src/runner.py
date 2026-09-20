@@ -128,14 +128,14 @@ def guard_errors(records, max_rate=0.01, label=""):
         return 0
     rate = len(bad) / len(records)
     ex = bad[0]["result"].get("error", "")[:160]
-    print(f"\n  !! {len(bad)}/{len(records)} luot goi THAT BAI ({100 * rate:.2f}%)"
+    print(f"\n  !! {len(bad)}/{len(records)} calls FAILED ({100 * rate:.2f}%)"
           f"{' - ' + label if label else ''}")
     print(f"     vi du: {ex}")
     if rate > max_rate:
         raise SystemExit(
-            f"\nDUNG: ty le loi {100 * rate:.2f}% vuot nguong {100 * max_rate:.2f}%.\n"
-            "Ket qua se bi nhiem neu chay tiep - loi ha tang se vao bang nhu\n"
-            "khuyet diem cua model. Sua ket noi hoac khoa API roi chay lai;\n"
-            "cac luot da thanh cong deu nam trong cache nen khong mat tien.")
-    print(f"     duoi nguong {100 * max_rate:.2f}%, loai khoi phan tich va chay tiep")
+            f"\nSTOPPING: error rate {100 * rate:.2f}% exceeds the {100 * max_rate:.2f}% threshold.\n"
+            "Continuing would contaminate the results - infrastructure failures would\n"
+            "enter the tables as model mistakes. Fix the connection or the API key and\n"
+            "run again; every successful call is already cached, so nothing is paid twice.")
+    print(f"     below the {100 * max_rate:.2f}% threshold: excluded from the analysis, continuing")
     return len(bad)

@@ -47,7 +47,7 @@ import pandas as pd
 LEXICONS = ["KEEP", "PERMUTE", "SYMBOL", "PSEUDO"]
 TIER = ["gpt-4.1-nano", "gpt-4.1-mini", "gpt-4.1"]
 TYPES = ["DR", "ED", "FE"]
-LABEL = {"DR": "dao chieu canh", "ED": "thua mot canh", "FE": "thieu mot canh"}
+LABEL = {"DR": "reversed edge", "ED": "one spurious edge", "FE": "one missing edge"}
 ARITH = {"marginal", "correlation"}
 IDENT = {"backadj"}
 
@@ -90,7 +90,7 @@ def boot(by_model, rng, n=4000):
 def summarise(by_model, rng, boots):
     est, bs = boot(by_model, rng, boots)
     lo, hi = np.percentile(bs, [2.5, 97.5])
-    return est, lo, hi, ("co" if lo > 0 or hi < 0 else "khong")
+    return est, lo, hi, ("yes" if lo > 0 or hi < 0 else "no")
 
 
 def main():
@@ -98,7 +98,7 @@ def main():
     ap.add_argument("--seed", type=int, default=20260907)
     ap.add_argument("--boot", type=int, default=4000)
     ap.add_argument("--all-queries", action="store_true",
-                    help="dung ca mau thay vi chi nhom cau hoi nhan qua")
+                    help="use the whole sample instead of the genuinely-causal group only")
     a = ap.parse_args()
     causal = not a.all_queries
     D = {lex: load(lex) for lex in LEXICONS}
@@ -106,9 +106,9 @@ def main():
     W = 88
 
     print("=" * W)
-    print("1. GIA CUA TUNG LOAI LOI DO THI, THEO BO TU VUNG")
+    print("1. PRICE OF EACH GRAPH ERROR TYPE, BY LEXICON")
     print("=" * W)
-    scope = "chi nhom cau hoi nhan qua that" if causal else "ca mau"
+    scope = "genuinely-causal group only" if causal else "whole sample"
     print(f"  Do bang ORACLE tru <loai>_k1, {scope}, k co dinh bang 1.")
     print(f"  Gop ba model, bootstrap boc lai theo ITEM {a.boot} lan.\n")
 
@@ -123,19 +123,20 @@ def main():
             if not by:
                 continue
             est, lo, hi, ok = summarise(by, rng, a.boot)
-            rows.append({"lexicon": lex, "loai": t, "nghia": LABEL[t],
-                         "chi_phi_pp": round(est, 2), "ci_lo": round(lo, 2),
-                         "ci_hi": round(hi, 2), "xac_lap": ok,
-                         "can_tuong_duong": round(max(abs(lo), abs(hi)), 2)})
+            rows.append({"lexicon": lex, "error_type": t, "meaning": LABEL[t],
+                         "cost_pp": round(est, 2), "ci_lo": round(lo, 2),
+                         "ci_hi": round(hi, 2), "established": ok,
+                         "equivalence_bound": round(max(abs(lo), abs(hi)), 2)})
     cost = pd.DataFrame(rows)
-    print(cost[["lexicon", "loai", "chi_phi_pp", "ci_lo", "ci_hi", "xac_lap"]]
+    print(cost[["lexicon", "error_type", "cost_pp", "ci_lo", "ci_hi", "established"]]
           .to_string(index=False))
     cost.to_csv(ROOT / "results" / "errortype_by_lexicon.csv", index=False)
 
     print("\n" + "=" * W)
-    print("2. CANH BI DAO CHIEU CO DAT HON HAI LOAI KIA KHONG")
+    print("2. IS A REVERSED EDGE MORE EXPENSIVE THAN THE OTHER TWO TYPES")
     print("=" * W)
-    print("  Hieu ghep cap trong cung item, nen khong phai suy tu hai CI chong nhau.\n")
+    print("  A paired within-item difference, so this is not inferred from two")
+    print("  overlapping CIs.\n")
     rows = []
     for lex in LEXICONS:
         for other in ("ED", "FE"):
@@ -147,9 +148,9 @@ def main():
             if not by:
                 continue
             est, lo, hi, ok = summarise(by, rng, a.boot)
-            rows.append({"lexicon": lex, "so_sanh": f"DR dat hon {other}",
-                         "hieu_pp": round(est, 2), "ci_lo": round(lo, 2),
-                         "ci_hi": round(hi, 2), "xac_lap": ok})
+            rows.append({"lexicon": lex, "n_compared": f"DR dat hon {other}",
+                         "delta_pp": round(est, 2), "ci_lo": round(lo, 2),
+                         "ci_hi": round(hi, 2), "established": ok})
     rank = pd.DataFrame(rows)
     print(rank.to_string(index=False))
     rank.to_csv(ROOT / "results" / "errortype_ranking.csv", index=False)
@@ -157,25 +158,26 @@ def main():
     print("\n" + "=" * W)
     print("3. DOC KET QUA")
     print("=" * W)
-    keep_any = (cost[cost.lexicon == "KEEP"].xac_lap == "co").any()
+    keep_any = (cost[cost.lexicon == "KEEP"].established == "yes").any()
     anon = cost[cost.lexicon.isin(["SYMBOL", "PSEUDO"])]
-    dr_anon = anon[(anon.loai == "DR") & (anon.xac_lap == "co")]
+    dr_anon = anon[(anon.error_type == "DR") & (anon.established == "yes")]
     if not keep_any:
-        kb = cost[cost.lexicon == "KEEP"].can_tuong_duong.max()
-        print(f"  Tren KEEP: KHONG loai loi nao co chi phi do duoc "
+        kb = cost[cost.lexicon == "KEEP"].equivalence_bound.max()
+        print(f"  On KEEP: NO error type has a measurable cost "
               f"(can tuong duong toi da {kb:.2f} pp).")
-        print("  Con prior dung de dua vao thi do thi hong it quan trong.")
+        print("  With a correct prior to lean on, a broken graph matters little.")
     if len(dr_anon):
-        print(f"\n  Tren bo an danh: DR xac lap o {len(dr_anon)}/2 bo, "
-              f"trong khi ED va FE khong o bo nao.")
-        print("  Bo prior di thi do thi moi co gia, va thu co gia la CHIEU CANH.")
-    strict = rank[rank.xac_lap == "co"]
+        print(f"\n  On the anonymised lexicons: DR is established in {len(dr_anon)}/2 of "
+              f"them, while ED and FE are established in none.")
+        print("  Remove the prior and the graph starts to matter - and what matters is")
+        print("  EDGE DIRECTION.")
+    strict = rank[rank.established == "yes"]
     if len(strict):
         print(f"\n  DR dat hon loai khac mot cach xac lap o: "
               f"{', '.join(sorted(set(strict.lexicon)))}.")
-    print("\n  CANH BAO CO MAU. Nhom nhan qua chi con khoang 60 item moi o, nen mot")
-    print("  ket qua 'khong xac lap' o day nghia la CHUA PHAN GIAI DUOC o co mau")
-    print("  nay, khong phai bang khong. Doc cot can_tuong_duong trong file CSV.")
+    print("\n  SAMPLE-SIZE WARNING. The causal group leaves only about 60 items per cell,")
+    print("  so a 'not established' result here means NOT RESOLVABLE at this sample")
+    print("  size, not zero. Read the equivalence_bound column in the CSV.")
     print("\n  Da ghi: results/errortype_by_lexicon.csv, results/errortype_ranking.csv")
 
 

@@ -1,28 +1,29 @@
-"""Mot canh dao co phai mot lieu khong, hay lieu la TY LE canh bi hong?
+"""Is one reversed edge one dose, or is the dose the FRACTION of edges corrupted?
 
-Phan bien nhan duoc ngay 2026-09-20: dao mot canh tren do thi ba canh la hong
-33% do thi, con tren do thi nam canh chi la 20%. Vay khi bao "DR_k1" nhu mot
-dieu kien duy nhat, ta dang gop bon lieu khac nhau lai lam mot. Phan bien nay
-dung, va du lieu quet k san co du de tra loi.
+The objection, raised 2026-09-20: reversing one edge of a three-edge graph
+corrupts 33% of it, but only 20% of a five-edge graph. So reporting "DR_k1" as a
+single condition pools four different doses. The objection is correct, and the
+existing k sweep has enough data to answer it.
 
-Bay ho trong results/pilot_raw_price400KEEP.csv - 399 item, gap 2,7 lan file
-pilot_raw.csv ma ban truoc dung - voi k = 1, 2, 3:
+Seven families in results/pilot_raw_price400KEEP.csv - 399 items, 2.7x the
+pilot_raw.csv file an earlier version of this script used - with k = 1, 2, 3:
 
-    ho ba canh (confounding, mediation)                33%, 67%, 100%
-    ho bon canh (IV, diamond, diamondcut, frontdoor)   25%, 50%,  75%
-    ho nam canh (arrowhead)                            20%, 40%,  60%
+    three-edge families (confounding, mediation)               33%, 67%, 100%
+    four-edge families (IV, diamond, diamondcut, frontdoor)    25%, 50%,  75%
+    five-edge family (arrowhead)                               20%, 40%,  60%
 
-tuc chin muc lieu tu 20% den 100%. Cau hoi kiem duoc: mat mat di theo SO canh
-dao, hay theo TY LE canh dao? Neu theo ty le, cac duong cua cac ho se chap lai
-lam mot khi ve theo k/E, chu khong phai khi ve theo k.
+which is nine dose levels from 20% to 100%. The testable question: does the loss
+track the NUMBER of edges reversed, or the FRACTION? If it is the fraction, the
+per-family curves should collapse onto one line when plotted against k/E rather
+than against k.
 
-Cach do. Voi moi item, so voi chinh no o dieu kien ORACLE (ghep cap, cung item
-cung model), nen moi so la mot muc mat mat so voi do thi dung. Bootstrap cum
-theo item. Sau do hoi mot cau rat don gian: hoi quy mat mat theo k duoc R2 bao
-nhieu, theo k/E duoc bao nhieu.
+Measurement. Each item is compared against itself under ORACLE - same item, same
+model - so every number is a loss relative to having the correct graph. Cluster
+bootstrap over items. Then one very simple question: how much variance does a
+regression on k explain, and how much does one on k/E?
 
-Chay:  python scripts/analyze_dose.py
-Ket qua: in bang, ghi results/dose_response.csv
+Run:  python scripts/analyze_dose.py
+Writes: results/dose_response.csv
 """
 
 from __future__ import annotations
@@ -40,11 +41,11 @@ import pandas as pd
 
 SEED = 20260920
 NBOOT = 4000
-LOAI = {"DR": "dao chieu canh", "ED": "thieu canh", "FE": "thua canh"}
+KIND = {"DR": "reversed edge", "ED": "missing edge", "FE": "spurious edge"}
 
 
-def canh_moi_ho():
-    """So canh cua moi ho, doc thang tu khoa tham so trong cladder-meta.json."""
+def edges_per_family():
+    """Edge count per family, read straight off CLadder's parameter keys."""
     import importlib.util
     spec = importlib.util.spec_from_file_location(
         "vg", str(ROOT / "scripts" / "verify_groundtruth.py"))
@@ -60,13 +61,14 @@ def canh_moi_ho():
     return out
 
 
-def mat_mat(d, ho, cond):
-    """Mat mat ghep cap so voi ORACLE, tren tung item, gop ba model.
+def loss(d, family, cond):
+    """Paired loss against ORACLE, per item, averaged over the models.
 
-    Tra ve Series chi so la item, gia tri la trung binh tren cac model co du
-    ca hai dieu kien. Ghep cap trong item la diem manh cua thiet ke, giu no.
+    Returns a Series indexed by item whose value is the mean over the models that
+    have both conditions. Pairing within item is the design's main strength, so
+    it is preserved here.
     """
-    sub = d[(d.graph_id == ho) & (d.parsed == 1)]
+    sub = d[(d.graph_id == family) & (d.parsed == 1)]
     cols = []
     for m in sorted(sub.model.unique()):
         o = sub[(sub.model == m) & (sub.cond == "ORACLE")].set_index("item").correct
@@ -81,7 +83,7 @@ def mat_mat(d, ho, cond):
 
 
 def boot(v, seed=SEED, n=NBOOT):
-    """Bootstrap cum theo item cho trung binh, tra (uoc luong, lo, hi)."""
+    """Cluster bootstrap over items for the mean. Returns (estimate, lo, hi)."""
     x = v.dropna().values
     if len(x) < 5:
         return np.nan, np.nan, np.nan
@@ -94,60 +96,61 @@ def boot(v, seed=SEED, n=NBOOT):
 
 def main():
     d = pd.read_csv(ROOT / "results" / "pilot_raw_price400KEEP.csv")
-    E = canh_moi_ho()
-    hos = sorted(d.graph_id.unique(), key=lambda g: (E[g], g))
+    E = edges_per_family()
+    families = sorted(d.graph_id.unique(), key=lambda g: (E[g], g))
 
     print("=" * 86)
-    print("LIEU DUONG: mat mat so voi ORACLE theo SO canh hong va theo TY LE canh hong")
+    print("DOSE RESPONSE: loss against ORACLE, by edge COUNT and by edge FRACTION")
     print("=" * 86)
-    print("  ghep cap trong item, gop ba model, bootstrap cum theo item,",
-          NBOOT, "lan, seed", SEED)
-    print("  so duong la pp mat di so voi chinh item do khi duoc cap do thi DUNG\n")
+    print("  paired within item, averaged over three models, cluster bootstrap over",
+          NBOOT, "draws, seed", SEED)
+    print("  each number is pp lost relative to the same item given the CORRECT graph\n")
 
     rows = []
-    for loai in ("DR", "ED", "FE"):
-        conds = sorted(c for c in d.cond.unique() if c.startswith(loai + "_k"))
+    for kind in ("DR", "ED", "FE"):
+        conds = sorted(c for c in d.cond.unique() if c.startswith(kind + "_k"))
         if not conds:
             continue
-        print(f"\n{loai} - {LOAI[loai]}")
-        print(f"  {'ho':13s} {'canh':>4s} {'k':>2s} {'ty le hong':>10s} "
-              f"{'mat pp':>7s}  {'khoang tin cay':>18s} {'n':>4s}")
+        print(f"\n{kind} - {KIND[kind]}")
+        print(f"  {'family':13s} {'edges':>5s} {'k':>2s} {'fraction':>9s} "
+              f"{'loss pp':>8s}  {'95% CI':>18s} {'n':>4s}")
         print("  " + "-" * 68)
-        for ho in hos:
+        for fam in families:
             for c in conds:
                 k = int(c.split("_k")[1])
-                if k > E[ho]:
+                if k > E[fam]:
                     continue
-                v = mat_mat(d, ho, c)
+                v = loss(d, fam, c)
                 if v.empty:
                     continue
                 est, lo, hi = boot(v)
                 if np.isnan(est):
                     continue
-                ty = k / E[ho]
-                print(f"  {ho:13s} {E[ho]:4d} {k:2d} {ty:9.0%} "
-                      f"{est:+7.2f}  [{lo:+7.2f} ; {hi:+7.2f}] {len(v):4d}")
-                rows.append({"loai": loai, "ho": ho, "so_canh": E[ho], "k": k,
-                             "ty_le_canh_hong": round(ty, 3),
-                             "mat_pp": round(est, 2), "ci_lo": round(lo, 2),
-                             "ci_hi": round(hi, 2), "n_item": len(v)})
+                frac = k / E[fam]
+                print(f"  {fam:13s} {E[fam]:5d} {k:2d} {frac:8.0%} "
+                      f"{est:+8.2f}  [{lo:+7.2f} ; {hi:+7.2f}] {len(v):4d}")
+                rows.append({"error_type": kind, "family": fam, "n_edges": E[fam],
+                             "k": k, "frac_edges_corrupted": round(frac, 3),
+                             "loss_pp": round(est, 2), "ci_lo": round(lo, 2),
+                             "ci_hi": round(hi, 2), "n_items": len(v)})
 
     df = pd.DataFrame(rows)
     out = ROOT / "results" / "dose_response.csv"
     df.to_csv(out, index=False)
 
     print("\n" + "=" * 86)
-    print("LIEU NAO GIAI THICH TOT HON: so canh k, hay ty le canh k/E?")
+    print("WHICH DOSE EXPLAINS MORE: edge count k, or edge fraction k/E?")
     print("=" * 86)
-    print("  Hoi quy tuyen tinh mat mat theo tung bien, tren cac o (ho x k).")
-    print("  Neu ty le la bien dung, cac ho se chap vao mot duong khi ve theo k/E.\n")
-    print("  Cot thu ba la mo hinh chi gom bien gia cho TUNG HO, khong co lieu gi ca.")
-    print("  R2 hieu chinh de phat mo hinh nhieu tham so hon.\n")
-    print(f"  {'loai':6s} {'so o':>5s} {'R2hc theo k':>12s} {'R2hc theo k/E':>14s} "
-          f"{'R2hc theo HO':>13s} {'thang'}")
-    print("  " + "-" * 70)
+    print("  Linear regression of the loss on each variable, over the (family x k) cells.")
+    print("  If the fraction is the right variable, the families collapse onto one line")
+    print("  when plotted against k/E.\n")
+    print("  The third column is a model of FAMILY dummies alone, with no dose term.")
+    print("  Adjusted R-squared, to penalise the model with more parameters.\n")
+    print(f"  {'type':6s} {'cells':>5s} {'adjR2 on k':>12s} {'adjR2 on k/E':>14s} "
+          f"{'adjR2 on family':>16s} {'winner'}")
+    print("  " + "-" * 72)
 
-    def r2_hieu_chinh(A, y):
+    def adj_r2(A, y):
         coef, *_ = np.linalg.lstsq(A, y, rcond=None)
         resid = y - A @ coef
         ss = ((y - y.mean()) ** 2).sum()
@@ -157,35 +160,39 @@ def main():
         n, p = len(y), A.shape[1] - 1
         return 1 - (1 - r2) * (n - 1) / (n - p - 1) if n - p - 1 > 0 else np.nan
 
-    for loai in ("DR", "ED", "FE"):
-        s = df[df.loai == loai]
-        if len(s) < 4 or s.ho.nunique() < 2:
-            print(f"  {loai:6s} {len(s):5d}  qua it o de so sanh")
+    for kind in ("DR", "ED", "FE"):
+        s = df[df.error_type == kind]
+        if len(s) < 4 or s.family.nunique() < 2:
+            print(f"  {kind:6s} {len(s):5d}  too few cells to compare")
             continue
-        y = s.mat_pp.values
+        y = s.loss_pp.values
         one = np.ones((len(s), 1))
-        r2 = {"k": r2_hieu_chinh(np.hstack([s.k.values.astype(float)[:, None], one]), y),
-              "k/E": r2_hieu_chinh(np.hstack([s.ty_le_canh_hong.values[:, None], one]), y),
-              "ho": r2_hieu_chinh(np.hstack([pd.get_dummies(s.ho, drop_first=True)
-                                             .values.astype(float), one]), y)}
+        r2 = {
+            "k": adj_r2(np.hstack([s.k.values.astype(float)[:, None], one]), y),
+            "k/E": adj_r2(np.hstack([s.frac_edges_corrupted.values[:, None], one]), y),
+            "family": adj_r2(np.hstack([pd.get_dummies(s.family, drop_first=True)
+                                        .values.astype(float), one]), y),
+        }
         win = max(r2, key=lambda k: -np.inf if np.isnan(r2[k]) else r2[k])
-        print(f"  {loai:6s} {len(s):5d} {r2['k']:12.3f} {r2['k/E']:14.3f} "
-              f"{r2['ho']:13.3f} {win:>7s}")
+        print(f"  {kind:6s} {len(s):5d} {r2['k']:12.3f} {r2['k/E']:14.3f} "
+              f"{r2['family']:16.3f} {win:>8s}")
 
-    print("\n  Luu y doc bang. Bay ho chi co ba muc so canh (3, 4, 5), va ho nam canh")
-    print("  chi co MOT ho la arrowhead - dung ho ma nhan CLadder hong. Nen phep so")
-    print("  sanh nay la bang chung dinh huong, chua du de chot bien lieu nao dung.")
-    print("  Doc ket qua. MOI R2 o day deu THAP - cao nhat trong hai cot lieu la")
-    print("  0,11. Nen cau tra loi cho phan bien khong phai 'k hay k/E moi dung',")
-    print("  ma la: LIEU GIAI THICH RAT IT, du do bang cach nao.")
-    print("  Voi ED va FE, bien gia theo ho ap dao (0,36 va 0,61): cai quyet dinh la")
-    print("  CAU TRUC nao bi hong, khong phai hong bao nhieu. Voi DR thi k/E va ho")
-    print("  ngang nhau va deu yeu, nen rieng o DR chua ket luan duoc ben nao.")
-    print("\n  DINH CHINH. Ban truoc cua khoi nay chay tren results/pilot_raw.csv")
-    print("  (147 item) va bao rang R2 cua CA HAI bien lieu deu AM. Tren mau 399")
-    print("  item thi dieu do KHONG con dung voi DR: k/E len 0,11. Ket luan manh")
-    print("  'lieu khong phai bien giai thich' chi dung cho ED va FE.")
-    print(f"\nda ghi {out.relative_to(ROOT)}")
+    print("\n  HOW TO READ THIS. The seven families give only three edge counts (3, 4,")
+    print("  5), and the five-edge group is the single family arrowhead - the one whose")
+    print("  CLadder labels are broken. So this comparison is directional evidence, not")
+    print("  enough to settle which dose variable is right.")
+    print("\n  What it does show: EVERY R-squared here is low - the highest of the two")
+    print("  dose columns is 0.11. So the answer to the objection is not 'k or k/E is")
+    print("  the right one', it is that DOSE EXPLAINS VERY LITTLE either way.")
+    print("  For ED and FE the family dummies dominate (0.36 and 0.61): what matters is")
+    print("  WHICH structure is broken, not how much of it. For DR, k/E and family are")
+    print("  comparable and both weak, so DR alone is unsettled.")
+    print("\n  CORRECTION. An earlier version of this block ran on results/pilot_raw.csv")
+    print("  (147 items) and reported that BOTH dose variables had negative adjusted")
+    print("  R-squared. On 399 items that is no longer true for DR: k/E rises to 0.11.")
+    print("  The strong claim 'dose is not an explanatory variable' holds for ED and FE")
+    print("  only.")
+    print(f"\nwrote {out.relative_to(ROOT)}")
     return 0
 
 

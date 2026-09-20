@@ -1,11 +1,11 @@
-"""Sinh toan bo hinh ve cho slides.tex.
+"""Generate every figure used by slides.tex.
 
-Nguyen tac: moi con so ve len hinh phai khai ro nguon goc.
-  - Uu tien doc thang tu results/*.csv
-  - Neu chi ton tai trong REPORT.md thi khai trong FROM_REPORT kem so muc
+Rule: every number drawn on a figure must declare where it came from.
+  - Read it straight from results/*.csv wherever possible
+  - If it exists only in REPORT.md, declare it in FROM_REPORT with its section
 
-Chay:  python scripts/make_figures.py
-Ket qua: figures/*.pdf  va mot bang xuat xu in ra man hinh
+Run:  python scripts/make_figures.py
+Writes: figures/*.pdf, plus a provenance table printed to the console
 """
 
 import csv
@@ -20,10 +20,10 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULTS = os.path.join(HERE, "results")
 FIGDIR = os.path.join(HERE, "figures")
 
-# mau dong bo voi slides.tex
-C_UP = "#006E64"     # cUp   - huong tich cuc
-C_DOWN = "#AA2823"   # cDown - huong tieu cuc
-C_KEY = "#234682"    # cKey  - nhan manh trung tinh
+# colours kept in sync with slides.tex
+C_UP = "#006E64"     # cUp   - positive direction
+C_DOWN = "#AA2823"   # cDown - negative direction
+C_KEY = "#234682"    # cKey  - neutral emphasis
 C_GREY = "#777777"
 
 plt.rcParams.update({
@@ -37,13 +37,13 @@ plt.rcParams.update({
 })
 
 # ---------------------------------------------------------------------
-# Cac gia tri CHI co trong REPORT.md, chua script nao sinh ra.
-# Day la lo hong da duoc ghi nhan o REPORT muc 11 ("Script cho muc 8.1").
+# Values that exist ONLY in REPORT.md, with no script producing them.
+# This is the gap recorded in REPORT section 11 ("a script for section 8.1").
 # ---------------------------------------------------------------------
 FROM_REPORT = {
-    # Sau gia tri cua muc 4.3 va 4.4 DA duoc chuyen sang
+    # The six values from sections 4.3 and 4.4 HAVE been moved to
     # scripts/analyze_structure_arms.py -> results/structure_arms.csv.
-    # Bang nay giu lai de ghi nhan lich su, khong con dung de ve hinh.
+    # This table is kept as a record; nothing is drawn from it any more.
 }
 
 PROVENANCE = []
@@ -64,28 +64,28 @@ def save(fig, name):
     out = os.path.join(FIGDIR, name)
     fig.savefig(out, bbox_inches="tight", pad_inches=0.02, transparent=True)
     plt.close(fig)
-    print("  viet", os.path.relpath(out, HERE))
+    print("  wrote", os.path.relpath(out, HERE))
 
 
 # ---------------------------------------------------------------------
-# Hinh 1. Forest plot: do thi co can DUNG khong
+# Figure 1. Forest plot: does the graph have to be CORRECT?
 # ---------------------------------------------------------------------
 def fig_forest():
-    """Doc thang tu results/structure_arms.csv do analyze_structure_arms.py sinh."""
-    arms = {r["dai_luong"]: r for r in read_csv("structure_arms.csv")}
+    """Read straight from results/structure_arms.csv, written by analyze_structure_arms.py."""
+    arms = {r["quantity"]: r for r in read_csv("structure_arms.csv")}
     want = [
         ("DiD | ORACLE",    "true graph, as arrows",    C_UP),
         ("DiD | PROSE",     "true graph, inside prose", C_UP),
         ("DiD | DR_k1",     "one edge reversed",        C_DOWN),
-        ("ORACLE tru DR_k1", "difference of the two",   "#222222"),
+        ("ORACLE minus DR_k1", "difference of the two", "#222222"),
     ]
     rows = []
     for key, lab, col in want:
         if key not in arms:
-            sys.exit("thieu %r trong structure_arms.csv - chay "
-                     "scripts/analyze_structure_arms.py truoc" % key)
+            sys.exit("%r missing from structure_arms.csv - run "
+                     "scripts/analyze_structure_arms.py first" % key)
         r = arms[key]
-        est, lo, hi = (float(r["uoc_luong_pp"]), float(r["ci_lo"]), float(r["ci_hi"]))
+        est, lo, hi = (float(r["estimate_pp"]), float(r["ci_lo"]), float(r["ci_hi"]))
         pv = float(r["p_boot"])
         ptxt = "<0.001" if pv < 0.001 else f"{pv:.3f}".rstrip("0").rstrip(".")
         rows.append((lab, est, lo, hi, ptxt, col))
@@ -124,13 +124,13 @@ def fig_forest():
 
 
 # ---------------------------------------------------------------------
-# Hinh 2. Nang nhanh xau hay ha nhanh tot
+# Figure 2. Lifting the weak branch, or lowering the strong one
 # ---------------------------------------------------------------------
 def fig_lift_drag():
-    """Doc thang tu results/structure_arms.csv."""
-    arms = {r["dai_luong"]: r for r in read_csv("structure_arms.csv")}
-    lift = float(arms["nang nhanh an danh"]["uoc_luong_pp"])
-    drag = float(arms["keo nhanh KEEP"]["uoc_luong_pp"])
+    """Read straight from results/structure_arms.csv."""
+    arms = {r["quantity"]: r for r in read_csv("structure_arms.csv")}
+    lift = float(arms["lift, anonymised branch"]["estimate_pp"])
+    drag = float(arms["drag, KEEP branch"]["estimate_pp"])
     note("anonymised branch lifted", f"{lift:+.2f}", "results/structure_arms.csv")
     note("original-words branch lowered", f"{drag:+.2f}", "results/structure_arms.csv")
 
@@ -156,10 +156,10 @@ def fig_lift_drag():
 
 
 # ---------------------------------------------------------------------
-# Hinh 3. Bac thang tu vung - doc THANG tu ladder5_steps.csv
+# Figure 3. The lexical ladder - read STRAIGHT from ladder5_steps.csv
 # ---------------------------------------------------------------------
 def fig_ladder():
-    steps = {r["buoc"]: r for r in read_csv("ladder5_steps.csv")}
+    steps = {r["step"]: r for r in read_csv("ladder5_steps.csv")}
 
     chain = ["KEEP -> IRRELEVANT", "IRRELEVANT -> SYMBOL", "SYMBOL -> PSEUDO"]
     labels = ["KEEP", "IRRELEVANT", "SYMBOL", "PSEUDO"]
@@ -167,9 +167,9 @@ def fig_ladder():
     cum = [0.0]
     for key in chain:
         if key not in steps:
-            sys.exit("thieu buoc %r trong ladder5_steps.csv" % key)
-        cum.append(cum[-1] - float(steps[key]["chenh_pp"]))
-        note(key, f"{-float(steps[key]['chenh_pp']):+.2f} pp",
+            sys.exit("step %r missing from ladder5_steps.csv" % key)
+        cum.append(cum[-1] - float(steps[key]["delta_pp"]))
+        note(key, f"{-float(steps[key]['delta_pp']):+.2f} pp",
              "results/ladder5_steps.csv")
 
     first = steps[chain[0]]
@@ -188,7 +188,7 @@ def fig_ladder():
                 ha="left", va="center", fontsize=6.3, color=C_DOWN)
 
     rest = ", ".join(
-        f"{-float(steps[k]['chenh_pp']):+.2f}" for k in chain[1:])
+        f"{-float(steps[k]['delta_pp']):+.2f}" for k in chain[1:])
     ax.annotate(f"next steps {rest} pp; every CI contains zero",
                 (1.5, -22.6), ha="center", va="top", fontsize=6.3, color=C_GREY,
                 annotation_clip=False)
@@ -211,7 +211,7 @@ def fig_ladder():
 
 # ---------------------------------------------------------------------
 def count_calls():
-    """Dem so luot cham diem thuc te, bo qua du lieu da cach ly."""
+    """Count the responses actually scored, skipping quarantined data."""
     import glob
     total = {"pilot_raw": 0, "induction_raw": 0}
     for f in glob.glob(os.path.join(RESULTS, "*.csv")):
@@ -223,18 +223,18 @@ def count_calls():
                 with open(f, encoding="utf-8", errors="ignore") as fh:
                     total[prefix] += sum(1 for _ in fh) - 1
     n = sum(total.values())
-    note("scored model responses", f"{n:,}", "results/*_raw*.csv (dem truc tiep)")
+    note("scored model responses", f"{n:,}", "results/*_raw*.csv (counted directly)")
     return n
 
 
 def main():
-    print("sinh hinh ve:")
+    print("generating figures:")
     fig_forest()
     fig_lift_drag()
     fig_ladder()
     count_calls()
 
-    print("\nXUAT XU TUNG CON SO VE LEN HINH")
+    print("\nPROVENANCE OF EVERY NUMBER ON THE FIGURES")
     print("-" * 78)
     w = max(len(a) for a, _, _ in PROVENANCE)
     for what, val, src in PROVENANCE:
@@ -242,9 +242,9 @@ def main():
         print(f"  [{flag}] {what:<{w}}  {val:>22}   {src}")
     print("-" * 78)
     n_prose = sum(1 for _, _, s in PROVENANCE if not s.startswith("results/"))
-    print(f"  {len(PROVENANCE)} gia tri, trong do {n_prose} chi co trong REPORT.md")
+    print(f"  {len(PROVENANCE)} values, of which {n_prose} exist only in REPORT.md")
     if n_prose:
-        print("  => day la lo hong da ghi o REPORT muc 11, chua co script sinh ra")
+        print("  => the gap recorded in REPORT section 11: no script produces these")
 
 
 if __name__ == "__main__":

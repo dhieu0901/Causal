@@ -1,4 +1,4 @@
-model,dieu_kien,n,delta_pp,p,y_nghia
+model,dieu_kien,n,delta_pp,p,meaning
 gpt-4.1-nano,ORACLE,135,2.22,0.8601,
 gpt-4.1-nano,ED_k1,137,-2.0,1.0,
 gpt-4.1-nano,ED_k2,133,-5.99,0.2005,

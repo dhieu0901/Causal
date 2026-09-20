@@ -54,12 +54,12 @@ def main():
     kmax = len(kcols)
 
     print("=" * 78)
-    print("PILOT - ket qua")
+    print("PILOT - results")
     print("=" * 78)
     print(f"items={df.item.nunique()}  models={models}  "
           f"conditions={sorted(df.cond.unique())}")
     print(f"parse rate tong: {100*df.parsed.mean():.2f}%   "
-          f"loi API: {(df.error.astype(str) != '').sum() - (df.error.isna()).sum()}")
+          f"API errors: {(df.error.astype(str) != '').sum() - (df.error.isna()).sum()}")
 
     # ---- accuracy table ---------------------------------------------------
     print("\n" + "-" * 78)
@@ -73,7 +73,7 @@ def main():
 
     # ---- deltas -----------------------------------------------------------
     print("\n" + "-" * 78)
-    print("Q1/Q2  CAC HIEU SO THEN CHOT")
+    print("Q1/Q2  THE DECISIVE DIFFERENCES")
     print("-" * 78)
     rows = []
     for m in models:
@@ -93,7 +93,7 @@ def main():
 
     # ---- break-even -------------------------------------------------------
     print("\n" + "-" * 78)
-    print("Q3  DIEM HOA VON k* (bootstrap 4000, lay mau lai o cap item)")
+    print("Q3  BREAK-EVEN POINT k* (bootstrap 4000, resampled at item level)")
     print("-" * 78)
     be_rows = []
     for m in models:
@@ -109,11 +109,11 @@ def main():
         if not ok:
             continue
         b = bootstrap_break_even(cbk, s["RAW"].fillna(0).values, reps=4000, seed=11)
-        reach = "trong tam voi" if b["k_star"] <= kmax else "NGOAI tam do"
+        reach = "within reach" if b["k_star"] <= kmax else "OUT of reach"
         be_rows.append({"model": m, "k*": round(b["k_star"], 2),
                         "CI_lo": round(b["lo"], 2), "CI_hi": round(b["hi"], 2),
                         "rong": round(b["hi"] - b["lo"], 2),
-                        "k_da_do_toi": kmax, "danh_gia": reach})
+                        "k_da_do_toi": kmax, "verdict": reach})
     if be_rows:
         bd = pd.DataFrame(be_rows)
         print(bd.to_string(index=False))
@@ -121,7 +121,7 @@ def main():
 
     # ---- significance -----------------------------------------------------
     print("\n" + "-" * 78)
-    print("McNEMAR EXACT  (b = chi dk1 dung, c = chi dk2 dung)")
+    print("McNEMAR EXACT  (b = only cond 1 correct, c = only cond 2 correct)")
     print("-" * 78)
     pairs = [("ORACLE", "RAW")] + [(k, "RAW") for k in kcols]
     if kcols:
@@ -134,23 +134,23 @@ def main():
             r = mcnemar(s, a, b)
             if r:
                 nb, nc, p, n = r
-                sig.append({"model": m, "so_sanh": f"{a} vs {b}", "n": n,
+                sig.append({"model": m, "n_compared": f"{a} vs {b}", "n": n,
                             "b": nb, "c": nc, "p": round(p, 4),
-                            "y_nghia": "*" if p < .05 else ""})
+                            "meaning": "*" if p < .05 else ""})
     sg = pd.DataFrame(sig)
     print(sg.to_string(index=False))
     sg.to_csv(ROOT / "results" / f"pilot_mcnemar{TAG}.csv", index=False)
 
     # ---- tier trend -------------------------------------------------------
     print("\n" + "-" * 78)
-    print("Q4  HIEU UNG CO THEO THANG TIER KHONG?")
+    print("Q4  DOES THE EFFECT SCALE WITH MODEL TIER?")
     print("-" * 78)
     print(dl[["model", "Delta_struct", "doc_DR_pp_moi_canh"]].to_string(index=False))
     if len(dl) >= 2:
         d0, d1 = dl.Delta_struct.iloc[0], dl.Delta_struct.iloc[-1]
         print(f"\n  Delta_struct: {dl.model.iloc[0]} = {d0:+.2f} pp  ->  "
               f"{dl.model.iloc[-1]} = {d1:+.2f} pp")
-        print("  Gia thuyet H4 du doan model yeu huong loi it hon hoac am.")
+        print("  Hypothesis H4 predicts the weaker model gains less, or negatively.")
 
     print("\nDa ghi 5 file CSV vao results/")
 

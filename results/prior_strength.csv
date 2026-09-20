@@ -1,37 +1,37 @@
-model,cond,so_sanh,prior_ban_dau,n,delta_pp,p,y_nghia
-gpt-4.1-nano,RAW,PERMUTE - KEEP,prior dung,88,-4.55,0.5572,
-gpt-4.1-nano,RAW,PERMUTE - KEEP,prior sai san co,77,-10.39,0.0963,
-gpt-4.1-nano,RAW,SYMBOL - KEEP,prior dung,94,-13.83,0.0106,*
-gpt-4.1-nano,RAW,SYMBOL - KEEP,prior sai san co,78,-16.67,0.0106,*
-gpt-4.1-nano,RAW,PSEUDO - KEEP,prior dung,94,-15.96,0.0081,*
-gpt-4.1-nano,RAW,PSEUDO - KEEP,prior sai san co,79,-7.59,0.2632,
-gpt-4.1-nano,ORACLE,PERMUTE - KEEP,prior dung,82,-4.88,0.4807,
-gpt-4.1-nano,ORACLE,PERMUTE - KEEP,prior sai san co,71,-14.08,0.0639,
-gpt-4.1-nano,ORACLE,SYMBOL - KEEP,prior dung,90,2.22,0.8145,
-gpt-4.1-nano,ORACLE,SYMBOL - KEEP,prior sai san co,73,-13.7,0.0309,*
-gpt-4.1-nano,ORACLE,PSEUDO - KEEP,prior dung,90,-3.33,0.7111,
-gpt-4.1-nano,ORACLE,PSEUDO - KEEP,prior sai san co,72,-8.33,0.2379,
-gpt-4.1-mini,RAW,PERMUTE - KEEP,prior dung,94,-13.83,0.0072,*
-gpt-4.1-mini,RAW,PERMUTE - KEEP,prior sai san co,76,-10.53,0.1516,
-gpt-4.1-mini,RAW,SYMBOL - KEEP,prior dung,95,-10.53,0.0213,*
-gpt-4.1-mini,RAW,SYMBOL - KEEP,prior sai san co,77,-3.9,0.5811,
-gpt-4.1-mini,RAW,PSEUDO - KEEP,prior dung,95,-12.63,0.0118,*
-gpt-4.1-mini,RAW,PSEUDO - KEEP,prior sai san co,77,-14.29,0.0074,*
-gpt-4.1-mini,ORACLE,PERMUTE - KEEP,prior dung,92,1.09,1.0,
-gpt-4.1-mini,ORACLE,PERMUTE - KEEP,prior sai san co,70,-5.71,0.4807,
-gpt-4.1-mini,ORACLE,SYMBOL - KEEP,prior dung,93,-3.23,0.6476,
-gpt-4.1-mini,ORACLE,SYMBOL - KEEP,prior sai san co,74,-2.7,0.8036,
-gpt-4.1-mini,ORACLE,PSEUDO - KEEP,prior dung,92,-1.09,1.0,
-gpt-4.1-mini,ORACLE,PSEUDO - KEEP,prior sai san co,77,-5.19,0.3877,
-gpt-4.1,RAW,PERMUTE - KEEP,prior dung,92,-14.13,0.0146,*
-gpt-4.1,RAW,PERMUTE - KEEP,prior sai san co,77,-5.19,0.5235,
-gpt-4.1,RAW,SYMBOL - KEEP,prior dung,94,-13.83,0.001,*
-gpt-4.1,RAW,SYMBOL - KEEP,prior sai san co,78,-2.56,0.8145,
-gpt-4.1,RAW,PSEUDO - KEEP,prior dung,93,-10.75,0.0213,*
-gpt-4.1,RAW,PSEUDO - KEEP,prior sai san co,77,-9.09,0.2295,
-gpt-4.1,ORACLE,PERMUTE - KEEP,prior dung,95,-9.47,0.0784,
-gpt-4.1,ORACLE,PERMUTE - KEEP,prior sai san co,75,-8.0,0.2101,
-gpt-4.1,ORACLE,SYMBOL - KEEP,prior dung,94,-6.38,0.2379,
-gpt-4.1,ORACLE,SYMBOL - KEEP,prior sai san co,74,-10.81,0.0768,
-gpt-4.1,ORACLE,PSEUDO - KEEP,prior dung,95,-9.47,0.0784,
-gpt-4.1,ORACLE,PSEUDO - KEEP,prior sai san co,75,-2.67,0.8238,
+model,cond,n_compared,prior_ban_dau,n,delta_pp,p,meaning
+gpt-4.1-nano,RAW,PERMUTE - KEEP,correct prior,88,-4.55,0.5572,
+gpt-4.1-nano,RAW,PERMUTE - KEEP,wrong prior already,77,-10.39,0.0963,
+gpt-4.1-nano,RAW,SYMBOL - KEEP,correct prior,94,-13.83,0.0106,*
+gpt-4.1-nano,RAW,SYMBOL - KEEP,wrong prior already,78,-16.67,0.0106,*
+gpt-4.1-nano,RAW,PSEUDO - KEEP,correct prior,94,-15.96,0.0081,*
+gpt-4.1-nano,RAW,PSEUDO - KEEP,wrong prior already,79,-7.59,0.2632,
+gpt-4.1-nano,ORACLE,PERMUTE - KEEP,correct prior,82,-4.88,0.4807,
+gpt-4.1-nano,ORACLE,PERMUTE - KEEP,wrong prior already,71,-14.08,0.0639,
+gpt-4.1-nano,ORACLE,SYMBOL - KEEP,correct prior,90,2.22,0.8145,
+gpt-4.1-nano,ORACLE,SYMBOL - KEEP,wrong prior already,73,-13.7,0.0309,*
+gpt-4.1-nano,ORACLE,PSEUDO - KEEP,correct prior,90,-3.33,0.7111,
+gpt-4.1-nano,ORACLE,PSEUDO - KEEP,wrong prior already,72,-8.33,0.2379,
+gpt-4.1-mini,RAW,PERMUTE - KEEP,correct prior,94,-13.83,0.0072,*
+gpt-4.1-mini,RAW,PERMUTE - KEEP,wrong prior already,76,-10.53,0.1516,
+gpt-4.1-mini,RAW,SYMBOL - KEEP,correct prior,95,-10.53,0.0213,*
+gpt-4.1-mini,RAW,SYMBOL - KEEP,wrong prior already,77,-3.9,0.5811,
+gpt-4.1-mini,RAW,PSEUDO - KEEP,correct prior,95,-12.63,0.0118,*
+gpt-4.1-mini,RAW,PSEUDO - KEEP,wrong prior already,77,-14.29,0.0074,*
+gpt-4.1-mini,ORACLE,PERMUTE - KEEP,correct prior,92,1.09,1.0,
+gpt-4.1-mini,ORACLE,PERMUTE - KEEP,wrong prior already,70,-5.71,0.4807,
+gpt-4.1-mini,ORACLE,SYMBOL - KEEP,correct prior,93,-3.23,0.6476,
+gpt-4.1-mini,ORACLE,SYMBOL - KEEP,wrong prior already,74,-2.7,0.8036,
+gpt-4.1-mini,ORACLE,PSEUDO - KEEP,correct prior,92,-1.09,1.0,
+gpt-4.1-mini,ORACLE,PSEUDO - KEEP,wrong prior already,77,-5.19,0.3877,
+gpt-4.1,RAW,PERMUTE - KEEP,correct prior,92,-14.13,0.0146,*
+gpt-4.1,RAW,PERMUTE - KEEP,wrong prior already,77,-5.19,0.5235,
+gpt-4.1,RAW,SYMBOL - KEEP,correct prior,94,-13.83,0.001,*
+gpt-4.1,RAW,SYMBOL - KEEP,wrong prior already,78,-2.56,0.8145,
+gpt-4.1,RAW,PSEUDO - KEEP,correct prior,93,-10.75,0.0213,*
+gpt-4.1,RAW,PSEUDO - KEEP,wrong prior already,77,-9.09,0.2295,
+gpt-4.1,ORACLE,PERMUTE - KEEP,correct prior,95,-9.47,0.0784,
+gpt-4.1,ORACLE,PERMUTE - KEEP,wrong prior already,75,-8.0,0.2101,
+gpt-4.1,ORACLE,SYMBOL - KEEP,correct prior,94,-6.38,0.2379,
+gpt-4.1,ORACLE,SYMBOL - KEEP,wrong prior already,74,-10.81,0.0768,
+gpt-4.1,ORACLE,PSEUDO - KEEP,correct prior,95,-9.47,0.0784,
+gpt-4.1,ORACLE,PSEUDO - KEEP,wrong prior already,75,-2.67,0.8238,

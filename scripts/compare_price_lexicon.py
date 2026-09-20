@@ -48,70 +48,72 @@ def main():
     models = [m for m in TIER if m in set(K.model)]
 
     print("=" * 84)
-    print("1. GIA MOI CANH LOI - co phu thuoc che do tu vung khong?")
+    print("1. PRICE PER WRONG EDGE - does it depend on the lexical regime?")
     print("=" * 84)
     rows = []
     for m in models:
         for t in TYPES:
-            k = K[(K.model == m) & (K.loai.str.startswith(t))].iloc[0]
-            p = P[(P.model == m) & (P.loai.str.startswith(t))].iloc[0]
+            k = K[(K.model == m) & (K.error_type.str.startswith(t))].iloc[0]
+            p = P[(P.model == m) & (P.error_type.str.startswith(t))].iloc[0]
             # Two CIs that overlap do not prove equality, but a price that moved
             # would have to show up as CIs pulling apart. None of them do.
-            overlap = not (k.gia_hi < p.gia_lo or p.gia_hi < k.gia_lo)
+            overlap = not (k.price_hi < p.price_lo or p.price_hi < k.price_lo)
             rows.append({
-                "model": m, "loai": t,
-                "gia_KEEP": k.gia_pp_moi_canh,
-                "KEEP_CI": f"[{k.gia_lo:.2f}, {k.gia_hi:.2f}]",
-                "gia_PSEUDO": p.gia_pp_moi_canh,
-                "PSEUDO_CI": f"[{p.gia_lo:.2f}, {p.gia_hi:.2f}]",
-                "CI_chong_nhau": "co" if overlap else "KHONG",
+                "model": m, "error_type": t,
+                "gia_KEEP": k.price_pp_per_edge,
+                "KEEP_CI": f"[{k.price_lo:.2f}, {k.price_hi:.2f}]",
+                "gia_PSEUDO": p.price_pp_per_edge,
+                "PSEUDO_CI": f"[{p.price_lo:.2f}, {p.price_hi:.2f}]",
+                "CI_overlap": "yes" if overlap else "no",
             })
     g = pd.DataFrame(rows)
     print(g.to_string(index=False))
-    n_ov = (g.CI_chong_nhau == "co").sum()
-    print(f"\n  {n_ov}/{len(g)} cap CI chong nhau -> khong cap nao tach ra duoc.")
+    n_ov = (g.CI_overlap == "yes").sum()
+    print(f"\n  {n_ov}/{len(g)} CI pairs overlap -> no pair separates.")
     g.to_csv(ROOT / "results" / "price_by_lexicon.csv", index=False)
 
     print("\n" + "=" * 84)
-    print("2. NGAN SACH VA DIEM HOA VON - day moi la cho thay doi")
+    print("2. BUDGET AND BREAK-EVEN - this is where things change")
     print("=" * 84)
     out = []
     for m in models:
-        k = K[(K.model == m) & (K.loai.str.startswith("DR"))].iloc[0]
-        p = P[(P.model == m) & (P.loai.str.startswith("DR"))].iloc[0]
-        fmt = lambda r: ("chua xac lap" if pd.isna(r.hoa_von_k)
-                         else f"{r.hoa_von_k:.2f} [{r.hoa_von_lo:.2f}, {r.hoa_von_hi:.2f}]")
+        k = K[(K.model == m) & (K.error_type.str.startswith("DR"))].iloc[0]
+        p = P[(P.model == m) & (P.error_type.str.startswith("DR"))].iloc[0]
+        fmt = lambda r: ("not established" if pd.isna(r.breakeven_k)
+                         else f"{r.breakeven_k:.2f} [{r.breakeven_lo:.2f}, {r.breakeven_hi:.2f}]")
         out.append({"model": m,
-                    "ngan_sach_KEEP": k.ngan_sach_pp,
-                    "ngan_sach_PSEUDO": p.ngan_sach_pp,
+                    "ngan_sach_KEEP": k.budget_pp,
+                    "ngan_sach_PSEUDO": p.budget_pp,
                     "kstar_KEEP_DR": fmt(k),
                     "kstar_PSEUDO_DR": fmt(p),
                     # Carried in the file itself, not only in the printed text:
                     # anyone reading this CSV without the script must see that
                     # the contrast between the two budgets was retracted.
-                    "canh_bao": "hieu ngan sach CHUA XAC LAP, ca ba CI chua 0, "
-                                "nano di nguoc - xem REPORT.md muc 8.3"})
+                    "warning": "budget difference NOT ESTABLISHED, all three CIs "
+                                "contain 0, nano moves the other way - see REPORT.md "
+                                "section 8.3"})
     o = pd.DataFrame(out)
     print(o.to_string(index=False))
     o.to_csv(ROOT / "results" / "breakeven_by_lexicon.csv", index=False)
 
     print("""
-  CACH DOC, theo REPORT.md muc 8.3.
+  HOW TO READ THIS, per REPORT.md section 8.3.
 
-  VUNG: gia mot canh sai khong doi ro ret theo mien tu vung. 9/9 cap CI chong
-  nhau, va CI tren HIEU ghep cap la -0,11 [-1,62 ; 1,42] pp - day moi la co so
-  cua ket luan tuong duong, khong phai viec CI chong nhau.
+  SOLID: the price of one wrong edge does not vary appreciably with the lexical
+  regime. All 9 CI pairs overlap, and the CI on the PAIRED difference is
+  -0.11 [-1.62 ; 1.42] pp - that CI, not the overlap, is what supports the
+  equivalence conclusion.
 
-  CHUA XAC LAP: khang dinh "ngan sach tang gap doi khi bo neo tu vung" da bi
-  vong phan bien thu 5 bac bo. Ca ba CI tren hieu ngan sach deu chua 0, va
-  gpt-4.1-nano di NGUOC huong - ngan sach cua no GIAM. Bang tren in ra de doi
-  chieu, khong kem ket luan nao.
+  NOT ESTABLISHED: the claim that "the budget doubles once the lexical anchor is
+  removed" was rejected in review round 5. All three CIs on the budget difference
+  contain 0, and gpt-4.1-nano moves the OTHER way - its budget FALLS. The table
+  above is printed for reference and carries no conclusion.
 
-  Do do diem hoa von k* cung chua xac lap, vi tu so cua no chua vung. Khong
-  duoc doc cap so 0,74 va 1,93 nhu mot quy luat.
+  The break-even point k* is therefore also unestablished, because its numerator
+  is not solid. The pair 0.74 and 1.93 must not be read as a regularity.
 
-  Chay scripts/analyze_budget_paired.py de co CI tren hieu ngan sach va co mau
-  can thiet de chot.""")
+  Run scripts/analyze_budget_paired.py for a CI on the budget difference and the
+  sample size needed to settle it.""")
 
 
 if __name__ == "__main__":

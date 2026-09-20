@@ -1,24 +1,29 @@
-"""CLadder co that su tinh sai o ho `arrowhead` khong, hay bo giai cua ta sai?
+"""Does CLadder really miscompute the `arrowhead` family, or is OUR solver wrong?
 
-Cau hoi rat dang ngo, vi CLadder la benchmark duoc dung rong rai va gan nhu moi
-bai deu dung nhan yes/no nguyen ban. Neu bo giai trong verify_groundtruth.py sai
-thi moi ket luan dua tren no deu do. File nay tach bach hai kha nang do.
+The question deserves suspicion. CLadder is a widely used benchmark and almost
+every paper takes its yes/no labels as given. If the solver in
+verify_groundtruth.py were wrong, everything built on it would collapse. This
+file separates the two possibilities.
 
-LAP LUAN. Neu bo giai SAI, no se lech o KHAP NOI. Neu CLADDER sai, no se lech
-dung o nhung cho ma cau truc do thi du doan truoc, va khop chuan xac o phan con
-lai. Nen bai kiem chay theo bon buoc, buoc sau chi co nghia khi buoc truoc dat:
+THE ARGUMENT. If the SOLVER is wrong, it will deviate EVERYWHERE. If CLADDER is
+wrong, it will deviate exactly where the graph structure predicts in advance, and
+match exactly everywhere else. So the check runs in four steps, each meaningful
+only if the previous one holds:
 
-  1. DU DOAN TRUOC KHI NHIN SO. Doc cau truc moi ho, danh dau ho nao co CAC CHA
-     CUA Y phu thuoc lan nhau. Chi o do gia dinh "nhan xac suat bien cac cha"
-     moi sai. Danh sach nay sinh ra tu do thi, khong tu du lieu.
-  2. DOI CHIEU. Voi moi (ho x dai luong), so gia tri CLadder cong bo voi ca hai
-     phep tinh: phep DUNG, va phep NAIVE coi cac cha doc lap.
-  3. CHUOI GIAI CUA CHINH CLADDER. Lay so trong de bai, ap dung dung cong thuc
-     ma CLadder viet ra o step3, xem co ra dap an cong bo khong.
-  4. QUY MO. Bao nhieu cau bi lat nhan tren tong so cau.
+  1. PREDICT BEFORE LOOKING AT ANY NUMBER. Read each family's structure and mark
+     the ones whose PARENTS OF Y are mutually dependent. Only there can the
+     "multiply the parents' marginals" assumption fail. That list comes from the
+     graph, not from the data.
+  2. COMPARE. For every (family x quantity), check CLadder's published value
+     against both computations: the CORRECT one, and the NAIVE one that treats
+     the parents as independent.
+  3. CLADDER'S OWN REASONING CHAIN. Take the numbers the question supplies, apply
+     the formula CLadder itself writes in step3, and see whether it reproduces
+     CLadder's own published answer.
+  4. SCALE. How many questions end up with a flipped label, out of the whole set.
 
-Chay:  python scripts/audit_cladder_arithmetic.py
-Ket qua: in bang, ghi results/cladder_arithmetic_audit.csv
+Run:  python scripts/audit_cladder_arithmetic.py
+Writes: results/cladder_arithmetic_audit.csv
 """
 
 from __future__ import annotations
@@ -39,8 +44,8 @@ import pandas as pd
 
 TOL = 1e-9
 QUANTITIES = ["P(Y=1)", "ATE(Y | X)", "ETT(Y | X)", "NDE(Y | X)", "NIE(Y | X)"]
-TEN = {"P(Y=1)": "P(Y=1)", "ATE(Y | X)": "ATE", "ETT(Y | X)": "ETT",
-       "NDE(Y | X)": "NDE", "NIE(Y | X)": "NIE"}
+SHORT = {"P(Y=1)": "P(Y=1)", "ATE(Y | X)": "ATE", "ETT(Y | X)": "ETT",
+         "NDE(Y | X)": "NDE", "NIE(Y | X)": "NIE"}
 NUM = re.compile(r"\d+\.\d+")
 
 
@@ -64,10 +69,10 @@ def ancestors(scm, node):
 
 
 def parents_independent(scm, node="Y"):
-    """Cac cha cua `node` co doc lap doi mot khong, doc tu do thi.
+    """Are the parents of `node` pairwise independent, judged from the graph?
 
-    Hai cha phu thuoc nhau khi mot la to tien cua cai kia, hoac khi chung co
-    to tien chung. Day la dieu kien du de gia dinh doc lap sup do.
+    Two parents are dependent when one is an ancestor of the other, or when they
+    share an ancestor. That is enough for the independence assumption to fail.
     """
     par = scm.parents[node]
     anc = {p: ancestors(scm, p) for p in par}
@@ -78,7 +83,7 @@ def parents_independent(scm, node="Y"):
 
 
 def naive(scm, node="Y", given=None):
-    """P(node=1) tinh NHU THE cac cha doc lap - phep tinh sai ma CLadder dung."""
+    """P(node=1) computed AS IF the parents were independent - CLadder's formula."""
     par = scm.parents[node]
     tot = 0.0
     for vals in itertools.product((0, 1), repeat=len(par)):
@@ -96,14 +101,15 @@ def naive(scm, node="Y", given=None):
     return tot
 
 
-def buoc1(vg, meta):
+def step1_predict(vg, meta):
     print("=" * 88)
-    print("1. DU DOAN TU CAU TRUC, TRUOC KHI NHIN SO LIEU")
+    print("1. PREDICTION FROM STRUCTURE, BEFORE LOOKING AT ANY NUMBER")
     print("=" * 88)
-    print("  Gia dinh 'nhan xac suat bien cua cac cha' chi sai khi cac cha KHONG")
-    print("  doc lap. Cot cuoi la du doan: ho nao se lech, ho nao se khop.\n")
-    print(f"  {'ho':13s} {'nut':>4s} {'canh':>5s}  {'cha cua Y':24s} {'du doan'}")
-    print("  " + "-" * 74)
+    print("  The assumption 'multiply the parents' marginals' can only fail where the")
+    print("  parents are NOT independent. The last column is the prediction: which")
+    print("  families will deviate and which will match.\n")
+    print(f"  {'family':13s} {'nodes':>5s} {'edges':>5s}  {'parents of Y':24s} {'prediction'}")
+    print("  " + "-" * 76)
     seen, pred = {}, {}
     for m in meta:
         g = m["graph_id"]
@@ -114,16 +120,16 @@ def buoc1(vg, meta):
         indep = parents_independent(s, "Y")
         pred[g] = indep
         nn, ne = len(s.nodes), sum(len(s.parents[n]) for n in s.nodes)
-        print(f"  {g:13s} {nn:4d} {ne:5d}  {','.join(s.parents['Y']) or '-':24s} "
-              f"{'khop' if indep else 'SE LECH'}")
-    khop = sorted(g for g in pred if pred[g])
-    print(f"\n  du doan khop chuan xac: {', '.join(khop)}")
+        print(f"  {g:13s} {nn:5d} {ne:5d}  {','.join(s.parents['Y']) or '-':24s} "
+              f"{'will match' if indep else 'WILL DEVIATE'}")
+    ok = sorted(g for g in pred if pred[g])
+    print(f"\n  predicted to match exactly: {', '.join(ok)}")
     return pred
 
 
-def buoc2(vg, meta, pred):
+def step2_compare(vg, meta, pred):
     print("\n" + "=" * 88)
-    print("2. DOI CHIEU VOI GIA TRI CLADDER CONG BO")
+    print("2. AGAINST CLADDER'S PUBLISHED VALUES")
     print("=" * 88)
     hit = collections.defaultdict(collections.Counter)
     dev = collections.defaultdict(lambda: collections.defaultdict(list))
@@ -132,7 +138,7 @@ def buoc2(vg, meta, pred):
         try:
             s = vg.SCM(m["params"])
         except Exception:
-            hit[g]["loi_doc"] += 1
+            hit[g]["unreadable"] += 1
             continue
         hit[g]["n"] += 1
         got = {}
@@ -157,135 +163,140 @@ def buoc2(vg, meta, pred):
             na = naive(s, "Y", {"X": 1}) - naive(s, "Y", {"X": 0})
             hit[g]["ATE_naive"] += abs(na - gt["ATE(Y | X)"]) < TOL
 
-    print("  Lech tuyet doi giua phep tinh DUNG va gia tri CLadder cong bo.")
-    print("  '.' nghia la khop den 1e-9 tren toan bo SCM cua ho do.\n")
-    head = f"  {'ho':13s} {'n':>5s} " + " ".join(f"{TEN[q]:>16s}" for q in QUANTITIES)
+    print("  Absolute deviation between the CORRECT computation and CLadder's value.")
+    print("  '.' means an exact match to 1e-9 across every SCM of that family.\n")
+    head = f"  {'family':13s} {'n':>5s} " + " ".join(f"{SHORT[q]:>16s}" for q in QUANTITIES)
     print(head)
     print("  " + "-" * (len(head) - 2))
     rows = []
     for g in sorted(dev):
-        cells, rec = [], {"ho": g, "n_scm": hit[g]["n"]}
+        cells, rec = [], {"family": g, "n_scm": hit[g]["n"]}
         for q in QUANTITIES:
             v = dev[g].get(q)
             if not v:
                 cells.append(f"{'-':>16s}")
-                rec["lech_max_" + TEN[q]] = ""
+                rec["max_dev_" + SHORT[q]] = ""
                 continue
             mx = max(v)
             cells.append(f"{'.':>16s}" if mx < TOL
                          else f"{statistics.median(v):7.4f}/{mx:<7.4f}")
-            rec["lech_max_" + TEN[q]] = 0.0 if mx < TOL else round(mx, 6)
+            rec["max_dev_" + SHORT[q]] = 0.0 if mx < TOL else round(mx, 6)
         n = max(hit[g]["n"], 1)
-        rec["PY_theo_phep_naive_pct"] = round(100 * hit[g]["PY_naive"] / n, 1)
-        rec["ATE_theo_phep_naive_pct"] = round(100 * hit[g]["ATE_naive"] / n, 1)
-        rec["du_doan_khop"] = bool(pred.get(g))
+        rec["PY_matches_naive_pct"] = round(100 * hit[g]["PY_naive"] / n, 1)
+        rec["ATE_matches_naive_pct"] = round(100 * hit[g]["ATE_naive"] / n, 1)
+        rec["predicted_match"] = bool(pred.get(g))
         rows.append(rec)
         print(f"  {g:13s} {hit[g]['n']:5d} " + " ".join(cells))
 
-    print("\n  Cot 'theo phep NAIVE': ty le SCM ma phep tinh SAI tai lap CHINH XAC")
-    print("  gia tri CLadder cong bo. Day la bang chung truc tiep ve phep tinh do.\n")
-    print(f"  {'ho':13s} {'P(Y=1) theo naive':>20s} {'ATE theo naive':>18s}")
+    print("\n  The 'matches naive' columns: the share of SCMs where the WRONG formula")
+    print("  reproduces CLadder's published value EXACTLY. That is direct evidence")
+    print("  about which computation was used.\n")
+    print(f"  {'family':13s} {'P(Y=1) via naive':>20s} {'ATE via naive':>18s}")
     print("  " + "-" * 54)
     for r in rows:
-        print(f"  {r['ho']:13s} {r['PY_theo_phep_naive_pct']:19.1f}% "
-              f"{r['ATE_theo_phep_naive_pct']:17.1f}%")
+        print(f"  {r['family']:13s} {r['PY_matches_naive_pct']:19.1f}% "
+              f"{r['ATE_matches_naive_pct']:17.1f}%")
 
-    sai = sorted(r["ho"] for r in rows if r["lech_max_P(Y=1)"] not in ("", 0.0))
-    print(f"\n  P(Y=1) lech o {len(sai)}/10 ho: {', '.join(sai)}")
-    nq = sorted(r["ho"] for r in rows
-                if any(r.get("lech_max_" + k) not in ("", 0.0)
-                       for k in ["ATE", "ETT", "NDE", "NIE"]))
-    print(f"  Dai luong NHAN QUA lech o {len(nq)}/10 ho: {', '.join(nq)}")
-    trung = [r["ho"] for r in rows if not r["du_doan_khop"]]
-    print(f"\n  Du doan o buoc 1 (se lech): {', '.join(sorted(trung))}")
-    print(f"  Thuc te P(Y=1) lech     : {', '.join(sai)}")
-    print(f"  => du doan cau truc {'KHOP HOAN TOAN' if sorted(trung) == sai else 'KHONG KHOP'}")
+    bad = sorted(r["family"] for r in rows if r["max_dev_P(Y=1)"] not in ("", 0.0))
+    print(f"\n  P(Y=1) deviates in {len(bad)}/10 families: {', '.join(bad)}")
+    causal = sorted(r["family"] for r in rows
+                    if any(r.get("max_dev_" + k) not in ("", 0.0)
+                           for k in ["ATE", "ETT", "NDE", "NIE"]))
+    print(f"  CAUSAL quantities deviate in {len(causal)}/10 families: {', '.join(causal)}")
+    predicted = [r["family"] for r in rows if not r["predicted_match"]]
+    print(f"\n  Predicted in step 1 (will deviate): {', '.join(sorted(predicted))}")
+    print(f"  Actually deviating on P(Y=1)      : {', '.join(bad)}")
+    print(f"  => the structural prediction "
+          f"{'MATCHES EXACTLY' if sorted(predicted) == bad else 'DOES NOT MATCH'}")
     return rows
 
 
-def buoc3(qs):
+def step3_chain(qs):
     print("\n" + "=" * 88)
-    print("3. CHUOI GIAI CUA CHINH CLADDER CO DAN RA DAP AN CUA CHINH NO KHONG")
+    print("3. DOES CLADDER'S OWN CHAIN PRODUCE CLADDER'S OWN ANSWER")
     print("=" * 88)
-    print("  Voi cau `marginal`, CLadder viet o step3:")
+    print("  For a `marginal` question, CLadder writes at step3:")
     print("      P(Y) = P(Y | X=1)*P(X=1) + P(Y | X=0)*P(X=0)")
-    print("  De bai cap dung P(X) va P(Y | X). Ap cong thuc do vao chinh hai so do.\n")
+    print("  and the question supplies exactly P(X) and P(Y | X). Apply that formula")
+    print("  to those very numbers.\n")
     st = collections.Counter()
-    fam_ok, fam_bad, flip_fam = collections.Counter(), collections.Counter(), collections.Counter()
-    dau, khop5 = collections.Counter(), collections.Counter()
+    fam_ok, fam_bad, flip_fam = (collections.Counter(), collections.Counter(),
+                                 collections.Counter())
+    sign, closes = collections.Counter(), collections.Counter()
     for q in qs:
         m = q["meta"]
         if m["query_type"] != "marginal":
             continue
         gi = m.get("given_info")
-        st["tong"] += 1
+        st["total"] += 1
         s5 = str((q.get("reasoning") or {}).get("step5", ""))
         if "*" in s5 and "=" in s5:
             lhs, rhs = s5.split("=")[0], s5.split("=")[-1]
-            dau["step5 in dau TRU" if "-" in lhs else "step5 in dau cong"] += 1
+            sign["step5 prints a MINUS" if "-" in lhs else "step5 prints a plus"] += 1
             try:
                 val = float(rhs.strip())
             except ValueError:
                 val = None
             if val is not None:
-                khop5["ve phai = dap an cong bo, lam tron 2 so"
-                      if abs(val - round(m["groundtruth"], 2)) < 1e-9
-                      else "ve phai khac dap an cong bo"] += 1
-                nums = [float(x) for x in re.findall(NUM, lhs)]
+                closes["right side = published answer, 2 dp"
+                       if abs(val - round(m["groundtruth"], 2)) < 1e-9
+                       else "right side differs from published answer"] += 1
+                nums = [float(x) for x in NUM.findall(lhs)]
                 if len(nums) == 4:
-                    khop5["cong hai tich in ra = ve phai"
-                          if abs(nums[0] * nums[1] + nums[2] * nums[3] - val) < 0.005
-                          else "cong hai tich in ra KHAC ve phai"] += 1
+                    closes["printed products SUM to the right side"
+                           if abs(nums[0] * nums[1] + nums[2] * nums[3] - val) < 0.005
+                           else "printed products do NOT sum to the right side"] += 1
         if not isinstance(gi, dict) or "P(X)" not in gi or "P(Y | X)" not in gi:
-            st["thieu khoa"] += 1
+            st["missing keys"] += 1
             continue
         lo, hi = gi["P(Y | X)"]
         px = gi["P(X)"]
         ltp = px * hi + (1 - px) * lo
         gt = m["groundtruth"]
         if abs(ltp - gt) < TOL:
-            st["de bai tai lap duoc dap an"] += 1
+            st["question reproduces its answer"] += 1
             fam_ok[m["graph_id"]] += 1
         else:
-            st["de bai KHONG tai lap duoc dap an"] += 1
+            st["question does NOT reproduce its answer"] += 1
             fam_bad[m["graph_id"]] += 1
         if (ltp > 0.5) != (gt > 0.5):
-            st["lech toi muc LAT NHAN yes/no"] += 1
+            st["off by enough to FLIP the yes/no label"] += 1
             flip_fam[m["graph_id"]] += 1
     for k, v in st.items():
-        print(f"  {k:38s} {v}")
-    print(f"\n  ho tai lap duoc : {dict(fam_ok)}")
-    print(f"  ho KHONG tai lap: {dict(fam_bad)}")
-    print(f"  ho bi lat nhan  : {dict(flip_fam)}")
-    print("\n  Rieng ve chuoi giai in kem, doc lap voi so lieu:")
-    for k, v in dau.items():
-        print(f"  {k:38s} {v}")
-    for k, v in khop5.items():
-        print(f"  {k:38s} {v}")
-    print("  step3 viet dau CONG, step5 in dau TRU o toan bo so cau tren. Ve phai")
-    print("  luon la dap an cong bo lam tron hai chu so. Nhung cong hai tich IN RA")
-    print("  o ve trai chi ra dung ve phai o mot phan: o phan con lai, ngay ca khi")
-    print("  doc dau cong thay dau tru, chuoi van khong tu khep kin.")
+        print(f"  {k:42s} {v}")
+    print(f"\n  families that reproduce     : {dict(fam_ok)}")
+    print(f"  families that do NOT        : {dict(fam_bad)}")
+    print(f"  families with flipped labels: {dict(flip_fam)}")
+    print("\n  Separately, about the printed chain itself:")
+    for k, v in sign.items():
+        print(f"  {k:42s} {v}")
+    for k, v in closes.items():
+        print(f"  {k:42s} {v}")
+    print("  step3 writes a PLUS and step5 prints a MINUS in every one of those items.")
+    print("  The right-hand side is always the published answer rounded to two")
+    print("  decimals. But summing the two PRINTED products lands on that right-hand")
+    print("  side only part of the time: for the rest, even reading the minus as the")
+    print("  plus step3 states, the chain does not close on its own numbers.")
     return st, flip_fam
 
 
-def buoc3b(vg, meta, qs):
-    """Ho arrowhead: gia tri cong bo la gia tri cua MOT SCM KHAC, nho hon.
+def step3b_arrowhead(vg, meta, qs):
+    """arrowhead: the published values are the values of a DIFFERENT, smaller SCM.
 
-    Muc 2 cho thay arrowhead lech. Muc nay xac dinh chinh xac no lech thanh cai
-    gi. Gia thuyet: lay bang cua Y roi lay bien theo V2 bang P(V2) KHONG dieu
-    kien, duoc mot SCM trong do Y chi con hai cha (X, V3). Neu gia tri cong bo
-    bang dung gia tri cua SCM rut gon do, thi ta khong chi biet no sai - ta biet
-    no sai thanh cai gi.
+    Step 2 shows arrowhead deviates. This step pins down what it deviates INTO.
+    Hypothesis: take Y's table and average V2 out of it using the UNCONDITIONAL
+    P(V2), giving an SCM in which Y has only two parents (X, V3). If the published
+    values equal that reduced SCM's values exactly, then we do not merely know it
+    is wrong - we know what it is wrong INTO.
     """
     print()
     print("=" * 88)
-    print("3b. GIA TRI ARROWHEAD LA GIA TRI CUA SCM NAO")
+    print("3b. WHICH SCM DO THE ARROWHEAD VALUES BELONG TO")
     print("=" * 88)
-    print("  SCM rut gon: p'(Y | X, V3) = sum_v2 P(V2=v2) * p(Y | X, v2, V3),")
-    print("  tuc xoa canh V2->Y bang cach lay trung binh theo P(V2) khong dieu kien.")
-    print("  Phep nay chi dung neu V2 doc lap V3 khi da biet X - ma o arrowhead thi")
-    print("  khong, vi V2 chinh la mot cha cua V3.")
+    print("  Reduced SCM: p'(Y | X, V3) = sum_v2 P(V2=v2) * p(Y | X, v2, V3),")
+    print("  that is, delete the edge V2->Y by averaging over the unconditional P(V2).")
+    print("  That step is valid only if V2 and V3 are independent given X - and in")
+    print("  arrowhead they are not, because V2 is itself a parent of V3.")
     print()
     n = collections.Counter()
     for m in meta:
@@ -299,22 +310,22 @@ def buoc3b(vg, meta, qs):
                for x in (0, 1)]
         small = vg.SCM({"p(V2)": p["p(V2)"], "p(X)": p["p(X)"],
                         "p(V3 | X, V2)": p["p(V3 | X, V2)"], "p(Y | X, V3)": red})
-        n["tong"] += 1
-        n["ATE khop"] += abs(small.ate() - gt["ATE(Y | X)"]) < TOL
+        n["total"] += 1
+        n["ATE matches"] += abs(small.ate() - gt["ATE(Y | X)"]) < TOL
         d = small.nde_nie()
-        n["NDE khop"] += abs(d["NDE"] - gt["NDE(Y | X)"]) < TOL
-        n["NIE khop"] += min(abs(d["NIE_both_vs_base"] - gt["NIE(Y | X)"]),
-                             abs(d["NIE_telescoping"] - gt["NIE(Y | X)"])) < TOL
-    tot = n["tong"]
-    for k in ("ATE khop", "NDE khop", "NIE khop"):
-        print(f"  {k:12s} {n[k]}/{tot}")
-    if tot and all(n[k] == tot for k in ("ATE khop", "NDE khop", "NIE khop")):
+        n["NDE matches"] += abs(d["NDE"] - gt["NDE(Y | X)"]) < TOL
+        n["NIE matches"] += min(abs(d["NIE_both_vs_base"] - gt["NIE(Y | X)"]),
+                                abs(d["NIE_telescoping"] - gt["NIE(Y | X)"])) < TOL
+    tot = n["total"]
+    for k in ("ATE matches", "NDE matches", "NIE matches"):
+        print(f"  {k:14s} {n[k]}/{tot}")
+    if tot and all(n[k] == tot for k in ("ATE matches", "NDE matches", "NIE matches")):
         print()
-        print("  Khop TOAN BO. Vay gia tri arrowhead ma CLadder cong bo la gia tri")
-        print("  DUNG cua mot do thi KHAC voi do thi ma de bai neu ra.")
+        print("  ALL of them. So the arrowhead values CLadder publishes are the CORRECT")
+        print("  values of a DIFFERENT graph from the one the questions state.")
 
     print()
-    print("  Con de bai cap bang gi cho cau nde/nie?")
+    print("  And what table do the nde/nie questions supply?")
     mp = {m["model_id"]: m for m in meta}
     st = collections.Counter()
     for q in qs:
@@ -323,7 +334,7 @@ def buoc3b(vg, meta, qs):
             continue
         gi = mm.get("given_info")
         if not isinstance(gi, dict) or "p(Y | X, V3)" not in gi:
-            st["khong cap bang Y"] += 1
+            st["no Y table supplied"] += 1
             continue
         p = mp[mm["model_id"]]["params"]
         sc = vg.SCM(p)
@@ -336,43 +347,44 @@ def buoc3b(vg, meta, qs):
         tru = [[sc.prob({"Y": 1}, given={"X": x, "V3": v3}) for v3 in (0, 1)]
                for x in (0, 1)]
         if all(abs(g[x][v] - tru[x][v]) < TOL for x in (0, 1) for v in (0, 1)):
-            st["bang DUNG, lay tu phan phoi khop"] += 1
+            st["the CORRECT table, from the joint"] += 1
         elif all(abs(g[x][v] - red[x][v]) < TOL for x in (0, 1) for v in (0, 1)):
-            st["bang cua SCM rut gon"] += 1
+            st["the reduced SCM's table"] += 1
         else:
-            st["khong khop ben nao"] += 1
+            st["neither"] += 1
     for k, v in st.items():
-        print(f"  {k:38s} {v}")
+        print(f"  {k:42s} {v}")
     print()
-    print("  Nen tinh the la: de bai neu do thi CO canh V2->Y, cap mot bang DUNG")
-    print("  nhung da lay bien theo V2, roi cham diem bang dap an cua mot do thi")
-    print("  KHONG co canh V2->Y. Ba thu, ba doi tuong khac nhau. Vi V2 vua la cha")
-    print("  cua V3 vua la cha cua Y, hieu ung tu nhien KHONG dinh danh duoc tu")
-    print("  rieng nhung so ma de bai cap - ke ca voi mot bo giai hoan hao.")
+    print("  So the situation is: the question states a graph that HAS the edge V2->Y,")
+    print("  supplies a table that is CORRECT but marginal in V2, and then grades")
+    print("  against the answer of a graph that does NOT have V2->Y. Three different")
+    print("  objects. Because V2 is a parent of both V3 and Y, the natural effects are")
+    print("  NOT identifiable from the numbers the question supplies - not even to a")
+    print("  perfect solver.")
     return st
 
 
-def buoc4(qs):
+def step4_scale(qs):
     print("\n" + "=" * 88)
-    print("4. QUY MO: BAO NHIEU CAU BI LAT NHAN TREN TOAN BO")
+    print("4. SCALE: HOW MANY QUESTIONS END UP WITH A FLIPPED LABEL")
     print("=" * 88)
     spec = importlib.util.spec_from_file_location(
         "vl", str(ROOT / "scripts" / "verify_labels.py"))
     vl = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(vl)
     brk, tot, per = vl.count_label_flips(verbose=False, write_csv=False)
-    print(f"  tong cau trong cladder-questions.json      {len(qs)}")
-    print(f"  cau ma hai gia tri nam HAI PHIA nguong     {tot}")
-    print(f"  trong do nhan di theo gia tri HONG         {brk}")
-    print(f"  ty le tren toan bo                         {100.0 * brk / len(qs):.2f}%")
-    print("\n  phan ra theo loai truy van:")
+    print(f"  questions in cladder-questions.json         {len(qs)}")
+    print(f"  where the two values straddle the threshold {tot}")
+    print(f"  of which the label follows the BROKEN value {brk}")
+    print(f"  share of the whole dataset                  {100.0 * brk / len(qs):.2f}%")
+    print("\n  broken by query type:")
     for k in sorted(per):
         v = per[k]
-        print(f"    {k:14s} {v.get('hong', 0):3d} hong / {sum(v.values()):3d} quyet dinh")
-    print("\n  DAY LA LY DO CAC BAI KHAC KHONG PHAT HIEN. Duoi 1% so cau bi lat nhan,")
-    print("  nen mot chenh lech do chinh xac vai diem phan tram giua hai model gan")
-    print("  nhu khong doi. Sai lech chi lo ra khi TINH LAI SCM, ma hau het cac bai")
-    print("  chi dung nhan yes/no co san.")
+        print(f"    {k:14s} {v.get('broken', 0):3d} broken / {sum(v.values()):3d} decisive")
+    print("\n  THIS IS WHY NOBODY ELSE HAS NOTICED. Under 1% of questions have a")
+    print("  flipped label, so an accuracy difference of a few points between two")
+    print("  models is essentially unchanged. The error only becomes visible if you")
+    print("  RECOMPUTE THE SCMs, and most papers simply use the yes/no answer field.")
     return brk, tot
 
 
@@ -381,30 +393,32 @@ def main():
     meta = json.loads((ROOT / "data" / "cladder-meta.json").read_text(encoding="utf-8"))
     qs = json.loads((ROOT / "data" / "cladder-questions.json").read_text(encoding="utf-8"))
 
-    pred = buoc1(vg, meta)
-    rows = buoc2(vg, meta, pred)
-    buoc3(qs)
-    buoc3b(vg, meta, qs)
-    brk, tot = buoc4(qs)
+    pred = step1_predict(vg, meta)
+    rows = step2_compare(vg, meta, pred)
+    step3_chain(qs)
+    step3b_arrowhead(vg, meta, qs)
+    brk, tot = step4_scale(qs)
 
     out = ROOT / "results" / "cladder_arithmetic_audit.csv"
     pd.DataFrame(rows).to_csv(out, index=False)
 
     print("\n" + "=" * 88)
-    print("KET LUAN")
+    print("CONCLUSION")
     print("=" * 88)
-    print("  Bo giai KHOP CHUAN XAC voi CLadder o 9/10 ho tren ca bon dai luong nhan")
-    print("  qua. Neu bo giai sai, no da lech o khap noi. No chi lech dung o nhung o")
-    print("  ma cau truc do thi du doan truoc. Vay loi nam o CLadder, khong o ta.")
+    print("  The solver MATCHES CLadder EXACTLY on 9 of 10 families across all four")
+    print("  causal quantities. Were the solver wrong, it would deviate everywhere. It")
+    print("  deviates only in the cells the graph structure predicted in advance. So")
+    print("  the error is CLadder's, not ours.")
     print()
-    print("  Pham vi chinh xac cua loi:")
-    print("    P(Y=1)              sai o 7/10 ho - moi ho ma cac cha cua Y phu thuoc")
-    print("    ATE, ETT, NDE, NIE  sai o DUNG MOT ho: arrowhead")
-    print("  arrowhead la ho duy nhat ma dieu kien theo X van chua du de tach cac cha")
-    print("  cua Y ra doc lap, vi V3 co ca X lan V2 lam cha.")
-    print(f"\n  Hau qua tren nhan: {brk}/{tot} nhan quyet dinh di theo gia tri hong,")
-    print(f"  tuc {100.0 * brk / len(qs):.2f}% toan bo bo du lieu.")
-    print(f"\nda ghi {out.relative_to(ROOT)}")
+    print("  The exact scope of the error:")
+    print("    P(Y=1)              wrong in 7/10 families - every family where the")
+    print("                        parents of Y are dependent")
+    print("    ATE, ETT, NDE, NIE  wrong in EXACTLY ONE family: arrowhead")
+    print("  arrowhead is the only family where conditioning on X still does not make")
+    print("  the parents of Y independent, because V3 has both X and V2 as parents.")
+    print(f"\n  Effect on labels: {brk}/{tot} decisive labels follow the broken value,")
+    print(f"  which is {100.0 * brk / len(qs):.2f}% of the whole dataset.")
+    print(f"\nwrote {out.relative_to(ROOT)}")
     return 0
 
 

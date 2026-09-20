@@ -33,14 +33,14 @@ stage () {
   "$@" >> "$LOG" 2>&1 || rc=$?
   if [ "$rc" -ne 0 ]; then
     echo "!!! $name THAT BAI, exit=$rc   [$(date '+%H:%M:%S')]" | tee -a "$LOG"
-    echo "!!! Dung toan bo lan chay. Xem $LOG." | tee -a "$LOG"
+    echo "!!! Aborting the whole run. See $LOG." | tee -a "$LOG"
     exit "$rc"
   fi
   echo "<<< $name done, exit=0   [$(date '+%H:%M:%S')]" | tee -a "$LOG"
 }
 
 command -v python >/dev/null 2>&1 || {
-  echo "python khong co tren PATH. Kich hoat moi truong roi chay lai." >&2
+  echo "python is not on PATH. Activate the environment and run again." >&2
   exit 127
 }
 
@@ -72,20 +72,20 @@ for LEX in KEEP PERMUTE SYMBOL PSEUDO; do
 done
 
 # 5. Pricing the error types on the main branch.
-stage "5/6 dinh gia loai loi"   python scripts/analyze_types.py --pilot pilot_raw_n800.csv                                   --induction induction_raw_n800.csv --tag _n800
+stage "5/6 pricing the error types"   python scripts/analyze_types.py --pilot pilot_raw_n800.csv                                   --induction induction_raw_n800.csv --tag _n800
 
 # 6. Headline analysis. analyze_querygroup.py carries the stratification and the
 #    interaction tests that review round 6 required; analyze_lexical.py is the
 #    pooled view kept for comparison.
-stage "6/7 phan tich tu vung"   python scripts/analyze_lexical.py
-stage "6/7 phan tang theo nhom truy van"   python scripts/analyze_querygroup.py
+stage "6/7 lexical analysis"   python scripts/analyze_lexical.py
+stage "6/7 stratify by query group"   python scripts/analyze_querygroup.py
 
 # 7. Checks that do not depend on the run above and cost nothing, but that the
 #    report leans on. verify_groundtruth enumerates all 7,064 SCMs rather than
 #    trusting CLadder's labels; analyze_chains is the only direct evidence that
 #    the supplied graph reaches the model's reasoning and not just its answer.
-stage "7/7 kiem nhan chuan toan bo SCM"   python scripts/verify_groundtruth.py
-stage "7/7 chuoi suy luan co dung do thi"   python scripts/analyze_chains.py
+stage "7/7 verify the answer key over every SCM"   python scripts/verify_groundtruth.py
+stage "7/7 do the chains use the graph"   python scripts/analyze_chains.py
 stage "7/7 bat thuong va residue"   python scripts/analyze_anomaly_residue.py
 stage "7/7 ngan sach ghep cap"   python scripts/analyze_budget_paired.py
 

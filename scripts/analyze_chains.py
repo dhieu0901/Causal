@@ -96,12 +96,12 @@ def code_direction(text, u, v):
     t = asserts(text, u, v)
     s = asserts(text, v, u)
     if t and s:
-        return "ca_hai"            # chain states both; cannot be scored
+        return "both"            # chain states both; cannot be scored
     if s:
-        return "theo_do_thi"       # followed the supplied (reversed) edge
+        return "followed_graph"       # followed the supplied (reversed) edge
     if t:
-        return "giu_chieu_that"    # overrode the supplied edge
-    return "khong_noi"
+        return "kept_true_direction"    # overrode the supplied edge
+    return "silent"
 
 
 def reversed_edge(edges, item_idx, seed):
@@ -122,7 +122,7 @@ def main():
     ap.add_argument("--n", type=int, default=200)
     ap.add_argument("--seed", type=int, default=20260907)
     ap.add_argument("--dump", type=int, default=0,
-                    help="ghi N chuoi ra file de cham tay")
+                    help="write N chains to a file for hand coding")
     a = ap.parse_args()
     W = 88
 
@@ -142,17 +142,18 @@ def main():
                       "dr": build(prompt, "PERTURB", bad)})
 
     print("=" * W)
-    print("1. CHUOI SUY LUAN CO DUNG DO THI DUOC CAP KHONG")
+    print("1. DO THE REASONING CHAINS USE THE SUPPLIED GRAPH")
     print("=" * W)
-    print(f"  {len(cases)} item co dung mot canh bi dao duoi DR_k1.")
-    print("  Do thi that noi u -> v; DR_k1 dua vao v -> u. Xem chuoi noi chieu nao.\n")
+    print(f"  {len(cases)} items have exactly one reversed edge under DR_k1.")
+    print("  The true graph says u -> v; DR_k1 supplies v -> u. See which direction\n"
+          "  the chain states.\n")
 
     rows, miss, dump = [], 0, []
     for m in TIER:
         rec = {"model": m}
         for cond in ("oracle", "dr"):
-            c = {"theo_do_thi": 0, "giu_chieu_that": 0, "khong_noi": 0,
-                 "ca_hai": 0, "struct": 0, "n": 0}
+            c = {"followed_graph": 0, "kept_true_direction": 0, "silent": 0,
+                 "both": 0, "struct": 0, "n": 0}
             for k in cases:
                 t = cache_text(m, k[cond])
                 if t is None:
@@ -163,41 +164,41 @@ def main():
                 c[code_direction(t, k["u"], k["v"])] += 1
                 if a.dump and cond == "dr" and len(dump) < a.dump:
                     dump.append({"model": m, "item": k["item"],
-                                 "canh_that": f"{k['u']} -> {k['v']}",
-                                 "canh_cap": f"{k['v']} -> {k['u']}",
+                                 "true_edge": f"{k['u']} -> {k['v']}",
+                                 "given_edge": f"{k['v']} -> {k['u']}",
                                  "ma_tu_dong": code_direction(t, k["u"], k["v"]),
                                  "chuoi": t})
             n = max(c["n"], 1)
             tag = "ORACLE" if cond == "oracle" else "DR_k1"
             rec[f"{tag}_n"] = c["n"]
             rec[f"{tag}_ngon_ngu_cau_truc"] = round(100 * c["struct"] / n, 1)
-            rec[f"{tag}_theo_do_thi"] = round(100 * c["theo_do_thi"] / n, 1)
-            rec[f"{tag}_giu_chieu_that"] = round(100 * c["giu_chieu_that"] / n, 1)
-            rec[f"{tag}_khong_noi"] = round(100 * c["khong_noi"] / n, 1)
-            rec[f"{tag}_ca_hai"] = round(100 * c["ca_hai"] / n, 1)
+            rec[f"{tag}_theo_do_thi"] = round(100 * c["followed_graph"] / n, 1)
+            rec[f"{tag}_giu_chieu_that"] = round(100 * c["kept_true_direction"] / n, 1)
+            rec[f"{tag}_khong_noi"] = round(100 * c["silent"] / n, 1)
+            rec[f"{tag}_ca_hai"] = round(100 * c["both"] / n, 1)
         rows.append(rec)
     d = pd.DataFrame(rows)
 
     print("  -- ty le chuoi dung NGON NGU CAU TRUC (%) --")
     print(d[["model", "ORACLE_ngon_ngu_cau_truc", "DR_k1_ngon_ngu_cau_truc",
              "ORACLE_n"]].to_string(index=False))
-    print("\n  -- duoi DR_k1: chuoi noi chieu nao cho canh bi dao (%) --")
+    print("\n  -- under DR_k1: which direction the chain states for the reversed edge (%) --")
     print(d[["model", "DR_k1_theo_do_thi", "DR_k1_giu_chieu_that",
              "DR_k1_khong_noi", "DR_k1_ca_hai"]].to_string(index=False))
     # Under ORACLE the supplied edge IS the true edge, so the column that means
     # "restated what it was given" is giu_chieu_that, and theo_do_thi means the
     # chain asserted a direction nothing in the prompt supports.
-    print("\n  -- duoi ORACLE: canh khong bi dao, nen cot dung la 'noi lai chieu that' --")
+    print("\n  -- under ORACLE: the edge is not reversed, so the right column is 'restates the true direction' --")
     print(d[["model", "ORACLE_giu_chieu_that", "ORACLE_khong_noi",
              "ORACLE_theo_do_thi"]]
-          .rename(columns={"ORACLE_giu_chieu_that": "noi_lai_chieu_duoc_cap",
+          .rename(columns={"ORACLE_giu_chieu_that": "restated_given_direction",
                            "ORACLE_theo_do_thi": "noi_chieu_NGUOC_khong_ai_cap"})
           .to_string(index=False))
 
     out = ROOT / "results" / "chain_graph_use.csv"
     d.to_csv(out, index=False)
     if miss:
-        print(f"\n  ({miss} luot khong co trong cache, da bo qua)")
+        print(f"\n  ({miss} calls not in the cache, skipped)")
 
     fol = d.DR_k1_theo_do_thi.mean()
     kep = d.DR_k1_giu_chieu_that.mean()
@@ -208,24 +209,25 @@ def main():
     print(f"  Trung binh ba model, duoi DR_k1: theo do thi {fol:.1f}%, "
           f"giu chieu that {kep:.1f}%, khong noi {sil:.1f}%.")
     if fol > kep:
-        print("  Chuoi theo do thi duoc cap NHIEU HON theo chieu dung. Do thi vao")
-        print("  toi tang suy luan, khong chi tang cau tra loi - day la bang chung")
+        print("  The chains follow the SUPPLIED graph more often than the true direction.")
+        print("  The graph reaches the reasoning layer, not just the answer layer - which")
+        print("  is the evidence")
         print("  co che truc tiep dau tien cua du an.")
     else:
-        print("  Chuoi giu chieu that nhieu hon theo do thi duoc cap. Model ghi de")
-        print("  khoi cau truc bang prior rieng, va lo hong hieu suat o DR_k1 KHONG")
-        print("  the giai thich bang viec no lam theo do thi sai.")
-    print(f"\n  CANH BAO: {sil:.1f}% chuoi khong noi chieu nao ca. Con so 'khong noi'")
-    print("  la CAN TREN cua su tho o, khong phai phep do su tho o - mot chuoi co")
-    print("  the suy luan tren canh do ma khong goi ten no.")
+        print("  The chains keep the true direction more often than they follow the graph.")
+        print("  The model overrides the structure block with its own prior, so the")
+        print("  performance gap at DR_k1 CANNOT be explained by it obeying a wrong graph.")
+    print(f"\n  WARNING: {sil:.1f}% of chains state no direction at all. The 'silent'")
+    print("  figure is an UPPER BOUND on indifference, not a measurement of it - a chain")
+    print("  can reason over that edge without ever naming it.")
 
     if a.dump:
         f = ROOT / "results" / "chain_sample_for_hand_coding.md"
         with f.open("w", encoding="utf-8") as fh:
-            fh.write("# Mau chuoi suy luan duoi DR_k1, de cham tay\n\n")
-            fh.write("Voi moi chuoi: do thi that noi `canh_that`, nhung prompt dua "
-                     "vao `canh_cap`.\nDoc chuoi roi tu danh ma, sau do so voi "
-                     "`ma_tu_dong` de kiem bo ma may.\n\n")
+            fh.write("# Sample reasoning chains under DR_k1, for hand coding\n\n")
+            fh.write("For each chain: the true graph says `true_edge`, but the prompt "
+                     "supplied `given_edge`.\nRead the chain, code it by hand, then "
+                     "compare against `auto_code` to check the automatic coder.\n\n")
             for k, c in enumerate(dump, 1):
                 fh.write(f"---\n\n## {k}. {c['model']} - item {c['item']}\n\n")
                 fh.write(f"- that: `{c['canh_that']}`\n")

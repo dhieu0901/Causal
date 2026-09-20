@@ -77,8 +77,47 @@ def describe_graph(edges, var_names: dict[str, str] | None = None) -> str:
     return " ".join(out)
 
 
+def list_nodes(edges, var_names: dict[str, str] | None = None) -> str:
+    """The variable names, SORTED ALPHABETICALLY.
+
+    Order is a leakage channel. Listing them in topological order would tell the
+    model which node is a root and which is a sink - exactly the structure this
+    condition exists to withhold. Alphabetical order is independent of the graph.
+    """
+    def nm(v):
+        return (var_names or {}).get(v, v)
+    names = sorted({nm(n) for e in edges for n in e})
+    if not names:
+        return ""
+    head = names[0].capitalize()
+    return ", ".join([head] + names[1:]) + "."
+
+
 def build(prompt: str, condition: str, edges=None, var_names=None) -> str:
-    """condition: RAW | RAW_INSTR | ORACLE | PERTURB (edges) | PROSE.
+    """condition: RAW | RAW_INSTR | NAMES_ONLY | ORACLE | PERTURB (edges) | PROSE.
+
+    NAMES_ONLY is the matched control for ORACLE. ORACLE adds FOUR things at
+    once: a block of text in a fixed position, the variable names restated, THE
+    EDGES, and an instruction telling the model to use the structure. NAMES_ONLY
+    keeps the first three and removes only the edges, so ORACLE minus NAMES_ONLY
+    isolates what the EDGES are worth.
+
+    If ORACLE does not beat NAMES_ONLY, then what helps the model is not the
+    CONTENT of the structure but merely having a set of symbols to anchor on -
+    and the study becomes one about symbol re-anchoring. Both outcomes are
+    publishable.
+
+    Two surface differences remain, stated rather than hidden:
+
+      1. The opening sentence has to change: "The causal structure of this world
+         is" is not true of a block that contains no structure. It becomes "The
+         variables of this world are". This is the same class of limitation
+         RAW_INSTR already carries.
+      2. The closing instruction is KEPT WORD FOR WORD. Changing it would add a
+         second difference and destroy the isolation. The consequence is that
+         "Use this causal structure when reasoning" follows a block with no
+         structure in it - which is precisely the condition being measured: does
+         the model need the CONTENT, or only a scaffold to hold on to?
 
     PROSE reproduces the untouched CLadder prompt, as a sanity anchor showing how
     much the stripping itself costs.
@@ -108,9 +147,13 @@ def build(prompt: str, condition: str, edges=None, var_names=None) -> str:
         return (stripped + "\n\nReason about the causal structure of this world "
                 "when answering." + ANSWER_RULE)
 
-    desc = describe_graph(edges, var_names)
-    block = (f"\n\nThe causal structure of this world is:\n{desc}\n"
-             f"Use this causal structure when reasoning.")
+    if condition == "NAMES_ONLY":
+        body = list_nodes(edges, var_names)
+        head = "The variables of this world are:"
+    else:
+        body = describe_graph(edges, var_names)
+        head = "The causal structure of this world is:"
+    block = f"\n\n{head}\n{body}\nUse this causal structure when reasoning."
     return stripped + block + ANSWER_RULE
 
 

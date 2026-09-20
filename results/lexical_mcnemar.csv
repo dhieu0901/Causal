@@ -1,4 +1,4 @@
-model,cond,so_sanh,n,delta_pp,p,y_nghia
+model,cond,n_compared,n,delta_pp,p,meaning
 gpt-4.1-nano,PROSE,PERMUTE - KEEP,157,-7.64,0.073,
 gpt-4.1-nano,PROSE,SYMBOL - KEEP,164,-5.49,0.243,
 gpt-4.1-nano,PROSE,PSEUDO - KEEP,165,1.82,0.766,

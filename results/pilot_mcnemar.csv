@@ -1,4 +1,4 @@
-model,so_sanh,n,b,c,p,y_nghia
+model,n_compared,n,b,c,p,meaning
 gpt-4.1-nano,ORACLE vs RAW,147,18,19,1.0,
 gpt-4.1-nano,DR_k1 vs RAW,147,18,25,0.3604,
 gpt-4.1-nano,DR_k2 vs RAW,147,17,28,0.1352,

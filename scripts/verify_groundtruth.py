@@ -113,7 +113,7 @@ class SCM:
         for k, v in params.items():
             m = KEY.match(k.strip())
             if not m:
-                raise ValueError(f"khong doc duoc khoa tham so: {k!r}")
+                raise ValueError(f"cannot parse parameter key: {k!r}")
             node, par = m.group(1), m.group(2)
             self.nodes.append(node)
             self.parents[node] = [s.strip() for s in par.split(",")] if par else []
@@ -132,7 +132,7 @@ class SCM:
                     pend.remove(n)
                     prog = True
             if not prog:
-                raise ValueError(f"do thi co chu trinh hoac thieu nut: {pend}")
+                raise ValueError(f"graph has a cycle or a missing node: {pend}")
         return out
 
     def p1(self, node, assign):
@@ -151,7 +151,7 @@ class SCM:
             t = t[assign[p]]
         if isinstance(t, list):
             if len(t) != 1:
-                raise ValueError(f"{node}: bang con {len(t)} phan tu, khong phai vo huong")
+                raise ValueError(f"{node}: sub-table has {len(t)} entries, not a scalar")
             t = t[0]
         return t
 
@@ -305,24 +305,24 @@ def naive_parent_independent(scm, node="Y", given=None):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--limit", type=int, default=0, help="chi kiem N model dau moi ho")
-    ap.add_argument("--quantity", default="", help="loc theo ten dai luong")
+    ap.add_argument("--limit", type=int, default=0, help="check only the first N models per family")
+    ap.add_argument("--quantity", default="", help="filter by quantity name")
     a = ap.parse_args()
 
     models = json.loads((ROOT / "data" / "cladder-meta.json").read_text(encoding="utf-8"))
     W = 92
     print("=" * W)
-    print("KIEM CHUNG GROUND TRUTH CLADDER - liet ke vet can toan bo SCM")
+    print("VERIFYING CLADDER GROUND TRUTH - exhaustive enumeration over every SCM")
     print("=" * W)
-    print(f"  {len(models)} SCM, nguong khop {TOL}")
+    print(f"  {len(models)} SCMs, match tolerance {TOL}")
     fams = sorted({m["graph_id"] for m in models})
-    print(f"  {len(fams)} ho do thi: {', '.join(fams)}")
+    print(f"  {len(fams)} graph families: {', '.join(fams)}")
     qs = sorted({k for m in models for k in m["groundtruth"]})
-    print(f"  {len(qs)} dai luong: {', '.join(qs)}\n")
+    print(f"  {len(qs)} quantities: {', '.join(qs)}\n")
 
     # ---- 1. engine self-test ---------------------------------------------
     print("-" * W)
-    print("1. TU KIEM BO MAY: so voi ba ham do-calculus viet tay cua ban truoc")
+    print("1. ENGINE SELF-TEST: against the three hand-written do-calculus estimators")
     print("-" * W)
     rows = []
     for fam, fn in HAND.items():
@@ -335,20 +335,20 @@ def main():
             except Exception:
                 pass
         e = np.array(d) if d else np.array([np.nan])
-        rows.append({"ho": fam, "so_sanh": len(d),
-                     "lech_max": f"{np.nanmax(e):.3e}", "khop": bool(np.all(e < TOL))})
+        rows.append({"family": fam, "n_compared": len(d),
+                     "max_dev": f"{np.nanmax(e):.3e}", "match": bool(np.all(e < TOL))})
     st = pd.DataFrame(rows)
     print(st.to_string(index=False))
-    if not st.khop.all():
-        print("\n  BO MAY SAI - dung lai, moi ket qua duoi khong tin duoc.")
+    if not st.match.all():
+        print("\n  THE ENGINE IS WRONG - stopping; nothing below can be trusted.")
         return 1
-    print("\n  Bo may khop ham viet tay tren ca ba ho. Tiep tuc.")
+    print("\n  Engine agrees with the hand-written functions on all three families.")
 
     # ---- 2 and 3. everything, every family --------------------------------
     print("\n" + "-" * W)
-    print("2. KIEM TOAN BO: moi ho do thi, moi dai luong")
+    print("2. FULL CHECK: every graph family, every quantity")
     print("-" * W)
-    acc, skipped, conv = {}, 0, {"telescoping": 0, "both_vs_base": 0, "khong_cai_nao": 0}
+    acc, skipped, conv = {}, 0, {"telescoping": 0, "both_vs_base": 0, "neither": 0}
     for fam in fams:
         sub = [m for m in models if m["graph_id"] == fam]
         if a.limit:
@@ -369,7 +369,7 @@ def main():
                 elif bvb < TOL:
                     conv["both_vs_base"] += 1
                 else:
-                    conv["khong_cai_nao"] += 1
+                    conv["neither"] += 1
                 got["NIE(Y | X)"] = (nn["NIE_telescoping"] if tel <= bvb
                                      else nn["NIE_both_vs_base"])
             except Exception:
@@ -383,19 +383,19 @@ def main():
     rows = []
     for (fam, k), errs in sorted(acc.items()):
         e = np.array(errs)
-        rows.append({"ho": fam, "dai_luong": k, "n": len(e),
-                     "lech_max": f"{e.max():.3e}", "khop": bool(np.all(e < TOL))})
+        rows.append({"family": fam, "quantity": k, "n": len(e),
+                     "max_dev": f"{e.max():.3e}", "match": bool(np.all(e < TOL))})
     df = pd.DataFrame(rows)
 
-    piv = df.pivot_table(index="ho", columns="dai_luong", values="khop", aggfunc="all")
-    print("  khop hoan toan theo (ho x dai luong):\n")
-    print(piv.replace({True: "OK", False: "SAI"}).fillna("-").to_string())
+    piv = df.pivot_table(index="family", columns="quantity", values="match", aggfunc="all")
+    print("  exact match by (family x quantity):\n")
+    print(piv.replace({True: "OK", False: "FAIL"}).fillna("-").to_string())
     out = ROOT / "results" / "groundtruth_verification.csv"
     out.parent.mkdir(exist_ok=True)
     df.to_csv(out, index=False)
 
     print("\n" + "-" * W)
-    print("3. QUY UOC PHAN RA HIEU UNG TU NHIEN MA CLADDER DUNG")
+    print("3. WHICH NATURAL-EFFECT DECOMPOSITION CONVENTION CLADDER USES")
     print("-" * W)
     tot = sum(conv.values())
     for k, v in conv.items():
@@ -404,16 +404,17 @@ def main():
     print("  both_vs_base: NDE = E[Y_1,M0] - E[Y_0],  NIE = E[Y_0,M1] - E[Y_0]")
 
     # ---- 4. diagnose whatever did not match --------------------------------
-    miss = df[~df.khop]
+    miss = df[~df.match]
     explained = False
     if len(miss):
         print("\n" + "-" * W)
-        print("4. CHAN DOAN CHO NHUNG O KHONG KHOP")
+        print("4. DIAGNOSIS FOR THE CELLS THAT DID NOT MATCH")
         print("-" * W)
-        print("  Gia thuyet: CLadder tinh bang cach nhan xac suat bien cua CAC NUT CHA")
-        print("  nhu the chung doc lap. Dung khi cac cha doc lap that, sai khi khong.\n")
+        print("  Hypothesis: CLadder multiplies the MARGINAL probabilities of a node's")
+        print("  PARENTS as if they were independent. Correct when the parents really")
+        print("  are independent, wrong when they are not.\n")
         rows = []
-        for fam in sorted(miss.ho.unique()):
+        for fam in sorted(miss.family.unique()):
             sub = [m for m in models if m["graph_id"] == fam]
             if a.limit:
                 sub = sub[:a.limit]
@@ -430,25 +431,27 @@ def main():
                     c_ok += abs(naive_parent_independent(s, given={"X": 1})
                                 - g["P(Y=1 | X=1)"]) < TOL
             n = len(sub)
-            rows.append({"ho": fam, "n": n,
-                         "PY_cong_thuc_dung": f"{100 * d_ok / n:.1f}%",
-                         "PY_gia_dinh_doc_lap": f"{100 * n_ok2 / n:.1f}%",
-                         "PY|X_gia_dinh_doc_lap": f"{100 * c_ok / c_n:.1f}%" if c_n else "-",
-                         "cha_cua_Y": ",".join(SCM(sub[0]["params"]).parents["Y"])})
+            rows.append({"family": fam, "n": n,
+                         "PY_correct_formula": f"{100 * d_ok / n:.1f}%",
+                         "PY_independence_assumed": f"{100 * n_ok2 / n:.1f}%",
+                         "PY_given_X_independence": f"{100 * c_ok / c_n:.1f}%" if c_n else "-",
+                         "parents_of_Y": ",".join(SCM(sub[0]["params"]).parents["Y"])})
         dg = pd.DataFrame(rows)
         print(dg.to_string(index=False))
-        explained = all(r["PY_gia_dinh_doc_lap"] == "100.0%" for r in rows)
-        print("\n  Doc bang: cot 'gia dinh doc lap' cao va cot 'cong thuc dung' thap")
-        print("  nghia la gia tri cong bo sinh ra tu phep tinh SAI, khong phai tu SCM.")
-        print("\n  PHAM VI. Sai lech nam o truong `groundtruth` trong metadata, va")
-        print("  no CO cham toi nhan yes/no dung de cham diem.")
-        print("\n  DINH CHINH 2026-09-20. Ban truoc cua khoi nay in ra khang dinh")
-        print("  nguoc lai - rang nhan yes/no khong bi anh huong, dan mot phep kiem")
-        print("  99,05% tren 1.580 cau marginal. Phep kiem do so nhan voi gia tri in")
-        print("  trong chuoi `reasoning` DA LAM TRON HAI CHU SO, ma lam tron xoa sach")
-        print("  khac biet dung o vung sat nguong. Va khang dinh do la mot CHUOI KY TU")
-        print("  CUNG, khong phai mot phep tinh.")
-        print("\n  Con so that, TINH TAI CHO chu khong phai chuoi cung:")
+        explained = all(r["PY_independence_assumed"] == "100.0%" for r in rows)
+        print("\n  Reading it: a high 'independence assumed' column with a low 'correct")
+        print("  formula' column means the published value came from the WRONG")
+        print("  computation, not from the SCM.")
+        print("\n  SCOPE. The error lives in the metadata `groundtruth` field, and it DOES")
+        print("  reach the yes/no label used for scoring.")
+        print("\n  CORRECTION, 2026-09-20. An earlier version of this block printed the")
+        print("  opposite claim - that the yes/no labels were unaffected - citing a")
+        print("  99.05% check over 1,580 marginal questions. That check compared the")
+        print("  label against a value printed in the `reasoning` string ALREADY ROUNDED")
+        print("  TO TWO DECIMALS, and the rounding erases exactly the differences that")
+        print("  matter near the threshold. The claim was also a HARD-CODED STRING, not")
+        print("  a computation.")
+        print("\n  The real number, COMPUTED HERE rather than hard-coded:")
         try:
             import importlib.util as _il
             _sp = _il.spec_from_file_location(
@@ -456,39 +459,39 @@ def main():
             _vl = _il.module_from_spec(_sp)
             _sp.loader.exec_module(_vl)
             _brk, _tot, _per = _vl.count_label_flips(verbose=False, write_csv=True)
-            print(f"  tren {_tot} cau ma gia tri dung va gia tri cong bo nam HAI PHIA")
-            print(f"  nguong, {_brk}/{_tot} nhan di theo gia tri HONG "
-                  f"({100.0 * _brk / _tot:.1f}%).")
-            print("  Phan ra theo query_type: " +
-                  ", ".join(f"{k} {v.get('hong', 0)}/{sum(v.values())}"
+            print(f"  over the {_tot} questions where the correct and published values fall")
+            print(f"  on OPPOSITE sides of the threshold, {_brk}/{_tot} labels follow the")
+            print(f"  BROKEN value ({100.0 * _brk / _tot:.1f}%).")
+            print("  By query_type: " +
+                  ", ".join(f"{k} {v.get('broken', 0)}/{sum(v.values())}"
                             for k in sorted(_per) for v in [_per[k]]))
         except Exception as _e:
-            print(f"  (khong chay duoc verify_labels.py: {_e})")
-            print("  Chay tay `python scripts/verify_labels.py` de co con so.")
+            print(f"  (could not run verify_labels.py: {_e})")
+            print("  Run `python scripts/verify_labels.py` by hand for the number.")
 
     print("\n" + "=" * W)
-    n_ok = int(df.khop.sum())
+    n_ok = int(df.match.sum())
     n_cell = len(df)
     n_chk = int(df.n.sum())
-    print(f"  {n_ok}/{n_cell} o (ho x dai luong) khop tuyet doi, {n_chk} phep so sanh")
+    print(f"  {n_ok}/{n_cell} (family x quantity) cells match exactly, {n_chk} comparisons")
     if skipped:
-        print(f"  {skipped} SCM bo qua vi loi doc tham so")
-    clean = bool(df.khop.all()) and skipped == 0
+        print(f"  {skipped} SCMs skipped because their parameters could not be read")
+    clean = bool(df.match.all()) and skipped == 0
     if clean:
-        print("\nGROUND TRUTH DUNG TOAN BO")
+        print("\nGROUND TRUTH CORRECT THROUGHOUT")
     elif explained:
         # Every mismatch is accounted for by the diagnosed upstream defect. It
         # DOES reach the yes/no labels near the decision threshold - see
         # scripts/verify_labels.py, which counts how many decisive labels
         # follow the broken value. That is a finding to report, not a reason
         # to abort, so the exit code stays 0 and run_full.sh continues.
-        print("\nDAI LUONG NHAN QUA DUNG TOAN BO tren 9/10 ho.")
-        print("Sai lech con lai DA GIAI THICH HET bang loi thuong nguon o muc 4.")
-        print("No KHONG phai loi cua du an nay, nhung no CO cham toi nhan yes/no")
-        print("o vung sat nguong - xem scripts/verify_labels.py.")
+        print("\nCAUSAL QUANTITIES CORRECT THROUGHOUT on 9 of 10 families.")
+        print("Every remaining deviation is FULLY ACCOUNTED FOR by the upstream defect")
+        print("diagnosed in section 4. It is NOT a defect of this project, but it DOES")
+        print("reach the yes/no labels near the threshold - see scripts/verify_labels.py.")
     else:
-        print("\nCO SAI LECH CHUA GIAI THICH DUOC - DIEU TRA THEM")
-    print(f"da ghi {out}")
+        print("\nUNEXPLAINED DEVIATIONS REMAIN - INVESTIGATE FURTHER")
+    print(f"wrote {out}")
     return 0 if (clean or explained) else 1
 
 

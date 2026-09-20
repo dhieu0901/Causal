@@ -79,7 +79,7 @@ def main():
     W = 92
 
     print("=" * W)
-    print("1. NGAN SACH TREN TUNG NHANH - co so cua diem uoc luong o muc 8.2")
+    print("1. BUDGET PER BRANCH - the basis for the point estimates in section 8.2")
     print("=" * W)
     rows = []
     for m in TIER:
@@ -91,13 +91,13 @@ def main():
     print(per.to_string(index=False))
     sfx = "" if a.prefix == "price400" else f"_{a.prefix}"
     per.to_csv(ROOT / "results" / f"budget_per_branch{sfx}.csv", index=False)
-    print("\n  Day la co so tai lap DUNG bang muc 8.2. Luu y n: 390/382/371, KHONG")
-    print("  phai 382/371 nhu muc 8.2 trich - hai con so do thuoc co so o muc 2.")
+    print("\n  This reproduces section 8.2 EXACTLY. Note the n values: 390/382/371, NOT")
+    print("  the 382/371 that section 8.2 quotes - those two belong to the section 2 basis.")
 
     print("\n" + "=" * W)
-    print("2. HIEU NGAN SACH GHEP CAP - co so duy nhat dung cho mot phep tru")
+    print("2. PAIRED BUDGET DIFFERENCE - the only valid basis for a subtraction")
     print("=" * W)
-    print("  Chi item parse duoc o ca BON o (ORACLE/RAW x KEEP/PSEUDO).")
+    print("  Only items parsed in all FOUR cells (ORACLE/RAW x KEEP/PSEUDO).")
     print(f"  Bootstrap boc lai theo item, {a.boot} lan.\n")
     rows = []
     for m in TIER:
@@ -113,38 +113,40 @@ def main():
         lo, hi = np.percentile(boot, [2.5, 97.5])
         se = boot.std(ddof=1)
         n_need = int(np.ceil(len(idx) * (1.96 * se / abs(est)) ** 2)) if est else None
-        rows.append({"model": m, "n_chung": len(idx),
+        rows.append({"model": m, "n_shared": len(idx),
                      "ngan_sach_KEEP": round(100 * bk[idx].mean(), 2),
                      "ngan_sach_PSEUDO": round(100 * bp[idx].mean(), 2),
-                     "hieu_pp": round(est, 2), "ci_lo": round(lo, 2), "ci_hi": round(hi, 2),
+                     "delta_pp": round(est, 2), "ci_lo": round(lo, 2), "ci_hi": round(hi, 2),
                      "se": round(se, 2),
-                     "xac_lap": "khong" if lo <= 0 <= hi else "co",
+                     "established": "no" if lo <= 0 <= hi else "yes",
                      "n_can_de_p05": n_need})
     pair = pd.DataFrame(rows)
     print(pair.to_string(index=False))
     pair.to_csv(ROOT / "results" / f"budget_paired_ci{sfx}.csv", index=False)
 
-    n_ok = (pair.xac_lap == "co").sum()
+    n_ok = (pair.established == "yes").sum()
     print(f"\n  {n_ok}/3 model co CI khong chua 0.")
-    rev = pair[pair.hieu_pp < 0]
+    rev = pair[pair.delta_pp < 0]
     if len(rev):
-        print(f"  Di NGUOC huong: {', '.join(rev.model)} - ngan sach GIAM khi bo neo tu vung.")
+        print(f"  Moving the OTHER way: {', '.join(rev.model)} - the budget FALLS once the "
+              f"lexical anchor is removed.")
 
     print("\n" + "=" * W)
     print("3. KET LUAN")
     print("=" * W)
     if n_ok == 0:
-        print('  Khang dinh "ngan sach tang gap doi khi bo neo tu vung" CHUA XAC LAP.')
+        print('  The claim that "the budget doubles once the lexical anchor is removed" is')
+        print('  NOT ESTABLISHED.')
         print("  Ca ba CI deu chua 0. Do do diem hoa von k* cung chua xac lap, vi")
-        print("  tu so cua no chua vung.")
+        print("  its numerator is not solid.")
     else:
-        print(f"  {n_ok}/3 model dat. Van chua du de phat bieu o muc ca ba model.")
+        print(f"  {n_ok}/3 models reach it. Still not enough to state it for all three.")
     big = pair.dropna(subset=["n_can_de_p05"]).sort_values("n_can_de_p05")
     for _, r in big.iterrows():
-        print(f"    {r.model:14} hien co n={r.n_chung}, can n~{int(r.n_can_de_p05)} "
+        print(f"    {r.model:14} hien co n={r.n_shared}, can n~{int(r.n_can_de_p05)} "
               f"de hieu dat p<0,05")
-    print("\n  Con so n_can_de_p05 la con so KE HOACH, khong phai ket qua: no gia dinh")
-    print("  do lon hieu ung va phuong sai giu nguyen khi nang co mau.")
+    print("\n  n_needed_for_p05 is a PLANNING number, not a result: it assumes the effect")
+    print("  size and the variance stay unchanged as the sample grows.")
     print(f"  Da ghi: results/budget_per_branch{sfx}.csv, "
           f"results/budget_paired_ci{sfx}.csv")
 

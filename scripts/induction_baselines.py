@@ -72,7 +72,7 @@ def main():
     print("=" * 78)
     print(f"DUONG SAN MO PHONG, n={len(b)} item, 0 luot goi API")
     print("=" * 78)
-    print(f"{'Tac nhan gia dinh':46s} {'dao chieu':>10s} {'F1':>8s}")
+    print(f"{'Hypothetical agent':46s} {'reversed':>10s} {'F1':>8s}")
     print(f"{'Doan ngau nhien (cung so canh)':46s} "
           f"{b.rnd_rev.mean():10.3f} {b.rnd_f1.mean():8.3f}")
     print(f"{'Chi dung tri thuc the gioi (xuat do thi KEEP)':46s} "
@@ -96,26 +96,27 @@ def main():
             emitted = (s.n_true - s.n_missing + s.n_spurious).mean()
             rev = s.n_reversed.mean()
             out.append({
-                "model": m, "tu_vung": l,
+                "model": m, "lexicon": l,
                 "f1": round(s.f1.mean(), 3),
-                "f1_tren_san_ngau_nhien": round(s.f1.mean() - b.rnd_f1.mean(), 3),
-                "canh_xuat": round(emitted, 2),
-                "dao_chieu": round(rev, 3),
+                "f1_over_random_floor": round(s.f1.mean() - b.rnd_f1.mean(), 3),
+                "spurious_edges": round(emitted, 2),
+                "reversed": round(rev, 3),
                 # Normalised, because a lexicon that made the model emit more
                 # edges would raise the raw count on its own.
-                "dao_tren_canh_xuat": round(rev / emitted, 3) if emitted else None,
-                "phan_tram_duong_toi_tri_thuc": (
+                "reversed_on_spurious": round(rev / emitted, 3) if emitted else None,
+                "percent_of_way_to_knowledge": (
                     round(100 * rev / b.wk_rev.mean(), 1) if b.wk_rev.mean() else None),
-                "item_co_dao_chieu_pct": round(100 * (s.n_reversed > 0).mean(), 1),
+                "pct_items_with_reversal": round(100 * (s.n_reversed > 0).mean(), 1),
             })
     o = pd.DataFrame(out)
     print(o.to_string(index=False))
     o.to_csv(ROOT / "results" / "induction_baselines.csv", index=False)
 
-    print("\n  f1_tren_san_ngau_nhien am hoac gan 0 nghia la do thi tu dung khong")
-    print("  hon doan mo bao nhieu, du con so F1 tuyet doi trong co ve kha.")
-    print("  phan_tram_duong_toi_tri_thuc: 100% la tac nhan bo han van ban va chi")
-    print("  tra loi theo tri thuc. Model that nam giua, nen no doc van ban MOT PHAN.")
+    print("\n  f1_over_random_floor at or below 0 means the self-built graph is no")
+    print("  better than guessing, however respectable the raw F1 looks.")
+    print("  percent_of_way_to_knowledge: 100% is the agent that ignores the text")
+    print("  entirely and answers from knowledge alone. Real models sit in between,")
+    print("  so they read the text PARTLY.")
 
 
 if __name__ == "__main__":

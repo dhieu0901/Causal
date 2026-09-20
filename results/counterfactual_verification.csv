@@ -1,4 +1,4 @@
-loai,n,khop,lech
+query_type,n,match,mismatch
 det-counterfactual,1476,1476,0
 exp_away,168,168,0
 collider_bias,168,168,0

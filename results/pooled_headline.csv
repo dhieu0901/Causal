@@ -1,6 +1,6 @@
-cach_gop,n_item,did_pp,ci_lo,ci_hi,p_boot
+pooling,n_items,did_pp,ci_lo,ci_hi,p_boot
 lex,85,12.71,2.57,22.98,0.018
 n600,287,6.78,1.65,12.08,0.009
 price400,195,1.72,-5.27,8.27,0.6395
-"gop o muc item, bo trung",490,5.98,1.67,10.19,0.0055
-trung binh co trong so theo n,567,5.93,,,
+"item level, de-duplicated",490,5.98,1.67,10.19,0.0055
+n-weighted mean of samples,567,5.93,,,

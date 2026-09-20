@@ -94,10 +94,11 @@ def main():
     keys = sorted(idx["KEEP"])
 
     print("=" * W)
-    print("1. PHAT HIEN BAT THUONG: model co TU NOI RA rang de bai vo ly khong?")
+    print("1. ANOMALY DETECTION: does the model SAY OUT LOUD that the item makes no sense?")
     print("=" * W)
-    print("  Neu bac 1 chi 'bo di mot prior dung' thi ty le nay phai giong nhau")
-    print("  o moi bo. Neu PERMUTE tach han ra, bac 1 doi nhieu hon mot thu.\n")
+    print("  If rung 1 only 'removes a correct prior', this rate should be the same")
+    print("  across lexicons. If PERMUTE separates cleanly, rung 1 changes more than")
+    print("  one thing.\n")
     rows, miss = [], 0
     for cond in ["RAW", "ORACLE"]:
         for m in TIER:
@@ -123,24 +124,25 @@ def main():
             rows.append(r)
     an = pd.DataFrame(rows)
     show = ["cond", "model"] + [f"{l}_pct" for l in LEXICONS]
-    print("  -- ty le phan hoi gan co mau thuan (%) --")
+    print("  -- share of responses carrying a contradiction marker (%) --")
     print(an[show].to_string(index=False))
     print("\n  -- do dai phan hoi trung binh (ky tu) --")
     print(an[["cond", "model"] + [f"{l}_len" for l in LEXICONS]].to_string(index=False))
     an.to_csv(ROOT / "results" / "anomaly_flag_rate.csv", index=False)
     if miss:
-        print(f"\n  ({miss} luot goi khong co trong cache, da bo qua)")
+        print(f"\n  ({miss} calls not in the cache, skipped)")
 
     kp = an[[f"{l}_pct" for l in LEXICONS]].astype(float)
     print(f"\n  KEEP {kp.KEEP_pct.min():.1f}-{kp.KEEP_pct.max():.1f}%   "
           f"PERMUTE {kp.PERMUTE_pct.min():.1f}-{kp.PERMUTE_pct.max():.1f}%   "
           f"SYMBOL {kp.SYMBOL_pct.min():.1f}-{kp.SYMBOL_pct.max():.1f}%   "
           f"PSEUDO {kp.PSEUDO_pct.min():.1f}-{kp.PSEUDO_pct.max():.1f}%")
-    print("  PERMUTE tach han khoi ba bo con lai; SYMBOL va PSEUDO khong khac KEEP.")
+    print("  PERMUTE separates cleanly from the other three; SYMBOL and PSEUDO do not")
+    print("  differ from KEEP.")
     print("  Vay bac 1 bo prior dung + gan prior sai + tao tin hieu bat thuong.")
 
     print("\n" + "=" * W)
-    print("2. RESIDUE: SYMBOL va PSEUDO co thuc su an danh het khong?")
+    print("2. RESIDUE: do SYMBOL and PSEUDO really anonymise everything?")
     print("=" * W)
     story_of = {i: r.story_id for i, r in items.iterrows()}
     seen = {}
@@ -171,16 +173,16 @@ def main():
             if rem:
                 dirty += 1
                 leftover.update(rem)
-        rows.append({"lexicon": lex, "n_item": tot, "item_con_residue": dirty,
-                     "phan_tram": round(100 * dirty / tot, 1) if tot else None,
+        rows.append({"lexicon": lex, "n_item": tot, "items_with_residue": dirty,
+                     "percent": round(100 * dirty / tot, 1) if tot else None,
                      "tu_sot_hay_gap": ", ".join(w for w, _ in leftover.most_common(8))})
     res = pd.DataFrame(rows)
     print(res.to_string(index=False))
     res.to_csv(ROOT / "results" / "lexicon_residue.csv", index=False)
-    print("\n  relabel() chi thay cum nam trong variable_mapping. CLadder con goi")
-    print("  cung bien do bang bien the ngu phap khong co trong mapping, nen chung")
-    print("  song sot. Residue lam SYMBOL/PSEUDO lech VE PHIA KEEP, tuc lech theo")
-    print("  dung huong sinh ra ket qua null o bac 2 va bac 3.")
+    print("\n  relabel() only replaces phrases listed in variable_mapping. CLadder also")
+    print("  refers to the same variable through grammatical variants that are not in")
+    print("  the mapping, so those survive. Residue biases SYMBOL/PSEUDO TOWARDS KEEP -")
+    print("  the exact direction that would produce the null results at rungs 2 and 3.")
     print("\n  Da ghi: results/anomaly_flag_rate.csv, results/lexicon_residue.csv")
 
 

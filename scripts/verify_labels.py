@@ -1,17 +1,19 @@
-"""Nhan yes/no cua CLadder di theo gia tri nao: gia tri CONG BO hay gia tri DUNG.
+"""Which value does CLadder's yes/no label follow: the PUBLISHED one or the CORRECT one?
 
-Boi canh. `verify_groundtruth.py` chung minh truong `meta.groundtruth` cua CLadder
-sinh ra tu mot phep tinh sai: no nhan xac suat bien cua cac nut cha nhu the chung
-doc lap. Cau hoi tiep theo la sai lech do co cham toi NHAN dung de cham diem khong.
+Background. `verify_groundtruth.py` shows that CLadder's `meta.groundtruth` field
+comes from a miscomputation: it multiplies the marginal probabilities of a node's
+parents as if they were independent. The next question is whether that error
+reaches the yes/no label used for scoring.
 
-Cach lam, khong lay bat ky con so nao tu REPORT.md:
-  1. tinh lai gia tri DUNG bang bo giai SCM trong verify_groundtruth.py
-  2. lay gia tri CONG BO tu meta.groundtruth
-  3. loc cac cau ma hai gia tri nam HAI PHIA nguong quyet dinh
-  4. voi moi cau do, xem nhan yes/no trong du lieu trung voi ben nao
+Method, taking no number from REPORT.md:
+  1. recompute the CORRECT value with the SCM solver in verify_groundtruth.py
+  2. read the PUBLISHED value from meta.groundtruth
+  3. keep only the questions where the two fall on OPPOSITE sides of the
+     decision threshold
+  4. for each of those, see which side the yes/no label in the data agrees with
 
-Chay:  python scripts/verify_labels.py
-Ket qua: in bang, va ghi results/_label_flips.csv
+Run:  python scripts/verify_labels.py
+Writes: a table to the console, and results/_label_flips.csv
 """
 
 import csv
@@ -22,10 +24,12 @@ from collections import Counter, defaultdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# chi `marginal` la xac suat nen so voi 0,5; moi dai luong hieu so voi 0
-THR = {"marginal": 0.5}
+# only `marginal` is a probability, so only it is compared against 0.5; every
+# other quantity is a difference and is compared against 0
+THRESHOLD = {"marginal": 0.5}
 
-# hai loai nay bo giai chua ho tro, khai ro thay vi im lang bo qua
+# the solver does not cover these two; named explicitly rather than skipped
+# silently. scripts/verify_counterfactual.py covers them separately.
 UNSUPPORTED = ("exp_away", "det-counterfactual")
 
 
@@ -38,11 +42,11 @@ def _load_solver():
 
 
 def threshold(qt):
-    return THR.get(qt, 0.0)
+    return THRESHOLD.get(qt, 0.0)
 
 
 def true_value(vg, scm_meta, qt):
-    """Tinh lai dai luong bang bo giai SCM. None neu khong ho tro."""
+    """Recompute the quantity with the SCM solver. None if unsupported."""
     scm = vg.SCM(scm_meta["params"])
     if qt == "marginal":
         return scm.prob({"Y": 1})
@@ -55,18 +59,18 @@ def true_value(vg, scm_meta, qt):
         return scm.ett()
     if qt in ("nde", "nie"):
         d = scm.nde_nie()
-        # CLadder dung quy uoc both-vs-base cua Pearl, khong phai telescoping
+        # CLadder uses Pearl's both-versus-base convention, not telescoping
         return d["NDE"] if qt == "nde" else d["NIE_both_vs_base"]
     return None
 
 
 def label_for(value, thr, polarity):
-    """Nhan yes/no suy ra tu gia tri. Quy tac nay da kiem tren toan bo du lieu."""
+    """The yes/no label implied by a value. This rule was checked on the whole set."""
     return "yes" if ((value > thr) == bool(polarity)) else "no"
 
 
 def count_label_flips(verbose=True, write_csv=True):
-    """Tra ve (so_theo_gia_tri_hong, tong_so_cau_quyet_dinh, bang_theo_query_type)."""
+    """Returns (n_following_broken_value, n_decisive_questions, table_by_query_type)."""
     vg = _load_solver()
     meta = json.loads(open(os.path.join(ROOT, "data", "cladder-meta.json"),
                            encoding="utf-8").read())
@@ -81,26 +85,26 @@ def count_label_flips(verbose=True, write_csv=True):
         qt = m["query_type"]
         pub = m.get("groundtruth")
         if not isinstance(pub, (int, float)):
-            skipped["groundtruth khong phai so"] += 1
+            skipped["groundtruth is not a number"] += 1
             continue
         if qt in UNSUPPORTED:
-            skipped["bo giai chua ho tro %s" % qt] += 1
+            skipped["solver does not cover %s" % qt] += 1
             continue
         sm = scms.get(m["model_id"])
         if sm is None:
-            skipped["thieu SCM"] += 1
+            skipped["no SCM"] += 1
             continue
         try:
             tru = true_value(vg, sm, qt)
         except Exception as e:
-            skipped["loi tinh %s" % type(e).__name__] += 1
+            skipped["error computing %s" % type(e).__name__] += 1
             continue
         if tru is None:
-            skipped["khong ho tro %s" % qt] += 1
+            skipped["unsupported %s" % qt] += 1
             continue
         t = threshold(qt)
         if (float(pub) > t) == (float(tru) > t):
-            continue                      # hai gia tri cung phia, nhan khong doi
+            continue                      # same side, the label is unaffected
         decisive.append((q, m, qt, float(pub), float(tru), t))
 
     per_qt = defaultdict(Counter)
@@ -117,20 +121,20 @@ def count_label_flips(verbose=True, write_csv=True):
             unresolved += 1
             continue
         if ans == lp:
-            side = "hong"
+            side = "broken"
         elif ans == lt:
-            side = "dung"
+            side = "correct"
         else:
             unresolved += 1
             continue
         per_qt[qt][side] += 1
         rows.append({"question_id": q.get("question_id"),
                      "graph_id": m["graph_id"], "query_type": qt,
-                     "gia_tri_cong_bo": pub, "gia_tri_dung": tru,
-                     "nguong": t, "nhan": ans, "nhan_di_theo": side})
+                     "published_value": pub, "correct_value": tru,
+                     "threshold": t, "label": ans, "label_follows": side})
 
-    broken = sum(c["hong"] for c in per_qt.values())
-    total = broken + sum(c["dung"] for c in per_qt.values())
+    broken = sum(c["broken"] for c in per_qt.values())
+    total = broken + sum(c["correct"] for c in per_qt.values())
 
     if write_csv:
         out = os.path.join(ROOT, "results", "_label_flips.csv")
@@ -140,25 +144,26 @@ def count_label_flips(verbose=True, write_csv=True):
             w.writerows(rows)
 
     if verbose:
-        print("KIEM NHAN CHUAN CLADDER")
+        print("CHECKING CLADDER'S ANSWER KEY")
         print("=" * 62)
         if skipped:
-            print("  bo qua:", dict(skipped))
-        print("  so cau QUYET DINH (hai gia tri khac phia nguong):", len(decisive))
+            print("  skipped:", dict(skipped))
+        print("  DECISIVE questions (the two values straddle the threshold):",
+              len(decisive))
         if unresolved:
-            print("  khong phan dinh duoc:", unresolved)
+            print("  could not be decided:", unresolved)
         print()
-        print(f"  {'query_type':14s} {'HONG':>6s} {'DUNG':>6s}")
-        print("  " + "-" * 28)
+        print(f"  {'query_type':14s} {'BROKEN':>7s} {'CORRECT':>8s}")
+        print("  " + "-" * 30)
         for qt in sorted(per_qt):
-            print(f"  {qt:14s} {per_qt[qt]['hong']:6d} {per_qt[qt]['dung']:6d}")
-        print("  " + "-" * 28)
-        print(f"  {'TONG':14s} {broken:6d} {total - broken:6d}")
+            print(f"  {qt:14s} {per_qt[qt]['broken']:7d} {per_qt[qt]['correct']:8d}")
+        print("  " + "-" * 30)
+        print(f"  {'TOTAL':14s} {broken:7d} {total - broken:8d}")
         print()
-        print(f"  => {broken}/{total} nhan di theo gia tri HONG "
+        print(f"  => {broken}/{total} labels follow the BROKEN value "
               f"({100.0 * broken / total:.1f}%)")
         if write_csv:
-            print("  da ghi results/_label_flips.csv")
+            print("  wrote results/_label_flips.csv")
 
     return broken, total, {k: dict(v) for k, v in per_qt.items()}
 

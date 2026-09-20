@@ -1,58 +1,58 @@
-nhom,cond,model,lexicon,n,delta_pp,p
-gop tat ca,RAW,gpt-4.1-nano,PERMUTE,165,-7.27,0.0961
-gop tat ca,RAW,gpt-4.1-nano,SYMBOL,172,-15.12,0.0002
-gop tat ca,RAW,gpt-4.1-nano,PSEUDO,173,-12.14,0.0038
-gop tat ca,RAW,gpt-4.1-mini,PERMUTE,170,-12.35,0.0025
-gop tat ca,RAW,gpt-4.1-mini,SYMBOL,172,-7.56,0.0241
-gop tat ca,RAW,gpt-4.1-mini,PSEUDO,172,-13.37,0.0001
-gop tat ca,RAW,gpt-4.1,PERMUTE,169,-10.06,0.0186
-gop tat ca,RAW,gpt-4.1,SYMBOL,172,-8.72,0.0135
-gop tat ca,RAW,gpt-4.1,PSEUDO,170,-10.0,0.0115
-gop tat ca,ORACLE,gpt-4.1-nano,PERMUTE,153,-9.15,0.0436
-gop tat ca,ORACLE,gpt-4.1-nano,SYMBOL,163,-4.91,0.243
-gop tat ca,ORACLE,gpt-4.1-nano,PSEUDO,162,-5.56,0.243
-gop tat ca,ORACLE,gpt-4.1-mini,PERMUTE,162,-1.85,0.7428
-gop tat ca,ORACLE,gpt-4.1-mini,SYMBOL,167,-2.99,0.4996
-gop tat ca,ORACLE,gpt-4.1-mini,PSEUDO,169,-2.96,0.4996
-gop tat ca,ORACLE,gpt-4.1,PERMUTE,170,-8.82,0.0201
-gop tat ca,ORACLE,gpt-4.1,SYMBOL,168,-8.33,0.0243
-gop tat ca,ORACLE,gpt-4.1,PSEUDO,170,-6.47,0.1173
-nhan qua that,RAW,gpt-4.1-nano,PERMUTE,83,-16.87,0.0066
-nhan qua that,RAW,gpt-4.1-nano,SYMBOL,84,-21.43,0.0009
-nhan qua that,RAW,gpt-4.1-nano,PSEUDO,85,-16.47,0.0094
-nhan qua that,RAW,gpt-4.1-mini,PERMUTE,82,-24.39,0.0001
-nhan qua that,RAW,gpt-4.1-mini,SYMBOL,84,-16.67,0.0026
-nhan qua that,RAW,gpt-4.1-mini,PSEUDO,84,-20.24,0.0005
-nhan qua that,RAW,gpt-4.1,PERMUTE,84,-17.86,0.0026
-nhan qua that,RAW,gpt-4.1,SYMBOL,85,-12.94,0.0192
-nhan qua that,RAW,gpt-4.1,PSEUDO,83,-14.46,0.0075
-nhan qua that,ORACLE,gpt-4.1-nano,PERMUTE,75,-5.33,0.5235
-nhan qua that,ORACLE,gpt-4.1-nano,SYMBOL,78,1.28,1.0
-nhan qua that,ORACLE,gpt-4.1-nano,PSEUDO,78,-3.85,0.7201
-nhan qua that,ORACLE,gpt-4.1-mini,PERMUTE,77,5.19,0.5235
-nhan qua that,ORACLE,gpt-4.1-mini,SYMBOL,80,-1.25,1.0
-nhan qua that,ORACLE,gpt-4.1-mini,PSEUDO,81,0.0,1.0
-nhan qua that,ORACLE,gpt-4.1,PERMUTE,82,-6.1,0.3593
-nhan qua that,ORACLE,gpt-4.1,SYMBOL,80,-7.5,0.2632
-nhan qua that,ORACLE,gpt-4.1,PSEUDO,82,-8.54,0.2478
-backadj nhan dang,RAW,gpt-4.1-nano,PERMUTE,32,15.62,0.2668
-backadj nhan dang,RAW,gpt-4.1-nano,SYMBOL,32,-21.88,0.0654
-backadj nhan dang,RAW,gpt-4.1-nano,PSEUDO,32,0.0,1.0
-backadj nhan dang,RAW,gpt-4.1-mini,PERMUTE,32,15.62,0.2266
-backadj nhan dang,RAW,gpt-4.1-mini,SYMBOL,32,3.12,1.0
-backadj nhan dang,RAW,gpt-4.1-mini,PSEUDO,32,-3.12,1.0
-backadj nhan dang,RAW,gpt-4.1,PERMUTE,32,12.5,0.4545
-backadj nhan dang,RAW,gpt-4.1,SYMBOL,32,-3.12,1.0
-backadj nhan dang,RAW,gpt-4.1,PSEUDO,32,0.0,1.0
-backadj nhan dang,ORACLE,gpt-4.1-nano,PERMUTE,32,-18.75,0.146
-backadj nhan dang,ORACLE,gpt-4.1-nano,SYMBOL,32,-6.25,0.625
-backadj nhan dang,ORACLE,gpt-4.1-nano,PSEUDO,32,0.0,1.0
-backadj nhan dang,ORACLE,gpt-4.1-mini,PERMUTE,32,0.0,1.0
-backadj nhan dang,ORACLE,gpt-4.1-mini,SYMBOL,32,0.0,1.0
-backadj nhan dang,ORACLE,gpt-4.1-mini,PSEUDO,32,-3.12,1.0
-backadj nhan dang,ORACLE,gpt-4.1,PERMUTE,32,-3.12,1.0
-backadj nhan dang,ORACLE,gpt-4.1,SYMBOL,32,-6.25,0.6875
-backadj nhan dang,ORACLE,gpt-4.1,PSEUDO,32,3.12,1.0
+group,cond,model,lexicon,n,delta_pp,p
+all pooled,RAW,gpt-4.1-nano,PERMUTE,165,-7.27,0.0961
+all pooled,RAW,gpt-4.1-nano,SYMBOL,172,-15.12,0.0002
+all pooled,RAW,gpt-4.1-nano,PSEUDO,173,-12.14,0.0038
+all pooled,RAW,gpt-4.1-mini,PERMUTE,170,-12.35,0.0025
+all pooled,RAW,gpt-4.1-mini,SYMBOL,172,-7.56,0.0241
+all pooled,RAW,gpt-4.1-mini,PSEUDO,172,-13.37,0.0001
+all pooled,RAW,gpt-4.1,PERMUTE,169,-10.06,0.0186
+all pooled,RAW,gpt-4.1,SYMBOL,172,-8.72,0.0135
+all pooled,RAW,gpt-4.1,PSEUDO,170,-10.0,0.0115
+all pooled,ORACLE,gpt-4.1-nano,PERMUTE,153,-9.15,0.0436
+all pooled,ORACLE,gpt-4.1-nano,SYMBOL,163,-4.91,0.243
+all pooled,ORACLE,gpt-4.1-nano,PSEUDO,162,-5.56,0.243
+all pooled,ORACLE,gpt-4.1-mini,PERMUTE,162,-1.85,0.7428
+all pooled,ORACLE,gpt-4.1-mini,SYMBOL,167,-2.99,0.4996
+all pooled,ORACLE,gpt-4.1-mini,PSEUDO,169,-2.96,0.4996
+all pooled,ORACLE,gpt-4.1,PERMUTE,170,-8.82,0.0201
+all pooled,ORACLE,gpt-4.1,SYMBOL,168,-8.33,0.0243
+all pooled,ORACLE,gpt-4.1,PSEUDO,170,-6.47,0.1173
+genuinely causal,RAW,gpt-4.1-nano,PERMUTE,83,-16.87,0.0066
+genuinely causal,RAW,gpt-4.1-nano,SYMBOL,84,-21.43,0.0009
+genuinely causal,RAW,gpt-4.1-nano,PSEUDO,85,-16.47,0.0094
+genuinely causal,RAW,gpt-4.1-mini,PERMUTE,82,-24.39,0.0001
+genuinely causal,RAW,gpt-4.1-mini,SYMBOL,84,-16.67,0.0026
+genuinely causal,RAW,gpt-4.1-mini,PSEUDO,84,-20.24,0.0005
+genuinely causal,RAW,gpt-4.1,PERMUTE,84,-17.86,0.0026
+genuinely causal,RAW,gpt-4.1,SYMBOL,85,-12.94,0.0192
+genuinely causal,RAW,gpt-4.1,PSEUDO,83,-14.46,0.0075
+genuinely causal,ORACLE,gpt-4.1-nano,PERMUTE,75,-5.33,0.5235
+genuinely causal,ORACLE,gpt-4.1-nano,SYMBOL,78,1.28,1.0
+genuinely causal,ORACLE,gpt-4.1-nano,PSEUDO,78,-3.85,0.7201
+genuinely causal,ORACLE,gpt-4.1-mini,PERMUTE,77,5.19,0.5235
+genuinely causal,ORACLE,gpt-4.1-mini,SYMBOL,80,-1.25,1.0
+genuinely causal,ORACLE,gpt-4.1-mini,PSEUDO,81,0.0,1.0
+genuinely causal,ORACLE,gpt-4.1,PERMUTE,82,-6.1,0.3593
+genuinely causal,ORACLE,gpt-4.1,SYMBOL,80,-7.5,0.2632
+genuinely causal,ORACLE,gpt-4.1,PSEUDO,82,-8.54,0.2478
+backadj identification,RAW,gpt-4.1-nano,PERMUTE,32,15.62,0.2668
+backadj identification,RAW,gpt-4.1-nano,SYMBOL,32,-21.88,0.0654
+backadj identification,RAW,gpt-4.1-nano,PSEUDO,32,0.0,1.0
+backadj identification,RAW,gpt-4.1-mini,PERMUTE,32,15.62,0.2266
+backadj identification,RAW,gpt-4.1-mini,SYMBOL,32,3.12,1.0
+backadj identification,RAW,gpt-4.1-mini,PSEUDO,32,-3.12,1.0
+backadj identification,RAW,gpt-4.1,PERMUTE,32,12.5,0.4545
+backadj identification,RAW,gpt-4.1,SYMBOL,32,-3.12,1.0
+backadj identification,RAW,gpt-4.1,PSEUDO,32,0.0,1.0
+backadj identification,ORACLE,gpt-4.1-nano,PERMUTE,32,-18.75,0.146
+backadj identification,ORACLE,gpt-4.1-nano,SYMBOL,32,-6.25,0.625
+backadj identification,ORACLE,gpt-4.1-nano,PSEUDO,32,0.0,1.0
+backadj identification,ORACLE,gpt-4.1-mini,PERMUTE,32,0.0,1.0
+backadj identification,ORACLE,gpt-4.1-mini,SYMBOL,32,0.0,1.0
+backadj identification,ORACLE,gpt-4.1-mini,PSEUDO,32,-3.12,1.0
+backadj identification,ORACLE,gpt-4.1,PERMUTE,32,-3.12,1.0
+backadj identification,ORACLE,gpt-4.1,SYMBOL,32,-6.25,0.6875
+backadj identification,ORACLE,gpt-4.1,PSEUDO,32,3.12,1.0
 rung-1 so hoc,RAW,gpt-4.1-nano,PERMUTE,50,-6.0,0.4531
 rung-1 so hoc,RAW,gpt-4.1-nano,SYMBOL,56,-1.79,1.0
 rung-1 so hoc,RAW,gpt-4.1-nano,PSEUDO,56,-12.5,0.0654

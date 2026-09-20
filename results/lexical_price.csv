@@ -1,4 +1,4 @@
-model,tu_vung,RAW,ORACLE,DR_k1,delta_struct,gia_1_canh_dao
+model,lexicon,RAW,ORACLE,DR_k1,delta_struct,price_one_reversed_edge
 gpt-4.1-nano,KEEP,79.19,74.25,72.35,-4.94,1.9
 gpt-4.1-nano,PERMUTE,71.08,61.88,62.35,-9.21,-0.47
 gpt-4.1-nano,SYMBOL,64.16,68.45,64.5,4.29,3.96

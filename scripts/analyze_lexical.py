@@ -76,13 +76,13 @@ def main():
     d = load()
     missing = [l for l in LEXICONS if l not in d]
     if missing:
-        raise SystemExit(f"thieu ket qua cho: {missing}")
+        raise SystemExit(f"missing results for: {missing}")
 
     models = [m for m in TIER if m in set(d["KEEP"].model)]
     conds = ["PROSE", "RAW", "ORACLE", "DR_k1"]
 
     print("=" * 88)
-    print("1. DO CHINH XAC THEO BO TU VUNG  (chi cau parse duoc, cung item)")
+    print("1. ACCURACY BY LEXICON  (parsed answers only, same items)")
     print("=" * 88)
     rows = []
     for m in models:
@@ -100,24 +100,24 @@ def main():
     acc.to_csv(ROOT / "results" / f"lexical_accuracy{a.tag}.csv", index=False)
 
     print("\n" + "=" * 88)
-    print("2. McNEMAR GHEP CAP: doi tu vung tren CUNG item co lam giam do chinh xac khong?")
+    print("2. PAIRED McNEMAR: does swapping the lexicon on the SAME item cost accuracy?")
     print("=" * 88)
     out = []
     for m in models:
         for c in conds:
             for lex in ["PERMUTE", "SYMBOL", "PSEUDO"]:
                 n, delta, p = paired_mcnemar(d[lex], d["KEEP"], m, c)
-                out.append({"model": m, "cond": c, "so_sanh": f"{lex} - KEEP",
+                out.append({"model": m, "cond": c, "n_compared": f"{lex} - KEEP",
                             "n": n, "delta_pp": round(delta, 2) if pd.notna(delta) else None,
                             "p": round(p, 4) if pd.notna(p) else None,
-                            "y_nghia": "*" if pd.notna(p) and p < .05 else ""})
+                            "meaning": "*" if pd.notna(p) and p < .05 else ""})
             for hi, lo in [("PSEUDO", "SYMBOL"), ("SYMBOL", "PERMUTE")]:
                 n, delta, p = paired_mcnemar(d[hi], d[lo], m, c)
-                out.append({"model": m, "cond": c, "so_sanh": f"{hi} - {lo}",
+                out.append({"model": m, "cond": c, "n_compared": f"{hi} - {lo}",
                             "n": n,
                             "delta_pp": round(delta, 2) if pd.notna(delta) else None,
                             "p": round(p, 4) if pd.notna(p) else None,
-                            "y_nghia": "*" if pd.notna(p) and p < .05 else ""})
+                            "meaning": "*" if pd.notna(p) and p < .05 else ""})
     mc = pd.DataFrame(out)
     print(mc.to_string(index=False))
     mc.to_csv(ROOT / "results" / f"lexical_mcnemar{a.tag}.csv", index=False)
@@ -125,9 +125,9 @@ def main():
     print("\n" + "=" * 88)
     print("3. PHAN RA THEO query_type  (dieu kien ORACLE: do thi dung 100%)")
     print("=" * 88)
-    print("  correlation va marginal la rung-1, thuan so hoc, do thi khong tham gia.")
-    print("  Neu muc roi o day bang hoac hon cac loai co nhan qua, thi thu bi pha huy")
-    print("  khong phai nang luc suy luan nhan qua.\n")
+    print("  correlation and marginal are rung-1, pure arithmetic, with no role for the")
+    print("  graph. If the drop here matches or exceeds the causal query types, then what")
+    print("  was destroyed is not causal reasoning ability.\n")
     qt_rows = []
     for m in models:
         for qt in sorted(d["KEEP"].query_type.dropna().unique()):
@@ -153,10 +153,10 @@ def main():
     qd.to_csv(ROOT / "results" / f"lexical_by_querytype{a.tag}.csv", index=False)
 
     print("\n" + "=" * 88)
-    print("4. GIA CUA MOT CANH DAO CHIEU, THEO TUNG BO TU VUNG")
+    print("4. THE PRICE OF ONE REVERSED EDGE, BY LEXICON")
     print("=" * 88)
-    print("  Neu cau truc that su duoc dung de suy luan, bo neo tu vung phai lam")
-    print("  do thi SAI tro nen dat hon, chu khong phai re di.\n")
+    print("  If the structure really is used for reasoning, removing the lexical anchor")
+    print("  should make a WRONG graph more expensive, not cheaper.\n")
     pr = []
     for m in models:
         for lex in LEXICONS:
@@ -164,11 +164,11 @@ def main():
             g = s.groupby("cond").correct.mean() * 100
             if not {"ORACLE", "RAW", "DR_k1"} <= set(g.index):
                 continue
-            pr.append({"model": m, "tu_vung": lex,
+            pr.append({"model": m, "lexicon": lex,
                        "RAW": round(g["RAW"], 2), "ORACLE": round(g["ORACLE"], 2),
                        "DR_k1": round(g["DR_k1"], 2),
                        "delta_struct": round(g["ORACLE"] - g["RAW"], 2),
-                       "gia_1_canh_dao": round(g["ORACLE"] - g["DR_k1"], 2)})
+                       "price_one_reversed_edge": round(g["ORACLE"] - g["DR_k1"], 2)})
     pd_ = pd.DataFrame(pr)
     print(pd_.to_string(index=False))
     pd_.to_csv(ROOT / "results" / f"lexical_price{a.tag}.csv", index=False)
@@ -180,14 +180,14 @@ def main():
         if f.exists():
             ind[lex] = pd.read_csv(f)
     if len(ind) < 2:
-        print("\n(chua co ket qua induction theo tu vung - bo qua muc 5)")
+        print("\n(no per-lexicon induction results - skipping section 5)")
         return
 
     print("\n" + "=" * 88)
-    print("5. CHAT LUONG DO THI MODEL TU DUNG, GHEP CAP TREN CUNG ITEM")
+    print("5. QUALITY OF THE MODEL'S SELF-BUILT GRAPH, PAIRED ON THE SAME ITEMS")
     print("=" * 88)
-    print("  Muc 1-4 do viec SUY LUAN tren do thi duoc cap san.")
-    print("  Muc nay do viec TRICH XUAT do thi tu van ban - mot nang luc khac han.\n")
+    print("  Sections 1-4 measure REASONING over a graph that was supplied.")
+    print("  This section measures EXTRACTING the graph from text - a different ability.\n")
     rows, base_lex = [], "KEEP"
     for m in models:
         for lex in [l for l in LEXICONS if l in ind]:
@@ -206,21 +206,21 @@ def main():
             rev = s_.n_reversed.mean()
             rev_base = ind[base_lex][ind[base_lex].model == m].n_reversed.mean()
             rows.append({
-                "model": m, "tu_vung": lex, "n": len(i),
+                "model": m, "lexicon": lex, "n": len(i),
                 "f1": round(s_.f1.mean(), 3),
                 "f1_vs_KEEP": round(s_.f1.mean() - rev_base * 0 - b.f1.mean(), 3),
                 "p_wilcoxon": round(p_f1, 4) if pd.notna(p_f1) else None,
-                "dung_hoan_toan": round(s_.exact_match.mean(), 3),
-                "canh_dao_chieu": round(rev, 3),
-                "gap_bao_nhieu_lan": round(rev / rev_base, 1) if rev_base else None,
-                "canh_thieu": round(s_.n_missing.mean(), 2),
+                "exactly_correct": round(s_.exact_match.mean(), 3),
+                "reversed_edges": round(rev, 3),
+                "ratio": round(rev / rev_base, 1) if rev_base else None,
+                "missing_edges": round(s_.n_missing.mean(), 2),
             })
     idf = pd.DataFrame(rows)
     print(idf.to_string(index=False))
     idf.to_csv(ROOT / "results" / f"lexical_induction{a.tag}.csv", index=False)
     print("\n  Prior SAI (PERMUTE) gay dao chieu nhieu gap may lan prior VANG MAT")
-    print("  (SYMBOL/PSEUDO) la phep phan ly chinh: neu chieu canh duoc doc tu van")
-    print("  ban thi hai truong hop phai giong nhau.")
+    print("  (SYMBOL/PSEUDO) is the key dissociation: if edge direction is read off the")
+    print("  text, the two cases have to look the same.")
 
 
 if __name__ == "__main__":

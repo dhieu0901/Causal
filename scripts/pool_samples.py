@@ -1,48 +1,51 @@
-"""Tai lap con so tieu de: gop ba mau o muc ITEM, bo trung theo id goc CLadder.
+"""Reproduce the headline number: pool three samples at ITEM level, de-duplicated
+by the original CLadder id.
 
-Vi sao co file nay. REPORT muc 4.0 rut con so +14,35 (mau kham pha n=86) va thay
-bang **+5,98 pp tren n=490 item, gop ba mau, bo trung theo id goc**. Ra soat ngay
-2026-09-20: **khong script nao trong repo sinh ra con so do**. No chi ton tai
-duoi dang van xuoi. Day la con so TIEU DE cua ca du an.
+Why this file exists. REPORT section 4.0 retracted +14.35 (the exploratory sample,
+n=86) and replaced it with **+5.98 pp on n=490 items, three samples pooled and
+de-duplicated by original id**. Audit on 2026-09-20: **no script in the repo
+produced that number**. It existed only as prose. This is the project's HEADLINE.
 
-Ly do khong tai lap duoc ngay: `pilot.py` khong ghi cot `id` goc cua CLadder vao
-CSV ket qua. Cot `item` chi la chi so tham chieu TRONG tung mau (`--pair-to` lam
-KEEP va PSEUDO cua CUNG mot mau dung chung chi so, nhung hai mau khac nhau thi
-khong). Khoa tu nhien (story_id, graph_id, query_type, rung) cung khong duy nhat:
-174 item chi cho 110 to hop.
+Why it could not be reproduced directly: `pilot.py` never writes CLadder's `id`
+column into its result CSV. The `item` column is a reference index WITHIN one
+sample (`--pair-to` makes KEEP and PSEUDO of the SAME sample share it, but two
+different samples do not). The natural key (story_id, graph_id, query_type, rung)
+is not unique either: 174 items collapse to 110 combinations.
 
-Loi ra: `make_items` la ham TAT DINH - `random.Random(seed)` roi lay mau phan
-tang theo (graph_id, rung). Chay lai no voi dung tham so thi phuc hoi duoc cot
-`id`. Tham so do lai bang cach quet (n, kmax, drop_nonsense) cho toi khi day
-item sinh ra khop TUNG DONG voi (graph_id, rung, query_type, story_id) trong CSV
-da luu. Ket qua do duoc:
+The way out: `make_items` is DETERMINISTIC - `random.Random(seed)` then a
+proportional stratified draw over (graph_id, rung). Re-running it with the right
+arguments recovers the `id` column. Those arguments were recovered by sweeping
+(n, kmax, drop_nonsense) until the generated item sequence matched the saved CSV
+ROW BY ROW on (graph_id, rung, query_type, story_id). What that sweep found:
 
-    lex       n=174  kmax=1  drop_nonsense=True   10 ho
-    n600      n=580  kmax=1  drop_nonsense=True   10 ho
-    price400  n=399  kmax=3  drop_nonsense=True    7 ho
+    lex       n=174  kmax=1  drop_nonsense=True   10 families
+    n600      n=580  kmax=1  drop_nonsense=True   10 families
+    price400  n=399  kmax=3  drop_nonsense=True    7 families
 
-PHEP SO SANH PHAI DONG NHAT GIUA BA MAU. Mau `lex` co ba tu vung an danh
-(PERMUTE, SYMBOL, PSEUDO), hai mau kia chi co PSEUDO. Nen phep gop dung PSEUDO o
-ca ba. Dung ca ba tu vung cho `lex` se ra +14,31 tren 86 item thay vi +12,71
-tren 85 - khong so sanh duoc voi hai mau con lai.
+THE CONTRAST MUST BE IDENTICAL ACROSS SAMPLES. The `lex` sample has three
+anonymised lexicons (PERMUTE, SYMBOL, PSEUDO); the two large samples have only
+PSEUDO. So the pooling uses PSEUDO everywhere. Using all three for `lex` gives
++14.31 on 86 items instead of +12.71 on 85, which is not comparable with the
+other two.
 
-QUY UOC LAY TRUNG BINH la cho de sai nhat. Trung binh phai lay tren MOI O
-(item x model), khong phai trung binh theo item roi moi trung binh cac item.
-Hai cach khac nhau vi khong phai item nao cung du ca ba o. Cach dau tai lap dung
-ba con so cua REPORT; cach sau cho +13,92 / +6,85 / +1,88 va gop ra +6,53.
+THE AVERAGING CONVENTION is the easiest thing to get wrong here. The mean must be
+taken over EVERY CELL (item x model), not per item and then across items. The two
+differ because not every item has all three cells. The first convention reproduces
+REPORT's three numbers exactly; the second gives +13.92 / +6.85 / +1.88 and pools
+to +6.53.
 
-KET QUA: ca bon con so cua REPORT muc 4.0 tai lap chuan xac.
+RESULT: all four of REPORT section 4.0's numbers reproduce exactly.
 
-    kham pha      85  +12,71
-    mo rong      287   +6,78
-    bac thang    195   +1,72
-    GOP          490   +5,98   CI [+1,67 ; +10,19]
+    exploratory    85  +12.71
+    extension     287   +6.78
+    error ladder  195   +1.72
+    POOLED        490   +5.98   CI [+1.67 ; +10.19]
 
-Nen con so tieu de la DUNG va da khu trung dung cach. Cai thieu truoc day chi la
-mot script sinh ra no. Gio co.
+So the headline is CORRECT and properly de-duplicated. What was missing was a
+script that produces it. Now there is one.
 
-Chay:  python scripts/pool_samples.py
-Ket qua: in bang, ghi results/pooled_headline.csv va results/_itemmap_*.csv
+Run:  python scripts/pool_samples.py
+Writes: results/pooled_headline.csv and results/_itemmap_*.csv
 """
 
 from __future__ import annotations
@@ -64,14 +67,15 @@ SEED = 20260907
 NBOOT = 4000
 KEY = ["graph_id", "rung", "query_type", "story_id"]
 
-# (tag file, n, kmax, drop_nonsense). Tham so do lai va kiem tung dong - xem
-# docstring. `kiem_anh_xa` chay lai phep kiem do moi lan, khong tin suong.
-MAU = [
+# (file tag, n, kmax, drop_nonsense). Arguments recovered by sweep and checked
+# row by row - see the docstring. `verify_item_map` re-runs that check on every
+# call rather than trusting the constants.
+SAMPLES = [
     ("lex",      174, 1, True),
     ("n600",     580, 1, True),
     ("price400", 399, 3, True),
 ]
-LEX_GOP = "PSEUDO"          # tu vung an danh co o CA BA mau
+POOL_LEXICON = "PSEUDO"          # the one anonymised lexicon present in ALL samples
 
 
 def _pilot():
@@ -83,8 +87,12 @@ def _pilot():
     return m
 
 
-def sinh_items(full, pilot, n, kmax, drop):
-    """Ban sao y het `make_items`, tru viec doc file - de goi lap duoc."""
+def draw_items(full, pilot, n, kmax, drop):
+    """A copy of `make_items` that takes the dataframe instead of reading it.
+
+    Identical logic; separated only so the sweep can call it thousands of times
+    without re-reading an 8.8 MB CSV each round.
+    """
     d = full
     if drop:
         d = d[~d.story_id.astype(str).str.startswith("nonsense")]
@@ -100,27 +108,28 @@ def sinh_items(full, pilot, n, kmax, drop):
     return d.loc[picked].reset_index(drop=True)
 
 
-def kiem_anh_xa(tag, n, kmax, drop, full, pilot):
-    """Phuc hoi item -> id, va CHUNG MINH no dung bang doi chieu tung dong."""
-    it = sinh_items(full, pilot, n, kmax, drop)
+def verify_item_map(tag, n, kmax, drop, full, pilot):
+    """Recover item -> id, and PROVE it by matching the saved CSV row by row."""
+    it = draw_items(full, pilot, n, kmax, drop)
     saved = pd.read_csv(ROOT / "results" / f"pilot_raw_{tag}KEEP.csv")
-    that = (saved[["item"] + KEY].drop_duplicates()
+    want = (saved[["item"] + KEY].drop_duplicates()
             .sort_values("item")[KEY].reset_index(drop=True))
     got = it[KEY].reset_index(drop=True)
-    if not got.equals(that):
+    if not got.equals(want):
         raise SystemExit(
-            f"{tag}: day item sinh lai KHONG khop CSV da luu. Tham so (n={n}, "
-            f"kmax={kmax}, drop={drop}) sai, hoac pilot.py da doi. Dung lai.")
+            f"{tag}: the regenerated item sequence does NOT match the saved CSV. "
+            f"Either the arguments (n={n}, kmax={kmax}, drop={drop}) are wrong or "
+            f"pilot.py has changed. Stopping rather than pooling on a bad key.")
     out = it[["id"]].reset_index().rename(columns={"index": "item"})
     out.to_csv(ROOT / "results" / f"_itemmap_{tag}.csv", index=False)
     return out
 
 
-def nap(tag, lex, amap):
+def load(tag, lex, imap):
     d = pd.read_csv(ROOT / "results" / f"pilot_raw_{tag}{lex}.csv")
-    d = d.merge(amap, on="item", how="left")
+    d = d.merge(imap, on="item", how="left")
     if d.id.isna().any():
-        raise SystemExit(f"{tag}/{lex}: co item khong anh xa duoc sang id")
+        raise SystemExit(f"{tag}/{lex}: some items could not be mapped to an id")
     return d
 
 
@@ -130,14 +139,14 @@ def cell(d, model, cond, qs):
     return s.set_index("id").correct
 
 
-def did_mau(tag, amap, lexs, arm="ORACLE"):
-    """DiD tren tung id, cho mot mau. Cot la (model x tu vung)."""
-    keep = nap(tag, "KEEP", amap)
+def did_sample(tag, imap, lexicons, arm="ORACLE"):
+    """Per-id DiD for one sample. Columns are (model x lexicon) cells."""
+    keep = load(tag, "KEEP", imap)
     qs = set(keep.query_type.unique()) - ARITH - IDENT
     cols = []
     for m in TIER:
-        for lx in lexs:
-            L = nap(tag, lx, amap)
+        for lx in lexicons:
+            L = load(tag, lx, imap)
             kr, lr = cell(keep, m, "RAW", qs), cell(L, m, "RAW", qs)
             ka, la = cell(keep, m, arm, qs), cell(L, m, arm, qs)
             i = (kr.index.intersection(lr.index)
@@ -152,11 +161,11 @@ def did_mau(tag, amap, lexs, arm="ORACLE"):
 
 
 def boot(W, seed=SEED, n=NBOOT):
-    """Bootstrap cum theo item. Trung binh lay tren MOI O (item x cell).
+    """Cluster bootstrap over items. The mean is taken over EVERY cell.
 
-    Lay trung binh theo item truoc roi moi trung binh cac item se cho con so
-    khac, vi khong phai item nao cung du ca chin o. Quy uoc o day tai lap dung
-    ba con so cua REPORT muc 4.0, nen no la quy uoc REPORT da dung.
+    Averaging per item first and then across items gives a different number,
+    because not every item has all three cells. The convention here reproduces
+    REPORT section 4.0 exactly, which is evidence it is the one REPORT used.
     """
     rng = np.random.default_rng(seed)
     idx = W.index.values
@@ -173,61 +182,62 @@ def main():
     full = pd.read_csv(ROOT / "data" / "full_v1.5_default.csv")
 
     print("=" * 78)
-    print("GOP BA MAU O MUC ITEM, BO TRUNG THEO id GOC CLADDER")
+    print("POOLING THREE SAMPLES AT ITEM LEVEL, DE-DUPLICATED BY CLADDER id")
     print("=" * 78)
     print("  DiD_i = [(KEEP - PSEUDO) | RAW] - [(KEEP - PSEUDO) | ORACLE]")
-    print("  nhom cau hoi nhan qua that, bootstrap cum theo item,",
-          NBOOT, "lan, seed", SEED, "\n")
+    print("  genuinely-causal query group, cluster bootstrap over items,",
+          NBOOT, "draws, seed", SEED, "\n")
 
     per, rows = {}, []
-    print(f"  {'mau':10s} {'n item':>7s} {'DiD':>8s}  {'khoang tin cay 95%':>21s} {'p':>8s}")
+    print(f"  {'sample':10s} {'n items':>7s} {'DiD':>8s}  {'95% CI':>21s} {'p':>8s}")
     print("  " + "-" * 60)
-    for tag, n, kmax, drop in MAU:
-        amap = kiem_anh_xa(tag, n, kmax, drop, full, pilot)
-        W = did_mau(tag, amap, [LEX_GOP])
+    for tag, n, kmax, drop in SAMPLES:
+        imap = verify_item_map(tag, n, kmax, drop, full, pilot)
+        W = did_sample(tag, imap, [POOL_LEXICON])
         if W.empty:
-            print(f"  {tag:10s} khong du du lieu")
+            print(f"  {tag:10s} not enough data")
             continue
         per[tag] = W.rename(columns=lambda c: f"{tag}|{c}")
         e, lo, hi, p = boot(W)
         print(f"  {tag:10s} {len(W):7d} {e:+8.2f}  [{lo:+7.2f} ; {hi:+7.2f}] {p:8.4f}")
-        rows.append({"cach_gop": tag, "n_item": len(W), "did_pp": round(e, 2),
+        rows.append({"pooling": tag, "n_items": len(W), "did_pp": round(e, 2),
                      "ci_lo": round(lo, 2), "ci_hi": round(hi, 2),
                      "p_boot": round(p, 4)})
 
-    # Gop: ghep NGANG cac o cua ba mau tren cung truc id. Item nao xuat hien o
-    # nhieu mau thi co nhieu o hon, dung nhu khi gop trong mot mau.
-    hop = pd.concat(per.values(), axis=1)
-    e, lo, hi, p = boot(hop)
+    # Pool by concatenating the cells of all three samples along the id axis. An
+    # item present in several samples simply contributes more cells, exactly as
+    # it would within one sample.
+    pooled = pd.concat(per.values(), axis=1)
+    e, lo, hi, p = boot(pooled)
     print("  " + "-" * 60)
-    print(f"  {'GOP item':10s} {len(hop):7d} {e:+8.2f}  [{lo:+7.2f} ; {hi:+7.2f}] {p:8.4f}")
-    rows.append({"cach_gop": "gop o muc item, bo trung", "n_item": len(hop),
+    print(f"  {'POOLED':10s} {len(pooled):7d} {e:+8.2f}  [{lo:+7.2f} ; {hi:+7.2f}] {p:8.4f}")
+    rows.append({"pooling": "item level, de-duplicated", "n_items": len(pooled),
                  "did_pp": round(e, 2), "ci_lo": round(lo, 2),
                  "ci_hi": round(hi, 2), "p_boot": round(p, 4)})
 
     ns = {t: int(per[t].notna().any(axis=1).sum()) for t in per}
-    tong = sum(ns.values())
-    w = sum(ns[t] * 100 * np.nanmean(per[t].values) for t in per) / tong
-    rows.append({"cach_gop": "trung binh co trong so theo n", "n_item": tong,
+    total = sum(ns.values())
+    w = sum(ns[t] * 100 * np.nanmean(per[t].values) for t in per) / total
+    rows.append({"pooling": "n-weighted mean of samples", "n_items": total,
                  "did_pp": round(w, 2), "ci_lo": "", "ci_hi": "", "p_boot": ""})
 
+    dup = int(pd.concat([per[t].notna().any(axis=1) for t in per], axis=1)
+              .fillna(False).sum(axis=1).gt(1).sum())
     print("\n" + "=" * 78)
-    print("DOI CHIEU VOI REPORT MUC 4.0")
+    print("AGAINST REPORT SECTION 4.0")
     print("=" * 78)
-    trung = int(pd.concat([per[t].notna().any(axis=1) for t in per], axis=1)
-                .fillna(False).sum(axis=1).gt(1).sum())
-    print(f"  REPORT bao: n=490, DiD +5,98, CI [+1,78 ; +10,30], p=0,005")
-    print(f"  tai lap   : n={len(hop)}, DiD {e:+.2f}, "
+    print("  REPORT says : n=490, DiD +5.98, CI [+1.78 ; +10.30], p=0.005")
+    print(f"  reproduced  : n={len(pooled)}, DiD {e:+.2f}, "
           f"CI [{lo:+.2f} ; {hi:+.2f}], p={p:.4f}")
-    print(f"\n  {trung} item xuat hien o nhieu hon mot mau, da bo trung theo id goc.")
-    print(f"  De doi chieu: trung binh co trong so theo n (tong {tong}, tuc DEM")
-    print(f"  TRUNG) cho {w:+.2f} pp - gan bang nhung khong phai phep REPORT dung.")
-    print("\n  Con so tieu de DUNG va da khu trung dung cach. Thu tung thieu chi la")
-    print("  mot script sinh ra no; gio co.")
+    print(f"\n  {dup} items appear in more than one sample and were de-duplicated by id.")
+    print(f"  For contrast, an n-weighted mean of the samples (total {total}, which")
+    print(f"  DOUBLE COUNTS those) gives {w:+.2f} pp - close, but not what REPORT used.")
+    print("\n  The headline is correct and properly de-duplicated. What was missing")
+    print("  was a script that produces it; now there is one.")
 
     out = ROOT / "results" / "pooled_headline.csv"
     pd.DataFrame(rows).to_csv(out, index=False)
-    print(f"\nda ghi {out.relative_to(ROOT)} va results/_itemmap_*.csv")
+    print(f"\nwrote {out.relative_to(ROOT)} and results/_itemmap_*.csv")
     return 0
 
 

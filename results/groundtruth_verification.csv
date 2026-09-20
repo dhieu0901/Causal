@@ -1,4 +1,4 @@
-ho,dai_luong,n,lech_max,khop
+family,quantity,n,max_dev,match
 IV,ATE(Y | X),880,6.661e-16,True
 IV,ETT(Y | X),880,1.887e-15,True
 IV,NDE(Y | X),880,6.661e-16,True

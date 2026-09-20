@@ -1,4 +1,4 @@
-model,tu_vung,f1,f1_tren_san_ngau_nhien,canh_xuat,dao_chieu,dao_tren_canh_xuat,phan_tram_duong_toi_tri_thuc,item_co_dao_chieu_pct
+model,lexicon,f1,f1_over_random_floor,spurious_edges,reversed,reversed_on_spurious,percent_of_way_to_knowledge,pct_items_with_reversal
 gpt-4.1-nano,KEEP,0.462,0.1,1.77,0.069,0.039,7.1,6.3
 gpt-4.1-nano,PERMUTE,0.384,0.022,1.75,0.351,0.2,36.3,28.7
 gpt-4.1-nano,SYMBOL,0.509,0.146,2.06,0.155,0.075,16.1,13.8

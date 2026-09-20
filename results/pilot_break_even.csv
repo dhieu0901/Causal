@@ -1,4 +1,4 @@
-model,k*,CI_lo,CI_hi,rong,k_da_do_toi,danh_gia
-gpt-4.1-nano,0.0,0.0,2.5,2.5,3,trong tam voi
-gpt-4.1-mini,0.38,0.0,1.5,1.5,3,trong tam voi
-gpt-4.1,1.13,0.0,3.19,3.19,3,trong tam voi
+model,k*,CI_lo,CI_hi,rong,k_da_do_toi,verdict
+gpt-4.1-nano,0.0,0.0,2.5,2.5,3,within reach
+gpt-4.1-mini,0.38,0.0,1.5,1.5,3,within reach
+gpt-4.1,1.13,0.0,3.19,3.19,3,within reach

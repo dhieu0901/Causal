@@ -1,4 +1,4 @@
-model,tu_vung,n,f1,f1_vs_KEEP,p_wilcoxon,dung_hoan_toan,canh_dao_chieu,gap_bao_nhieu_lan,canh_thieu
+model,lexicon,n,f1,f1_vs_KEEP,p_wilcoxon,exactly_correct,reversed_edges,ratio,missing_edges
 gpt-4.1-nano,KEEP,174,0.462,0.0,,0.132,0.069,1.0,1.93
 gpt-4.1-nano,PERMUTE,174,0.384,-0.078,0.0203,0.086,0.351,5.1,1.94
 gpt-4.1-nano,SYMBOL,174,0.509,0.046,0.0314,0.138,0.155,2.2,1.7
