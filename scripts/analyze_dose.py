@@ -160,6 +160,12 @@ def main():
         n, p = len(y), A.shape[1] - 1
         return 1 - (1 - r2) * (n - 1) / (n - p - 1) if n - p - 1 > 0 else np.nan
 
+    # These nine adjusted R-squared values are quoted in PROPOSAL section 7.2 and
+    # in its abstract, and until 2026-09-23 they lived only in the print below -
+    # scripts/check_numbers.py could not vouch for a single one of them. The
+    # abstract now leans on "the highest dose column is 0.11", which is not a
+    # number an abstract may carry without a file behind it. Persist them.
+    r2_rows = []
     for kind in ("DR", "ED", "FE"):
         s = df[df.error_type == kind]
         if len(s) < 4 or s.family.nunique() < 2:
@@ -176,6 +182,14 @@ def main():
         win = max(r2, key=lambda k: -np.inf if np.isnan(r2[k]) else r2[k])
         print(f"  {kind:6s} {len(s):5d} {r2['k']:12.3f} {r2['k/E']:14.3f} "
               f"{r2['family']:16.3f} {win:>8s}")
+        r2_rows.append({"error_type": kind, "n_cells": len(s),
+                        "adj_r2_k": round(float(r2["k"]), 3),
+                        "adj_r2_k_over_E": round(float(r2["k/E"]), 3),
+                        "adj_r2_family": round(float(r2["family"]), 3),
+                        "winner": win})
+    if r2_rows:
+        pd.DataFrame(r2_rows).to_csv(
+            ROOT / "results" / "dose_variance_explained.csv", index=False)
 
     print("\n  HOW TO READ THIS. The seven families give only three edge counts (3, 4,")
     print("  5), and the five-edge group is the single family arrowhead - the one whose")

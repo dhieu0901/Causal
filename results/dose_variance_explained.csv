@@ -1,0 +1,4 @@
+error_type,n_cells,adj_r2_k,adj_r2_k_over_E,adj_r2_family,winner
+DR,21,0.047,0.11,0.101,k/E
+ED,21,0.007,-0.044,0.363,family
+FE,9,-0.135,-0.14,0.607,family

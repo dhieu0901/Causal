@@ -7,7 +7,23 @@ Thực nghiệm về hai câu hỏi:
 
 Xây trên [CLadder](https://github.com/causalNLP/cladder) (Jin et al., NeurIPS 2023). Xuất phát từ [NoisyCausal](https://arxiv.org/abs/2605.04313), định vị cạnh [Caliper](https://arxiv.org/abs/2606.04915).
 
-## Kết quả chính
+## Hai kết quả không phụ thuộc cỡ mẫu
+
+Phần thực nghiệm bên dưới chạy trên **một họ model** và n = 174 tới 580 item, nên đọc là giả thuyết có số đỡ. Hai kết quả sau thì khác: chúng đúng hoặc sai, kiểm lại được bằng một lệnh, và không phụ thuộc vào cỡ mẫu, số họ model, hay việc ai đã công bố gì trước.
+
+**1. Một bậc thang liều lượng đo không đúng thứ nó tưởng.** Cách hiển nhiên để hỏi *đồ thị sai nhiều có hại hơn sai ít không* là làm hỏng k = 1, 2, 3 cạnh rồi so. Cách đó hỏng, và hỏng theo kiểu không lộ ra trong bảng nào. Đảo một cạnh có thể **không đổi gì** về mặt nhân quả - nếu tập hiệu chỉnh cửa sau và quan hệ d-separation giữa `X` với `Y` còn nguyên thì đại lượng cần ước lượng không đổi, đáp án đúng cũng không đổi.
+
+| Liều | Nhiễu loạn **không** đổi estimand | Tác hại, chỉ tính item **có** đổi estimand |
+|---|---|---|
+| `DR_k1` | 45/197 item | **-6,36 pp** |
+| `DR_k2` | 0/197 | **-7,36 pp** |
+| `DR_k3` | 0/198 | **-6,90 pp** |
+
+Tỷ lệ nhiễu loạn vô hại tụt **23% xuống 0**, chỉ vì càng hỏng nhiều cạnh thì càng khó hỏng mà không chạm vào đại lượng. Liều lượng vì thế **lẫn hoàn toàn với thành phần mẫu**. Điều kiện hoá trên việc estimand thật sự đổi thì tác hại **phẳng**. Chạy `scripts/classify_perturbations.py`, khớp `results/perturbation_split.csv`.
+
+**2. Năm lỗi trong CLadder v1.5**, kèm lệnh tái lập từng lỗi - xem mục cảnh báo bên dưới và `docs/CLADDER_DATA_ERRORS.md`. Xuất xứ dữ liệu kiểm được từng byte bằng `scripts/verify_data_provenance.py`.
+
+## Kết quả thực nghiệm
 
 **Cấp một khối cấu trúc làm giảm tác hại của việc ẩn danh tên biến, trên nhóm câu hỏi thực sự cần suy luận nhân quả.**
 
