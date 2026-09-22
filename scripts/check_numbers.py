@@ -110,6 +110,20 @@ HISTORY_MARK = (
 EXTERNAL_MARK = ("Caliper", "CausalGraph2LLM", "Corr2Cause", "GSM-Symbolic",
                  "Vernier", "NoisyCausal", "RE-IMAGINE", "Yamin", "Lopiano")
 
+# REVIEW.md is a dated log of review rounds. A round records what the panel was
+# shown AT THE TIME, and several of those figures have since been superseded on
+# purpose - that is the document's job. Holding it to the current CSVs would
+# force the log to be rewritten backwards, which destroys the only record of how
+# a number changed. It is still SCANNED, and its count is printed, so a reader
+# can see how much of it has gone out of date; it just does not fail the gate.
+#
+# This exemption is by file, and it is the only one. README.md, REPORT.md,
+# PROPOSAL.md and WALKTHROUGH.md all describe the project as it stands now and
+# are held to the CSVs - WALKTHROUGH was still carrying the retracted headline
+# CI [+1.78 ; +10.30] on 2026-09-23, three documents after it was corrected
+# everywhere else, and that is exactly what this gate is for.
+LOG_FILES = {"REVIEW.md"}
+
 
 def classify(lines: list[str], i: int) -> str:
     """HISTORY, EXTERNAL or LIVE for the 1-indexed line `i`.
@@ -128,6 +142,21 @@ def classify(lines: list[str], i: int) -> str:
     if any(k.lower() in low for k in HISTORY_MARK):
         return "HISTORY"
     if not line.lstrip().startswith(">"):
+        # A table is not a blockquote, but a warning block sitting directly
+        # above one governs it. WALKTHROUGH.md has the retracted structure-arms
+        # table introduced by exactly such a block, and without this the three
+        # rows underneath were still counted as live claims.
+        if line.lstrip().startswith("|"):
+            j = i - 1
+            while j > 0 and (not lines[j - 1].strip()
+                             or lines[j - 1].lstrip().startswith("|")):
+                j -= 1
+            if j > 0 and lines[j - 1].lstrip().startswith(">"):
+                gov = lines[j - 1].lower()
+                if any(k.lower() in gov for k in HISTORY_MARK):
+                    return "HISTORY"
+                if any(k in lines[j - 1] for k in EXTERNAL_MARK):
+                    return "EXTERNAL"
         return "LIVE"
     # Walk up inside the blockquote to the nearest heading line.
     j = i - 1
@@ -200,15 +229,16 @@ def main() -> int:
 
     total = 0
     live: list[tuple[Path, int, str]] = []
-    excused = {"HISTORY": 0, "EXTERNAL": 0}
+    excused = {"HISTORY": 0, "EXTERNAL": 0, "LOG": 0}
     for path in TARGETS:
         if path.name == SELF:
             continue
         found = scan(path)
         if not found:
             continue
-        bad = [(ln, raw, kind) for ln, raw, val, kind in found
-               if not matches(val, pool)]
+        is_log = path.name in LOG_FILES
+        bad = [(ln, raw, "LOG" if is_log and kind == "LIVE" else kind)
+               for ln, raw, val, kind in found if not matches(val, pool)]
         total += len(found)
         n_live = sum(1 for _, _, k in bad if k == "LIVE")
         for _, _, k in bad:
@@ -225,6 +255,7 @@ def main() -> int:
     print(f"\n  {total} quantities scanned")
     print(f"  {excused['HISTORY']:>4d} mien vi nam trong khoi ghi nhan sua doi")
     print(f"  {excused['EXTERNAL']:>4d} mien vi trich tu cong trinh khac")
+    print(f"  {excused['LOG']:>4d} mien vi nam trong REVIEW.md, nhat ky cac vong")
     print(f"  {len(live):>4d} KHANG DINH SONG khong co file nao dung sau")
     unmatched = live
 
