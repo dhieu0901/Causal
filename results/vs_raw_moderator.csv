@@ -1,0 +1,13 @@
+sample,lexicon,subset,cond,delta_pp,ci_lo,ci_hi,p_boot,n_items
+n600,KEEP,all 10 families,ORACLE,-0.17,-3.79,3.33,0.906,290
+n600,KEEP,all 10 families,DR_k1,-6.11,-9.92,-2.42,0.002,289
+n600,KEEP,"7 families, the price400 set",ORACLE,-1.82,-6.0,2.69,0.4325,211
+n600,KEEP,"7 families, the price400 set",DR_k1,-6.35,-10.95,-1.98,0.004,210
+n600,KEEP,3 simple 2-edge families,ORACLE,4.22,-1.27,9.7,0.1305,79
+n600,KEEP,3 simple 2-edge families,DR_k1,-5.49,-11.81,0.42,0.086,79
+n600,PSEUDO,all 10 families,ORACLE,6.3,1.95,10.77,0.0055,291
+n600,PSEUDO,all 10 families,DR_k1,-1.26,-5.42,2.8,0.553,292
+n600,PSEUDO,"7 families, the price400 set",ORACLE,5.58,0.16,10.93,0.0475,212
+n600,PSEUDO,"7 families, the price400 set",DR_k1,-1.8,-6.57,2.97,0.4985,213
+n600,PSEUDO,3 simple 2-edge families,ORACLE,8.23,1.27,15.19,0.0205,79
+n600,PSEUDO,3 simple 2-edge families,DR_k1,0.21,-7.81,8.02,0.9655,79

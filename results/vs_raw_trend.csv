@@ -1,0 +1,7 @@
+arm,lexicon,sample,estimate,ci_lo,ci_hi,p_boot,n_items,unit,survives_BH
+DR,KEEP,price400,-0.89,-3.57,1.79,0.5125,196,pp per extra reversed edge,False
+DR,PSEUDO,price400,-2.27,-4.76,0.13,0.069,198,pp per extra reversed edge,False
+ED,KEEP,price400,-0.85,-3.0,1.27,0.446,197,pp per extra reversed edge,False
+ED,PSEUDO,price400,-0.72,-3.11,1.64,0.5485,198,pp per extra reversed edge,False
+DR_k1 minus ED_k1,KEEP,price400,-4.93,-8.93,-1.02,0.013,196,"pp, reversal against omission",False
+DR_k1 minus ED_k1,PSEUDO,price400,0.34,-4.46,5.22,0.924,198,"pp, reversal against omission",False

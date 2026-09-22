@@ -17,7 +17,8 @@ Ba điều phải đọc kèm. Cả ba tính trên **cùng mẫu gộp n=490** c
 
 | | |
 |---|---|
-| **Đồ thị có cần ĐÚNG không** | **Chưa chứng minh được.** Đồ thị đảo chiều một cạnh cũng đạt ngưỡng: +4,78 pp [+0,66 ; +8,93], p=0,022. Hiệu giữa hai bên không tách khỏi 0 (+1,49 pp, p=0,41) |
+| **Đồ thị có cần ĐÚNG không** | **Phải tách theo nhóm truy vấn, gộp lại là đọc sai.** Với `backadj`, nơi đồ thị LÀ đáp án: **+27,36 đến +43,77 pp**, 6/6 ô. Với suy luận nhân quả thật trên từ vựng quen: đồ thị đúng đáng **khoảng 0** (-5,04 / -0,17 / -0,08, không ô nào đạt ngưỡng), đồ thị đảo một cạnh lấy đi **-8,72 / -6,11 / -5,16**. Thiệt hại xác lập được, lợi ích thì không. Chạy `scripts/analyze_vs_raw.py` |
+| **Liều hỏng có đo được không** | **Không như đã tưởng.** 20,6% phép đảo cạnh ở k=1 **không đổi ước lượng ATE**, ở k=2 và k=3 thì 0%. Điều kiện trên việc nhiễu thật sự đổi đáp án, tác hại **phẳng**: -6,36 / -7,36 / -6,90. Đường liều cũ là hiệu ứng thành phần mẫu. Chạy `scripts/classify_perturbations.py` |
 | **Có "xoá sạch tác hại" không** | **Hiệu ứng gần như toàn bộ là nâng thật.** Đồ thị nâng nhánh ẩn danh +5,12 pp và hạ nhánh `KEEP` chỉ -0,50 pp, tức 9% - mà vế "hạ" không tách khỏi 0 (CI [-3,43 ; +2,36]). Chạy `scripts/analyze_structure_arms.py` |
 | **Hiệu ứng nằm ở đâu** | **Không đơn điệu theo độ phức tạp.** Dồn vào nhóm đồ thị 4 cạnh (+9,61 pp, p=0,001, n=230); nhóm 3 cạnh +3,81 và nhóm 2 cạnh +5,30 đều không tách khỏi 0; nhóm 5 cạnh âm (-4,05 pp, n=40). Thứ hạng **giữa từng họ** thì không tái lập được giữa các mẫu. Chạy `scripts/analyze_by_family.py` |
 
@@ -31,7 +32,7 @@ Con số tiêu đề tái lập bằng `scripts/pool_samples.py`, script này c�
 |---|---|---|---|
 | `KEEP` sang `IRRELEVANT` | mất prior đúng | **+17,67 pp** [+9,24 ; +26,53] | xác lập |
 | `IRRELEVANT` sang `PERMUTE` | bị gán prior **sai** | dưới 8,5 pp | chưa phân giải |
-| `IRRELEVANT` sang `SYMBOL` | từ thật sang ký hiệu | dưới 6,4 pp | chưa phân giải |
+| `IRRELEVANT` sang `SYMBOL` | từ thật sang ký hiệu | dưới 6,37 pp | chưa phân giải |
 | `SYMBOL` sang `PSEUDO` | ký hiệu sang từ giả | dưới 6,3 pp | chưa phân giải |
 
 Khi prior đã mất thì từ có thật hay không không còn quan trọng.

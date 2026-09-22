@@ -179,6 +179,22 @@ def main():
     print("n=86 and gave ORACLE +14.35 / DR_k1 +8.69. These pooled n=490 numbers")
     print("are markedly lower. The exploratory sample is the RETRACTED one - see")
     print("REPORT section 4.0.")
+    print("""
+DO NOT READ SECTION 2 AS EQUIVALENCE. "ORACLE minus DR_k1" is a difference of two
+INTERACTIONS, and an interaction cannot see anything that moves both of its
+branches by the same amount. Reversing edges lowers accuracy on the KEEP branch
+and on the PSEUDO branch alike, so this row stays near zero while the accuracies
+themselves move a great deal. Its interval also runs to +5.01 against a total
+effect of +5.98, so it would not support an equivalence claim even on its own
+terms.
+
+For the question this row is repeatedly mistaken for - does a wrong graph help as
+much as a right one - run scripts/analyze_vs_raw.py, which measures each arm
+against RAW directly AND stratifies by query group. On the genuinely causal group
+with real variable names it finds a correct graph worth about zero (-5.04, -0.17,
+-0.08, none surviving the correction) while a single reversed edge costs -8.72,
+-6.11 and -5.16. The damage is established and the benefit is not, which is an
+asymmetry rather than an equivalence.""")
     return 0
 
 

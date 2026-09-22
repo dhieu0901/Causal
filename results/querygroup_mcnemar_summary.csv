@@ -1,0 +1,9 @@
+group,cond,n_sig_raw,n_sig_bh,n_cells,mean_harm_pp
+all pooled,RAW,8,8,9,-10.73
+all pooled,ORACLE,3,0,9,-5.67
+genuinely causal,RAW,9,9,9,-17.92
+genuinely causal,ORACLE,0,0,9,-2.9
+backadj identification,RAW,0,0,9,2.08
+backadj identification,ORACLE,0,0,9,-3.82
+rung-1 so hoc,RAW,0,0,9,-7.31
+rung-1 so hoc,ORACLE,2,0,9,-10.75

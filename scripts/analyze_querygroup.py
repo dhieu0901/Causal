@@ -205,7 +205,7 @@ def main():
     print("\n" + "=" * W)
     print("2. McNEMAR: what anonymising variable names costs, WITHIN EACH GROUP")
     print("=" * W)
-    rows = []
+    rows, summary = [], []
     for g in ["all", "causal", "identify", "rung1_arith"]:
         qs = qset(base, g)
         for cond in ["RAW", "ORACLE"]:
@@ -221,11 +221,21 @@ def main():
                                  "p": None if pd.isna(p) else round(p, 4)})
             sig = int(np.nansum([p < 0.05 for p in ps]))
             sig_bh = int(bh(ps).sum())
+            mean_harm = float(np.nanmean(ds))
             print(f"  {NHAN[g]:16} {cond:7} tho {sig}/9   BH q=.05 {sig_bh}/9   "
-                  f"mean harm {np.nanmean(ds):+7.2f} pp")
+                  f"mean harm {mean_harm:+7.2f} pp")
+            # These three numbers are quoted verbatim in REPORT section 4.0 and
+            # section 5. Until now they existed only in this print statement, so
+            # nothing in results/ could vouch for them and scripts/check_numbers.py
+            # flagged them as unaccounted. Persist them.
+            summary.append({"group": NHAN[g], "cond": cond,
+                            "n_sig_raw": sig, "n_sig_bh": sig_bh, "n_cells": len(ps),
+                            "mean_harm_pp": round(mean_harm, 2)})
         print()
     mc = pd.DataFrame(rows)
     mc.to_csv(ROOT / "results" / "querygroup_mcnemar.csv", index=False)
+    pd.DataFrame(summary).to_csv(
+        ROOT / "results" / "querygroup_mcnemar_summary.csv", index=False)
 
     print("=" * W)
     print("3. THE INTERACTION TEST - the headline claim, tested properly")
