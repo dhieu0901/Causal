@@ -77,3 +77,35 @@ def resolution(n, p=0.70, slope_pp_per_edge=11.8, alpha=0.05):
     se = np.sqrt(p * (1 - p) / n) * 100
     half = stats.norm.ppf(1 - alpha / 2) * se
     return {"se_pp": se, "ci_half_pp": half, "k_resolution": half / slope_pp_per_edge}
+
+
+def boot_p(draws, n_draws=None) -> float:
+    """Two-tailed bootstrap p from a set of resampled estimates.
+
+    One definition, used by every bootstrap in this repository, because three
+    different conventions were in circulation until 2026-09-23 and each one put
+    a different number in a shipped CSV for the same situation:
+
+      clamp   p is 2 * min(left tail, right tail), and a draw landing exactly on
+              zero is counted by BOTH tails, so the product can exceed 1 near a
+              null effect. results/family_breakdown.csv shipped p = 1.0255.
+
+      floor   with B draws the smallest non-zero two-tailed p that this
+              estimator can express is 2/B, so that is the floor. Two scripts
+              had no floor at all and published p = 0.0 - see the headline row
+              of results/ladder5_steps.csv, +17.67 pp at "p = 0". A bootstrap
+              never licenses zero; it licenses "below 2/B". One script floored
+              at 1/B instead, so the same situation printed 0.00025 there and
+              0.0005 everywhere else.
+
+    Takes the draws rather than a precomputed p so the tail counting cannot
+    drift between call sites either. Pass n_draws only when the array has
+    already been filtered and the floor should reflect the draws attempted.
+    """
+    d = np.asarray(draws, dtype=float)
+    d = d[np.isfinite(d)]
+    b = int(len(d)) if n_draws is None else int(n_draws)
+    if b < 1 or d.size == 0:
+        return float("nan")
+    p = 2.0 * min(float((d <= 0).mean()), float((d >= 0).mean()))
+    return min(1.0, max(p, 2.0 / b))

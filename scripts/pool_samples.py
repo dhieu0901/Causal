@@ -61,6 +61,8 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import numpy as np
 import pandas as pd
 
+from stats import boot_p
+
 from analyze_querygroup import ARITH, IDENT, TIER
 
 SEED = 20260907
@@ -173,11 +175,9 @@ def boot(W, seed=SEED, n=NBOOT):
     for b in range(n):
         out[b] = 100 * np.nanmean(W.loc[rng.choice(idx, len(idx), replace=True)].values)
     est = 100 * np.nanmean(W.values)
-    # See the note in analyze_vs_raw.boot(): both tails count a draw that
-    # lands exactly on 0, so this can exceed 1 without the clamp. This is the
-    # helper analyze_by_family.py uses, and it is where the 1.0255 came from.
-    p = min(1.0, 2 * min((out <= 0).mean(), (out >= 0).mean()))
-    return est, np.percentile(out, 2.5), np.percentile(out, 97.5), max(p, 2.0 / n)
+    # This is the helper analyze_by_family.py uses, and it is where the
+    # p = 1.0255 in family_breakdown.csv came from.
+    return est, np.percentile(out, 2.5), np.percentile(out, 97.5), boot_p(out, n)
 
 
 def main():
@@ -229,9 +229,21 @@ def main():
     print("\n" + "=" * 78)
     print("AGAINST REPORT SECTION 4.0")
     print("=" * 78)
-    print("  REPORT says : n=490, DiD +5.98, CI [+1.78 ; +10.30], p=0.005")
-    print(f"  reproduced  : n={len(pooled)}, DiD {e:+.2f}, "
+    # This line used to read "REPORT says : n=490, DiD +5.98, CI [+1.78 ;
+    # +10.30], p=0.005" with those figures typed in. That interval was
+    # superseded on 2026-09-22 and the print went on asserting it as "what
+    # REPORT says" for as long as nobody re-read the string - a number typed by
+    # hand is not a check, it is a second place for the number to go stale.
+    #
+    # The fix is NOT to read structure_arms.csv here: that file is written at
+    # stage 12 of the sweep and this script runs at stage 5, so the comparison
+    # would silently be against the previous run. Prose-against-CSV is
+    # scripts/check_numbers.py's job. This script states what it measured and
+    # writes it to results/pooled_headline.csv; nothing else.
+    print(f"  do duoc o day : n={len(pooled)}, DiD {e:+.2f}, "
           f"CI [{lo:+.2f} ; {hi:+.2f}], p={p:.4f}")
+    print("  So doi chieu voi REPORT do scripts/check_numbers.py lo, vi no doc")
+    print("  duoc CA HAI phia. Dung go tay lai con so nao vao day.")
     print(f"\n  {dup} items appear in more than one sample and were de-duplicated by id.")
     print(f"  For contrast, an n-weighted mean of the samples (total {total}, which")
     print(f"  DOUBLE COUNTS those) gives {w:+.2f} pp - close, but not what REPORT used.")

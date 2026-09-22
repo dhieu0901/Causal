@@ -153,7 +153,13 @@ def step2_compare(vg, meta, pred):
                                  abs(nn["NIE_telescoping"] - gt.get("NIE(Y | X)", 1e9))
                                  else nn["NIE_telescoping"])
         except Exception:
-            pass
+            # `got` is built incrementally, so a failure part-way leaves a
+            # PARTIAL dict that then feeds `dev` as though it were complete.
+            # This clause used to `pass`, which made that invisible: a family
+            # whose nde_nie() always threw would report deviations for the two
+            # quantities that happened to succeed and say nothing about the
+            # three that never ran. Counted now, and printed below.
+            hit[g]["partial"] += 1
         for k, v in got.items():
             if k in gt:
                 dev[g][k].append(abs(v - gt[k]))
@@ -187,6 +193,22 @@ def step2_compare(vg, meta, pred):
         rec["predicted_match"] = bool(pred.get(g))
         rows.append(rec)
         print(f"  {g:13s} {hit[g]['n']:5d} " + " ".join(cells))
+
+    # Both counters were incremented and then never looked at, so an SCM this
+    # audit could not evaluate left no trace anywhere. Report them or do not
+    # count them.
+    n_unread = sum(hit[g]["unreadable"] for g in hit)
+    n_partial = sum(hit[g]["partial"] for g in hit)
+    if n_unread or n_partial:
+        print(f"\n  CANH BAO: {n_unread} SCM khong doc duoc, {n_partial} SCM chi tinh")
+        print("  duoc MOT PHAN cac dai luong. Cac bang tren chi noi ve phan con lai:")
+        for g in sorted(hit):
+            if hit[g]["unreadable"] or hit[g]["partial"]:
+                print(f"    {g:13s} khong doc duoc {hit[g]['unreadable']:4d}, "
+                      f"mot phan {hit[g]['partial']:4d}")
+    else:
+        print(f"\n  Moi SCM deu doc duoc va tinh duoc DU cac dai luong "
+              f"({sum(hit[g]['n'] for g in hit)} SCM, 0 bo qua).")
 
     print("\n  The 'matches naive' columns: the share of SCMs where the WRONG formula")
     print("  reproduces CLadder's published value EXACTLY. That is direct evidence")

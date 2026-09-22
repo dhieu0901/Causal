@@ -47,6 +47,8 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import numpy as np
 import pandas as pd
 
+from stats import boot_p
+
 TIER = ["gpt-4.1-nano", "gpt-4.1-mini", "gpt-4.1"]
 LADDER = ["KEEP", "PERMUTE", "IRRELEVANT", "SYMBOL", "PSEUDO"]
 ARITH = {"marginal", "correlation"}
@@ -141,7 +143,8 @@ def main():
             continue
         est, bs = boot(by, a.seed, a.boot)
         clo, chi = np.percentile(bs, [2.5, 97.5])
-        p = min(1.0, 2 * min((bs <= 0).mean(), (bs >= 0).mean()))
+        # Had no floor at all, so this shipped p = 0.0 on the headline row.
+        p = boot_p(bs, a.boot)
         rows.append({"step": label, "changes": what, "delta_pp": round(est, 2),
                      "ci_lo": round(clo, 2), "ci_hi": round(chi, 2),
                      "p": round(p, 4),

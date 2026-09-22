@@ -1,0 +1,10 @@
+model,error_type,estimate_pp,ci_lo,ci_hi,p_boot,n_items,separates_from_zero
+gpt-4.1-nano,DR,-1.44,-3.39,0.47,0.1535,298,False
+gpt-4.1-nano,ED,-0.26,-2.33,1.79,0.7995,313,False
+gpt-4.1-nano,FE,-4.29,-8.86,0.29,0.059,175,False
+gpt-4.1-mini,DR,-0.19,-2.08,1.66,0.8355,313,False
+gpt-4.1-mini,ED,-0.0,-1.69,1.69,0.9925,355,False
+gpt-4.1-mini,FE,1.0,-2.25,4.5,0.535,200,False
+gpt-4.1,DR,-0.11,-1.69,1.51,0.899,372,False
+gpt-4.1,ED,-1.12,-2.83,0.48,0.173,357,False
+gpt-4.1,FE,-1.65,-4.72,1.42,0.29,212,False

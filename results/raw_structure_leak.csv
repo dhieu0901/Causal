@@ -1,0 +1,4 @@
+sample,n_items,n_edge_stated,edge_stated_pct,n_latent_disclosed,latent_disclosed_pct,n_either,either_pct,n_both
+lex,174,20,11.5,54,31.0,64,36.8,10
+n600,580,68,11.7,180,31.0,220,37.9,28
+price400,399,51,12.8,171,42.9,194,48.6,28

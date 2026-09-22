@@ -99,10 +99,18 @@ def main():
     print("""
   HOW TO READ THIS, per REPORT.md section 8.3.
 
-  SOLID: the price of one wrong edge does not vary appreciably with the lexical
-  regime. All 9 CI pairs overlap, and the CI on the PAIRED difference is
-  -0.11 [-1.62 ; 1.42] pp - that CI, not the overlap, is what supports the
-  equivalence conclusion.
+  THE PRICE DIFFERENCE IS NOT COMPUTED HERE. The overlap column above is not
+  evidence: two overlapping CIs do not show two quantities are equal, they show
+  the comparison was never made. Until 2026-09-23 this block printed a paired
+  difference of -0.11 [-1.62 ; 1.42] pp as though it were a result, while no
+  function in this repository resampled that difference. It is now computed by
+  scripts/analyze_price_paired.py, which writes results/price_paired_difference.csv.
+
+  What that file says: 0 of 9 cells separate from zero, so the price cannot be
+  told apart between lexical regimes. But the equivalence bound is only tight
+  for DR on the strong models (about 1.7 pp). Across all nine cells the data
+  rule out only a difference larger than about 8.9 pp, because FE fits three
+  points on the smallest item counts. Quote the bound from the WEAKEST cell.
 
   NOT ESTABLISHED: the claim that "the budget doubles once the lexical anchor is
   removed" was rejected in review round 5. All three CIs on the budget difference

@@ -61,6 +61,9 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "src"))
+
+from stats import boot_p
 RESULTS = ROOT / "results"
 
 from analyze_querygroup import ARITH, IDENT
@@ -136,13 +139,9 @@ def boot(v: pd.Series, seed: int = SEED, n: int = NBOOT):
     out = np.empty(n)
     for b in range(n):
         out[b] = x[rng.integers(0, len(x), len(x))].mean()
-    # Clamp to 1. Draws that land exactly on 0 are counted by BOTH tails, so
-    # 2*min(...) can exceed 1 - results/family_breakdown.csv carried a p of
-    # 1.0255 from this. A probability above 1 is never a rounding curiosity to a
-    # reader opening the CSV; it discredits the whole table.
-    p = min(1.0, 2 * min((out <= 0).mean(), (out >= 0).mean()))
+    # One definition for every bootstrap in the repo - see stats.boot_p.
     return (100 * x.mean(), 100 * np.percentile(out, 2.5),
-            100 * np.percentile(out, 97.5), max(p, 2.0 / n))
+            100 * np.percentile(out, 97.5), boot_p(out, n))
 
 
 def benjamini_hochberg(p: np.ndarray, alpha: float = ALPHA) -> np.ndarray:

@@ -60,7 +60,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import numpy as np
 import pandas as pd
 from scipy import stats
-from stats import mcnemar_exact_p
+from stats import boot_p, mcnemar_exact_p
 
 LEXICONS = ["KEEP", "PERMUTE", "SYMBOL", "PSEUDO"]
 ANON = ["PERMUTE", "SYMBOL", "PSEUDO"]
@@ -153,12 +153,9 @@ def boot_mean(W, seed, n=4000):
         out[k] = 100 * np.nanmean(W.loc[s].mean(axis=0).values)
     est = 100 * np.nanmean(W.mean(axis=0).values)
     lo, hi = np.percentile(out, [2.5, 97.5])
-    # Draws landing exactly on 0 are counted by BOTH tails, so 2*min() can
-    # exceed 1. results/family_breakdown.csv shipped a p of 1.0255 from this
-    # very expression. A probability above 1 does not read as a rounding
-    # curiosity to anyone opening the CSV - it discredits the whole table.
-    p = min(1.0, 2 * min((out <= 0).mean(), (out >= 0).mean()))
-    return est, lo, hi, max(p, 1.0 / n)
+    # This floored at 1/n while every other bootstrap here floored at 2/n, so
+    # the same situation printed 0.00025 in this file and 0.0005 elsewhere.
+    return est, lo, hi, boot_p(out, n)
 
 
 def main():
@@ -301,6 +298,58 @@ def main():
     eq.to_csv(ROOT / "results" / "querygroup_equivalence.csv", index=False)
     print("  Rung 1 is a real effect; rungs 2 and 3 are tightly bounded around zero.")
     print("  That is an equivalence bound, not an argument from failure to reject.")
+
+    # ------------------------------------------------------------------
+    # Does the grouping of the two ambiguous query types matter? Review item
+    # V7-13 asked for exp_away to move to rung1_arith (CLadder labels it rung 1)
+    # and collider_bias to identify (its answer is fixed by the graph). Both
+    # readings are defensible, so the question is settled by measurement, and
+    # the measurement is kept here so nobody has to re-litigate it.
+    # ------------------------------------------------------------------
+    print("\n" + "=" * W)
+    print("5. DO NHAY: chuyen exp_away va collider_bias sang nhom khac")
+    print("=" * W)
+    print("  exp_away mang nhan rung 1 cua CLadder nhung khong phai so hoc thuan;")
+    print("  collider_bias do do thi quyet dinh nhung khong phai cau hoi tap hieu")
+    print("  chinh. Hai cach xep deu bien minh duoc, nen do xem no co doi gi khong.\n")
+    n_amb = {q: int((base[(base.model == TIER[0]) & (base.cond == "RAW")]
+                     .query_type == q).sum())
+             for q in ("exp_away", "collider_bias")}
+    srows = []
+    for label, drop in [
+            ("hien tai", ARITH | IDENT),
+            ("de xuat V7-13", ARITH | IDENT | {"exp_away", "collider_bias"})]:
+        qs = set(base.query_type.unique()) - drop
+        cols = []
+        for m in TIER:
+            o, w = cell(base, m, "ORACLE", qs), cell(base, m, "RAW", qs)
+            i = o.index.intersection(w.index)
+            if len(i) < 10:
+                continue
+            cols.append((o[i] - w[i]).rename(m))
+        if not cols:
+            continue
+        W_ = pd.concat(cols, axis=1)
+        est, lo, hi, p = boot_mean(W_, a.seed, a.boot)
+        print(f"  {label:16s} n={len(W_):4d}  Delta_struct {est:+6.2f} pp  "
+              f"[{lo:+6.2f} ; {hi:+6.2f}]  p={p:.4f}")
+        srows.append({"scheme": label, "n_items": len(W_),
+                      "delta_struct_pp": round(est, 2), "ci_lo": round(lo, 2),
+                      "ci_hi": round(hi, 2), "p_boot": round(p, 4)})
+    if len(srows) == 2:
+        pd.DataFrame(srows).to_csv(
+            ROOT / "results" / "querygroup_sensitivity.csv", index=False)
+        shift = abs(srows[0]["delta_struct_pp"] - srows[1]["delta_struct_pp"])
+        print(f"\n  Con so dich {shift:.2f} pp. exp_away co {n_amb['exp_away']} item")
+        print(f"  va collider_bias co {n_amb['collider_bias']}, nen du lieu KHONG the")
+        print("  phan xu cho chung thuoc nhom nao - va khong can phan xu, vi khong")
+        print("  con so nao duoc bao cao phu thuoc vao lua chon do.")
+        print("\n  Tieu chi da ap dung, ghi thanh van: rung1_arith chi gom hai loai la")
+        print("  SO HOC THUAN tren cac con so da cho (marginal, correlation);")
+        print("  identify chi gom backadj, noi do thi CHINH LA dap an; causal la phan")
+        print("  con lai. exp_away mang nhan rung 1 nhung doi hoi nhan ra mot collider")
+        print("  nen khong phai so hoc thuan; collider_bias do do thi quyet dinh nhung")
+        print("  khong phai cau hoi tap hieu chinh. Ca hai deu o lai nhom causal.")
 
     print("\n" + "=" * W)
     print("KET LUAN")

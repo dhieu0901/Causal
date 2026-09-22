@@ -326,19 +326,28 @@ def main():
     print("-" * W)
     rows = []
     for fam, fn in HAND.items():
-        d = []
+        d, skipped = [], 0
         for m in models:
             if m["graph_id"] != fam:
                 continue
             try:
                 d.append(abs(SCM(m["params"]).ate() - fn(m["params"])))
             except Exception:
-                pass
+                # Counted, never silent. This clause used to `pass`, which meant
+                # an SCM the engine could not evaluate simply left the sample and
+                # `match` was then decided on whatever survived - a check that
+                # narrows itself without saying so. Audited 2026-09-23 against
+                # the metadata population: 0 of 7,064 were being dropped, so the
+                # hazard was latent rather than active. It is now visible.
+                skipped += 1
         e = np.array(d) if d else np.array([np.nan])
-        rows.append({"family": fam, "n_compared": len(d),
+        rows.append({"family": fam, "n_compared": len(d), "n_skipped": skipped,
                      "max_dev": f"{np.nanmax(e):.3e}", "match": bool(np.all(e < TOL))})
     st = pd.DataFrame(rows)
     print(st.to_string(index=False))
+    if st.n_skipped.sum():
+        print(f"\n  CANH BAO: {int(st.n_skipped.sum())} SCM khong danh gia duoc va da")
+        print("  bi loai khoi phep so sanh. Cot 'match' chi noi ve phan con lai.")
     if not st.match.all():
         print("\n  THE ENGINE IS WRONG - stopping; nothing below can be trusted.")
         return 1

@@ -33,7 +33,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import numpy as np
 import pandas as pd
 from pilot import make_items
-from stats import mcnemar_exact_p
+from stats import boot_p, mcnemar_exact_p
 
 LEXICONS = ["KEEP", "PERMUTE", "SYMBOL", "PSEUDO"]
 TIER = ["gpt-4.1-nano", "gpt-4.1-mini", "gpt-4.1"]
@@ -111,11 +111,8 @@ def boot(v, seed=SEED, n=NBOOT):
     out = np.empty(n)
     for b in range(n):
         out[b] = x[rng.integers(0, len(x), len(x))].mean()
-    # Draws landing exactly on 0 are counted by both tails, so 2*min() can
-    # exceed 1. Clamp, as analyze_vs_raw.py does.
-    p = min(1.0, 2 * min((out <= 0).mean(), (out >= 0).mean()))
     return (100 * x.mean(), 100 * np.percentile(out, 2.5),
-            100 * np.percentile(out, 97.5), max(p, 2.0 / n))
+            100 * np.percentile(out, 97.5), boot_p(out, n))
 
 
 def boot_two_sample(a, b, seed=SEED, n=NBOOT):
@@ -128,9 +125,8 @@ def boot_two_sample(a, b, seed=SEED, n=NBOOT):
     for i in range(n):
         out[i] = (xa[rng.integers(0, len(xa), len(xa))].mean()
                   - xb[rng.integers(0, len(xb), len(xb))].mean())
-    p = min(1.0, 2 * min((out <= 0).mean(), (out >= 0).mean()))
     return (100 * (xa.mean() - xb.mean()), 100 * np.percentile(out, 2.5),
-            100 * np.percentile(out, 97.5), max(p, 2.0 / n))
+            100 * np.percentile(out, 97.5), boot_p(out, n))
 
 
 def main():

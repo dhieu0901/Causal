@@ -55,6 +55,12 @@ echo "BAT DAU $(date '+%Y-%m-%d %H:%M:%S')  n=$N  models=$MODELS" | tee -a "$LOG
 stage "1/8 verify data provenance" \
   python scripts/verify_data_provenance.py
 
+# Static, instant, and it catches a class of bug that costs a whole run: a
+# script reading a results file that a LATER stage writes scores the new
+# analysis against the PREVIOUS run's data and still exits 0.
+stage "1/8 verify pipeline order" \
+  python scripts/check_pipeline_order.py
+
 # 1. Main branch. The primary result: what each error type costs, and where the
 #    curve crosses the no-graph floor.
 stage "2/8 pilot commonsense n=$N" \

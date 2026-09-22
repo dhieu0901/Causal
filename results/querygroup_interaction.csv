@@ -3,9 +3,9 @@ all pooled,9 cells pooled,4.5,-0.32,9.4,0.0695
 all pooled,gpt-4.1-nano,3.78,-4.09,11.7,0.363
 all pooled,gpt-4.1-mini,7.92,0.37,15.81,0.036
 all pooled,gpt-4.1,1.8,-5.0,8.75,0.608
-genuinely causal,9 cells pooled,14.35,6.65,22.8,0.0003
+genuinely causal,9 cells pooled,14.35,6.65,22.8,0.0005
 genuinely causal,gpt-4.1-nano,14.0,1.78,26.15,0.0235
-genuinely causal,gpt-4.1-mini,21.53,9.71,33.69,0.0003
+genuinely causal,gpt-4.1-mini,21.53,9.71,33.69,0.0005
 genuinely causal,gpt-4.1,7.53,-4.15,19.58,0.192
 backadj identification,9 cells pooled,-5.9,-18.06,6.94,0.3915
 backadj identification,gpt-4.1-nano,-6.25,-27.08,15.62,0.641

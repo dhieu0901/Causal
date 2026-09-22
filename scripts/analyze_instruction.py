@@ -55,6 +55,8 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import numpy as np
 import pandas as pd
 
+from stats import boot_p
+
 TIER = ["gpt-4.1-nano", "gpt-4.1-mini", "gpt-4.1"]
 ARITH = {"marginal", "correlation"}
 IDENT = {"backadj"}
@@ -158,7 +160,7 @@ def main():
             # Clamped: with an estimate sitting exactly on zero both tails can
             # round above 0.5 and the doubled value exceeds 1, which is not a
             # p-value and reads as a bug to anyone checking the table.
-            p = min(1.0, 2 * min((bs <= 0).mean(), (bs >= 0).mean()))
+            p = boot_p(bs)
             rows.append({"group": gname, "test": label.split(".")[1].strip(),
                          "ma": label[0], "DiD_pp": round(est, 2),
                          "ci_lo": round(clo, 2), "ci_hi": round(chi, 2),
