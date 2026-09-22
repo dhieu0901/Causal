@@ -120,13 +120,23 @@ def main():
     print("\n" + "=" * 84)
     print("3. MEAN BY PRIOR GROUP (3 anonymised lexicons x 3 models pooled)")
     print("=" * 84)
+    # These means are quoted in REPORT sections 4.1 and 5. Until now they lived
+    # only in this print statement, so nothing in results/ could vouch for them
+    # and scripts/check_numbers.py flagged them as unaccounted. Persist them.
+    summary = []
     for c in ["RAW", "ORACLE"]:
         s = o[o.cond == c]
         print(f"\n--- {c} ---")
         for g in ["correct prior", "wrong prior already"]:
             t = s[s.prior_ban_dau == g]
+            n_sig = int((t.p < .05).sum())
             print(f"  {g:18s} hai TB {t.delta_pp.mean():7.2f} pp   "
-                  f"p<0.05: {int((t.p < .05).sum())}/{len(t)}")
+                  f"p<0.05: {n_sig}/{len(t)}")
+            summary.append({"cond": c, "prior_group": g,
+                            "mean_delta_pp": round(float(t.delta_pp.mean()), 2),
+                            "n_sig": n_sig, "n_cells": len(t)})
+    pd.DataFrame(summary).to_csv(
+        ROOT / "results" / "prior_strength_summary.csv", index=False)
     print("\n  Removing a CORRECT prior costs more than removing one that was already")
     print("  wrong. That is what the mechanism predicts, and it is a test that could")
     print("  have failed.")

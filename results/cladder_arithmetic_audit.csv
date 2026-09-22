@@ -1,4 +1,4 @@
-ho,n_scm,lech_max_P(Y=1),lech_max_ATE,lech_max_ETT,lech_max_NDE,lech_max_NIE,PY_theo_phep_naive_pct,ATE_theo_phep_naive_pct,du_doan_khop
+family,n_scm,max_dev_P(Y=1),max_dev_ATE,max_dev_ETT,max_dev_NDE,max_dev_NIE,PY_matches_naive_pct,ATE_matches_naive_pct,predicted_match
 IV,880,0.169443,0.0,0.0,0.0,0.0,100.0,0.0,False
 arrowhead,1008,0.24984,0.249163,0.249163,0.249163,0.249163,100.0,100.0,False
 chain,624,0.0,0.0,0.0,0.0,0.0,100.0,100.0,True

@@ -1,4 +1,4 @@
 lexicon,n_item,items_with_residue,percent,tu_sot_hay_gap
-PERMUTE,174,162,93.1,"employee, lung, cancer, smokers, nonsmokers, patients, deposit, tar"
-SYMBOL,174,107,61.5,"smokers, nonsmokers, patients, students, don, sign, letters, termination"
-PSEUDO,174,107,61.5,"smokers, nonsmokers, patients, students, don, sign, letters, termination"
+PERMUTE,174,162,93.1,"employee, cancer, lung, smokers, nonsmokers, patients, deposit, tar"
+SYMBOL,174,107,61.5,"smokers, nonsmokers, patients, students, don, termination, sign, letters"
+PSEUDO,174,107,61.5,"smokers, nonsmokers, patients, students, don, termination, sign, letters"

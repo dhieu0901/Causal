@@ -113,6 +113,12 @@ def bootstrap_fit(df_model, t, kmax=3, boot=600, seed=0, base="RAW"):
 
 def main():
     ap = argparse.ArgumentParser()
+    # DEPENDENCY, not just a default. `--induction` names a file that
+    # scripts/induction.py WRITES, so this script must run after it or it reads a
+    # stale one and its output changes without any code changing.
+    # scripts/verify_determinism.py caught exactly that. run_full.sh already
+    # orders them correctly and passes both paths explicitly; anything else
+    # running these by hand has to keep that order.
     ap.add_argument("--pilot", default="pilot_raw.csv")
     ap.add_argument("--induction", default="induction_raw.csv")
     ap.add_argument("--tag", default="")

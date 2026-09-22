@@ -68,6 +68,20 @@ CLadder trộn ba loại câu hỏi phản ứng khác hẳn nhau với đồ th
 
 Tiêu chí thành văn: một loại truy vấn thuộc nhóm nhận dạng nếu đáp án của nó là hàm của riêng đồ thị, độc lập với mọi tham số số học. Bỏ nhóm một là do **định lý** Causal Hierarchy; tách nhóm hai là một **lập luận**, không phải định lý. Mọi con số tiêu đề đều báo trên nhóm thứ ba.
 
+## Nếu bạn đang dựng pipeline tăng cường bằng đồ thị
+
+Năm câu, tất cả rút thẳng từ `results/vs_raw.csv`. Phạm vi: ba checkpoint `gpt-4.1`, CLadder v1.5, chưa có họ model thứ hai.
+
+| Tình huống | Làm gì | Số đỡ |
+|---|---|---|
+| Câu hỏi chỉ cần số học trên số đã cho | **Đừng gắn** | 0,00 pp [-1,41 ; +1,41], 0/6 ô đạt ngưỡng |
+| Đáp án **chính là** đồ thị (chọn tập hiệu chỉnh, sàng biến) | **Gắn** | +27,36 đến +43,77 pp, 6/6 ô |
+| Suy luận nhân quả nhiều bước, tên biến quen thuộc | **Đừng gắn** | đúng: ~0 (0/3 mẫu đạt ngưỡng); đảo 1 cạnh: -5 đến -9 pp (2/3 mẫu) |
+| Như trên nhưng tên biến vô nghĩa (mã nội bộ, cột ẩn danh) | **Gắn** | +6,30 pp [+1,95 ; +10,77] |
+| Không chắc chiều một cạnh | **Bỏ cạnh, đừng đoán** | thiếu cạnh 0/6 ô hại; đảo cạnh 4/10 ô hại |
+
+Hệ quả đáng chú ý nhất: ở dòng ba, **lợi ích không xác lập được còn thiệt hại thì có**, nên một pipeline tự trích DAG rồi đưa lại cho model có **kỳ vọng âm ở mọi tỉ lệ lỗi trích xuất lớn hơn 0**. Và theo mục 9 của báo cáo, LLM tự trích đồ thị đảo chiều nhiều gấp 5,1 đến 7,7 lần khi prior sai - tức loại lỗi bộ trích xuất sinh ra nhiều nhất đúng là loại đắt nhất.
+
 ## Cảnh báo cho ai dùng CLadder v1.5
 
 **Ba file `test-commonsense`, `test-anticommonsense`, `test-noncommonsense` không chứa câu hỏi.** 0,00% prompt của chúng có dấu `?`, trong khi `full_v1.5_default.csv` là 100%. Chấm điểm trên chúng cho ra đúng 50% và trông y hệt một phát hiện về nhận thức của LLM.
@@ -87,11 +101,17 @@ python scripts/verify_labels.py        # nhãn yes/no đi theo giá trị nào
 python scripts/verify_counterfactual.py   # bậc 3 và va chạm: 1.812 nhãn còn lại
 python scripts/audit_cladder_arithmetic.py  # phạm vi chính xác của lỗi CLadder
 python scripts/pool_samples.py         # gộp ba mẫu, tái lập con số tiêu đề
-python scripts/analyze_structure_arms.py  # các nhánh ORACLE/PROSE/DR_k1
+python scripts/analyze_structure_arms.py  # các nhánh ORACLE/PROSE/DR_k1, đo bằng DiD
+python scripts/analyze_vs_raw.py       # KẾT QUẢ CHÍNH: mọi nhánh so với RAW, tách theo nhóm truy vấn
+python scripts/classify_perturbations.py  # bao nhiêu phép nhiễu thật sự đổi đáp án
 python scripts/analyze_by_family.py    # DiD theo từng họ đồ thị, theo nút, theo cạnh
 python scripts/analyze_dose.py         # liều hay cấu trúc mới là biến giải thích
 python scripts/make_figures.py         # sinh hình cho slide từ CSV
 python scripts/feasibility.py          # khả thi, độ phân giải mẫu, dự toán
+
+# Hai cổng chặn - chạy trước khi tin bất kỳ con số nào
+python scripts/check_numbers.py        # mọi đại lượng pp trong văn bản có truy được về CSV không
+python scripts/verify_determinism.py   # chạy lại có ra đúng file cũ không (--all cho đầy đủ)
 
 # Thí nghiệm từ vựng ghép cặp - kết quả chính
 for LEX in KEEP PERMUTE SYMBOL PSEUDO; do
@@ -113,7 +133,10 @@ Dữ liệu CLadder không nằm trong repo. Tải từ [causalNLP/cladder](http
 
 ## Việc chưa xong
 
-- **Điều kiện `NAMES_ONLY`** - việc quan trọng nhất còn lại. Khối liệt kê đúng tên biến nhưng **không một mũi tên nào**. Đây là phép kiểm duy nhất có thể cứu lại chữ "đúng" trong "đồ thị đúng", **và nó có thể thất bại**.
+- **Một họ model thứ hai** - việc quan trọng nhất còn lại, và là thứ duy nhất chặn công bố mà không có cách lách.
+- **`DR_k2` và `DR_k3` trên mẫu n600** - đường liều hiện chỉ có trên 399 item và 7 họ; n600 có 580 item đủ 10 họ.
+- **Bậc thang từ vựng trên mẫu n=580** - RQ3 hiện vẫn đứng trên n=85 mỗi ô.
+- **Điều kiện `NAMES_ONLY`** - **hạ cấp 2026-09-22**, không còn là phép kiểm sống chết. Mục 4.3b đã bác giả thuyết tái gắn ký hiệu bằng dữ liệu sẵn có: `DR_k1` mang **y hệt** bộ tên biến của `ORACLE` mà giữ được **0** lợi ích. `NAMES_ONLY` giờ là việc củng cố, cho một bậc thang sạch hơn.
 - **Điều kiện `SCRAMBLE`** - một DAG ngẫu nhiên trên đúng bộ nút, không giữ cạnh nào của đồ thị thật.
 - **Bảng chín CI trên hiệu giá chưa có script sinh ra** - hiện là chuỗi in cứng trong `scripts/compare_price_lexicon.py`.
 - **Cả ba model đều thuộc dòng GPT-4.1.** Giới hạn duy nhất đủ nghiêm trọng để chặn công bố. Cần ít nhất một dòng khác họ, và một model có suy luận mở rộng kèm nhánh `ORACLE`.

@@ -1,0 +1,5 @@
+cond,prior_group,mean_delta_pp,n_sig,n_cells
+RAW,correct prior,-12.23,8,9
+RAW,wrong prior already,-8.91,2,9
+ORACLE,correct prior,-3.84,0,9
+ORACLE,wrong prior already,-7.91,1,9
