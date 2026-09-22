@@ -1,0 +1,7 @@
+sample,lexicon,quantity,query_group,delta_pp,ci_lo,ci_hi,p_boot,n_items,survives_BH
+lex,KEEP,ORACLE minus DR_k1,causal,3.68,-2.13,10.08,0.252,86,False
+lex,PSEUDO,ORACLE minus DR_k1,causal,8.33,1.74,14.92,0.018,86,True
+n600,KEEP,ORACLE minus DR_k1,causal,5.61,2.2,9.32,0.003,288,True
+n600,PSEUDO,ORACLE minus DR_k1,causal,7.73,3.89,11.86,0.0005,291,True
+price400,KEEP,ORACLE minus DR_k1,causal,5.08,0.85,9.22,0.0175,197,True
+price400,PSEUDO,ORACLE minus DR_k1,causal,1.26,-3.62,6.06,0.5985,198,False

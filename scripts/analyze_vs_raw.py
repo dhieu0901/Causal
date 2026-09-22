@@ -46,6 +46,7 @@ samples so a reader can see which effects reproduce across samples.
 
 Run:  python scripts/analyze_vs_raw.py
 Writes: results/vs_raw.csv
+        results/vs_raw_rq2.csv
         results/vs_raw_trend.csv
         results/vs_raw_moderator.csv
 """
@@ -232,6 +233,39 @@ def trend_table(series) -> pd.DataFrame:
     return T
 
 
+def rq2_table() -> pd.DataFrame:
+    """ORACLE minus DR_k1, paired within item, on the causal group.
+
+    This is the DIRECT test of RQ2 - must the structure block be CORRECT? - and
+    for a long time the project answered it from results/structure_arms.csv,
+    where the same contrast reads +1.49, CI [-1.86 ; +5.01], p=0.41, i.e. "not
+    distinguishable". That row is a difference of two DIFFERENCES-IN-DIFFERENCES.
+    An interaction cannot see a shift that moves both lexical branches, and
+    reversing an edge moves both.
+
+    Taking the contrast directly, item by item, on the query group that needs
+    causal reasoning, reverses the answer: the correct graph wins in every cell.
+    """
+    rows = []
+    for tag, _, conds in SAMPLES:
+        if "DR_k1" not in conds:
+            continue
+        for lex in LEXICONS:
+            d = load(tag, lex)
+            a, b = paired(d, "ORACLE", group="causal"), paired(d, "DR_k1", group="causal")
+            i = a.index.intersection(b.index)
+            if len(i) < 5:
+                continue
+            est, lo, hi, p = boot(pd.Series((a[i] - b[i]).values))
+            rows.append(dict(sample=tag, lexicon=lex, quantity="ORACLE minus DR_k1",
+                             query_group="causal", delta_pp=round(est, 2),
+                             ci_lo=round(lo, 2), ci_hi=round(hi, 2),
+                             p_boot=round(p, 4), n_items=len(i)))
+    R = pd.DataFrame(rows)
+    R["survives_BH"] = benjamini_hochberg(R.p_boot.values)
+    return R
+
+
 def moderator_table() -> pd.DataFrame:
     """Does graph complexity moderate the damage from a wrong graph?
 
@@ -261,6 +295,7 @@ def moderator_table() -> pd.DataFrame:
 def main() -> None:
     R, series = main_table()
     T = trend_table(series)
+    Q = rq2_table()
     M = moderator_table()
 
     print("=" * 78)
@@ -298,7 +333,32 @@ def main() -> None:
               f"  {'yes' if r.survives_BH else 'no'}")
 
     print("\n" + "=" * 78)
-    print("3. MODERATOR - is the damage from a wrong graph larger in complex graphs?")
+    print("3. RQ2 DIRECT - ORACLE minus DR_k1, paired, causal group")
+    print("=" * 78 + "\n")
+    print("  Must the structure block be CORRECT? This is the contrast that answers it.")
+    print(f"  Benjamini-Hochberg at {ALPHA} within this table.\n")
+    print(f"  {'sample':10s} {'lex':8s} {'delta_pp':>9s} {'ci_lo':>8s} {'ci_hi':>8s}"
+          f" {'p':>8s} {'n':>5s}  BH")
+    for _, r in Q.iterrows():
+        print(f"  {r['sample']:10s} {r.lexicon:8s} {r.delta_pp:>9.2f} {r.ci_lo:>8.2f}"
+              f" {r.ci_hi:>8.2f} {r.p_boot:>8.4f} {r.n_items:>5d}"
+              f"  {'yes' if r.survives_BH else 'no'}")
+    print(f"""
+  Positive in {int((Q.delta_pp > 0).sum())} of {len(Q)} cells, surviving the
+  correction in {int(Q.survives_BH.sum())}. The correct graph beats a graph with
+  one reversed edge across three independently drawn samples.
+
+  Compare results/structure_arms.csv, which puts the same contrast at +1.49,
+  CI [-1.86 ; +5.01], p=0.41 - "not distinguishable". That row is a difference of
+  two INTERACTIONS and cannot see a shift that moves both lexical branches.
+  Reversing an edge moves both. Taken directly, item by item, the answer flips.
+
+  Note the two cells that do NOT survive: lex KEEP (n=86, the smallest sample)
+  and price400 PSEUDO. Both are still positive. The pattern is consistent; the
+  per-cell power is not.""")
+
+    print("\n" + "=" * 78)
+    print("4. MODERATOR - is the damage from a wrong graph larger in complex graphs?")
     print("=" * 78 + "\n")
     print(f"  {'lex':8s} {'subset':30s} {'cond':8s} {'delta_pp':>9s} {'ci_lo':>8s}"
           f" {'ci_hi':>8s} {'p':>8s} {'n':>5s}")
@@ -347,9 +407,10 @@ def main() -> None:
 
     R.to_csv(RESULTS / "vs_raw.csv", index=False)
     T.to_csv(RESULTS / "vs_raw_trend.csv", index=False)
+    Q.to_csv(RESULTS / "vs_raw_rq2.csv", index=False)
     M.to_csv(RESULTS / "vs_raw_moderator.csv", index=False)
     print(f"\n  wrote results/vs_raw.csv ({len(R)} rows), "
-          f"vs_raw_trend.csv ({len(T)}), vs_raw_moderator.csv ({len(M)})")
+          f"vs_raw_trend.csv ({len(T)}), vs_raw_rq2.csv ({len(Q)}), vs_raw_moderator.csv ({len(M)})")
 
 
 if __name__ == "__main__":
