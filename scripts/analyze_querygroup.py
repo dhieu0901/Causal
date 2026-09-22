@@ -307,7 +307,7 @@ def main():
     # the measurement is kept here so nobody has to re-litigate it.
     # ------------------------------------------------------------------
     print("\n" + "=" * W)
-    print("5. DO NHAY: chuyen exp_away va collider_bias sang nhom khac")
+    print("5. DO NHAY CUA DiD THEO CACH CAT NHOM TRUY VAN")
     print("=" * W)
     print("  exp_away mang nhan rung 1 cua CLadder nhung khong phai so hoc thuan;")
     print("  collider_bias do do thi quyet dinh nhung khong phai cau hoi tap hieu")
@@ -316,30 +316,41 @@ def main():
                      .query_type == q).sum())
              for q in ("exp_away", "collider_bias")}
     srows = []
+    # The four cuts of REPORT section 4.1 plus the V7-13 variant. That table
+    # shows the headline moving from p=0.07 to significant depending on which
+    # query groups are removed, which is the most important thing a reader can
+    # know about it - and it had no script until 2026-09-23.
     for label, drop in [
-            ("hien tai", ARITH | IDENT),
+            ("gop tat ca", set()),
+            ("chi bo rung-1", ARITH),
+            ("chi bo backadj", IDENT),
+            ("bo ca hai (hien tai)", ARITH | IDENT),
             ("de xuat V7-13", ARITH | IDENT | {"exp_away", "collider_bias"})]:
         qs = set(base.query_type.unique()) - drop
-        cols = []
-        for m in TIER:
-            o, w = cell(base, m, "ORACLE", qs), cell(base, m, "RAW", qs)
-            i = o.index.intersection(w.index)
-            if len(i) < 10:
-                continue
-            cols.append((o[i] - w[i]).rename(m))
-        if not cols:
+        # The DiD, via the same did_cells() the rest of this file uses. An
+        # earlier draft of this block computed Delta_struct (ORACLE - RAW on
+        # KEEP) instead and printed it under the same heading. The pooled row
+        # happened to land at +4.30 against the DiD's +4.50, close enough to
+        # pass a glance, while "drop backadj" came out at -2.48 against +7.13 -
+        # the opposite sign. Two different quantities under one label.
+        W_ = did_cells(d, qs)
+        if W_.empty:
             continue
-        W_ = pd.concat(cols, axis=1)
         est, lo, hi, p = boot_mean(W_, a.seed, a.boot)
-        print(f"  {label:16s} n={len(W_):4d}  Delta_struct {est:+6.2f} pp  "
+        print(f"  {label:22s} n={len(W_):4d}  DiD {est:+6.2f} pp  "
               f"[{lo:+6.2f} ; {hi:+6.2f}]  p={p:.4f}")
         srows.append({"scheme": label, "n_items": len(W_),
-                      "delta_struct_pp": round(est, 2), "ci_lo": round(lo, 2),
+                      "did_pp": round(est, 2), "ci_lo": round(lo, 2),
                       "ci_hi": round(hi, 2), "p_boot": round(p, 4)})
-    if len(srows) == 2:
+    if len(srows) >= 2:
         pd.DataFrame(srows).to_csv(
             ROOT / "results" / "querygroup_sensitivity.csv", index=False)
-        shift = abs(srows[0]["delta_struct_pp"] - srows[1]["delta_struct_pp"])
+        by = {r["scheme"]: r for r in srows}
+        cur, alt = by.get("bo ca hai (hien tai)"), by.get("de xuat V7-13")
+        if cur and alt:
+            shift = abs(cur["did_pp"] - alt["did_pp"])
+        else:
+            shift = float("nan")
         print(f"\n  Con so dich {shift:.2f} pp. exp_away co {n_amb['exp_away']} item")
         print(f"  va collider_bias co {n_amb['collider_bias']}, nen du lieu KHONG the")
         print("  phan xu cho chung thuoc nhom nao - va khong can phan xu, vi khong")

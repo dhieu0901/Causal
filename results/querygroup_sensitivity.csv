@@ -1,3 +1,6 @@
-scheme,n_items,delta_struct_pp,ci_lo,ci_hi,p_boot
-hien tai,86,-4.66,-12.09,2.83,0.222
-de xuat V7-13,78,-4.71,-12.85,3.77,0.266
+scheme,n_items,did_pp,ci_lo,ci_hi,p_boot
+gop tat ca,174,4.5,-0.32,9.4,0.0695
+chi bo rung-1,118,8.37,1.65,15.42,0.014
+chi bo backadj,142,7.13,2.05,12.45,0.0045
+bo ca hai (hien tai),86,14.35,6.65,22.8,0.0005
+de xuat V7-13,78,14.53,5.74,23.45,0.0015

@@ -172,13 +172,40 @@ def main():
             print(f"  share of the effect that is HARM to the KEEP branch: "
                   f"{100 * abs(min(dn, 0.0)) / tot:.0f}%")
 
+    # Per sample, not only pooled. REPORT section 4.3 carries the three arms on
+    # the 174-item lexical sample alone, and until 2026-09-23 that table had no
+    # script: the only trace of it in this repository was the printed sentence
+    # below, describing the run rather than performing it. A number that exists
+    # only inside a sentence about a number is not a source.
+    print("\n4. Per sample, so the exploratory figures can be checked too")
+    for tag, *_ in SAMPLES:
+        for arm in usable:
+            W = did_sample(tag, imaps[tag], [POOL_LEXICON], arm=arm)
+            if W.empty:
+                continue
+            est, lo, hi, p = boot(W)
+            n = len(W.index.unique())
+            print(f"  {tag:9s} DiD | {arm:12s} {est:+7.2f}  "
+                  f"[{lo:+7.2f} ; {hi:+7.2f}]  p={p:.4f}  n={n}")
+            # The label carries the sample. make_figures.py keys this file by
+            # `quantity` into a dict, so a per-sample row sharing a label with
+            # the pooled row would overwrite it and the figure would quietly
+            # show price400's numbers under the pooled caption.
+            rows.append({"quantity": f"DiD | {arm} | {tag}", "sample": tag,
+                         "estimate_pp": round(est, 2), "ci_lo": round(lo, 2),
+                         "ci_hi": round(hi, 2), "p_boot": round(p, 4),
+                         "n_items": n})
+
     out = ROOT / "results" / "structure_arms.csv"
-    pd.DataFrame(rows).to_csv(out, index=False)
+    df = pd.DataFrame(rows)
+    if "sample" in df.columns:
+        df["sample"] = df["sample"].fillna("pooled")
+    df.to_csv(out, index=False)
     print(f"\nwrote {out.relative_to(ROOT)}")
-    print("\nNOTE. The earlier version of this file ran on the exploratory sample")
-    print("n=86 and gave ORACLE +14.35 / DR_k1 +8.69. These pooled n=490 numbers")
-    print("are markedly lower. The exploratory sample is the RETRACTED one - see")
-    print("REPORT section 4.0.")
+    print("\nNOTE. The lex-sample rows above are the EXPLORATORY ones, and section")
+    print("4.0 of REPORT records why they were retracted as a headline. They are")
+    print("reported so the figures quoted in section 4.3 can be checked, not so")
+    print("they can be quoted again.")
     print("""
 DO NOT READ SECTION 2 AS EQUIVALENCE. "ORACLE minus DR_k1" is a difference of two
 INTERACTIONS, and an interaction cannot see anything that moves both of its
