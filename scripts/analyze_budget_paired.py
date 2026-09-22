@@ -43,6 +43,8 @@ sys.path.insert(0, str(ROOT / "src"))
 import numpy as np
 import pandas as pd
 
+from stats import boot_p
+
 TIER = ["gpt-4.1", "gpt-4.1-mini", "gpt-4.1-nano"]
 
 
@@ -118,11 +120,76 @@ def main():
                      "ngan_sach_PSEUDO": round(100 * bp[idx].mean(), 2),
                      "delta_pp": round(est, 2), "ci_lo": round(lo, 2), "ci_hi": round(hi, 2),
                      "se": round(se, 2),
+                     # REPORT section 8.2 quotes p for these rows; it was not
+                     # stored, so check_numbers.py could not vouch for it.
+                     "p_boot": round(boot_p(boot, a.boot), 4),
                      "established": "no" if lo <= 0 <= hi else "yes",
                      "n_can_de_p05": n_need})
     pair = pd.DataFrame(rows)
     print(pair.to_string(index=False))
     pair.to_csv(ROOT / "results" / f"budget_paired_ci{sfx}.csv", index=False)
+
+    # ------------------------------------------------------------------
+    # The pooled column. REPORT.md section 8.2 carries a third column headed
+    # "Gop, n~800 item rieng biet" and, until 2026-09-23, no script produced
+    # it - the two per-sample columns beside it did. Pooling has to happen on
+    # the ORIGINAL CLadder id, not on the item index, because the two samples
+    # were drawn separately and their item numbers collide while referring to
+    # different questions. pool_samples.py makes the same move for the headline.
+    # ------------------------------------------------------------------
+    pooled_rows = []
+    tags = [("price400", ""), ("n600", "_n600")]
+    have = [(pfx, sfx2) for pfx, sfx2 in tags
+            if (ROOT / "results" / f"pilot_raw_{pfx}KEEP.csv").exists()
+            and (ROOT / "results" / f"_itemmap_{pfx}.csv").exists()]
+    if len(have) == 2 and a.prefix == "price400":
+        print("\n" + "=" * W)
+        print("2b. GOP HAI MAU, bo trung theo id goc CLadder")
+        print("=" * W)
+        for m in TIER:
+            parts, seen = [], set()
+            for pfx, _ in have:
+                try:
+                    Kx, Px = load("KEEP", pfx), load("PSEUDO", pfx)
+                except SystemExit:
+                    continue
+                imap = pd.read_csv(ROOT / "results" / f"_itemmap_{pfx}.csv")
+                to_id = dict(zip(imap.item, imap.id))
+                common = (set(per_item(Kx, m, "ORACLE").index)
+                          & set(per_item(Kx, m, "RAW").index)
+                          & set(per_item(Px, m, "ORACLE").index)
+                          & set(per_item(Px, m, "RAW").index))
+                idx = sorted(common)
+                if not idx:
+                    continue
+                bk, bp = budget_series(Kx, m, common), budget_series(Px, m, common)
+                d_i = pd.Series(bp[idx].values - bk[idx].values,
+                                index=[to_id.get(i) for i in idx])
+                d_i = d_i[[i is not None for i in d_i.index]]
+                # First sample wins a repeated question; never count it twice.
+                keep = [i for i in d_i.index if i not in seen]
+                seen.update(keep)
+                parts.append(d_i.loc[keep])
+            if not parts:
+                continue
+            allv = pd.concat(parts)
+            allv = allv[~allv.index.duplicated()]
+            ids = list(allv.index)
+            boot = np.array([100 * allv.loc[rng.choice(ids, len(ids), replace=True)].mean()
+                             for _ in range(a.boot)])
+            est = 100 * allv.mean()
+            lo, hi = np.percentile(boot, [2.5, 97.5])
+            pooled_rows.append({"model": m, "n_unique_ids": len(ids),
+                                "delta_pp": round(est, 2), "ci_lo": round(lo, 2),
+                                "ci_hi": round(hi, 2), "p_boot": round(boot_p(boot, a.boot), 4),
+                                "established": "no" if lo <= 0 <= hi else "yes"})
+        if pooled_rows:
+            pooled = pd.DataFrame(pooled_rows)
+            print(pooled.to_string(index=False))
+            pooled.to_csv(ROOT / "results" / "budget_paired_pooled.csv", index=False)
+            print("\n  De-dup theo id goc: mot cau xuat hien o ca hai mau chi tinh MOT lan.")
+            print("  Gop KHONG phai nhan ban - hai mau dung chung mot phan item, va")
+            print("  chung duoc rut tu cung mot benchmark boi cung mot nguoi.")
 
     n_ok = (pair.established == "yes").sum()
     print(f"\n  {n_ok}/3 model co CI khong chua 0.")

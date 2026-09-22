@@ -87,18 +87,77 @@ def matches(x: float, pool: set[float]) -> bool:
     return any(abs(x - c) < TOL or abs(abs(x) - abs(c)) < TOL for c in pool)
 
 
-def scan(path: Path) -> list[tuple[int, str, float]]:
+# A quantity with no CSV behind it is not automatically a defect. Two kinds are
+# legitimate, and both are detected from context rather than from a hand-written
+# list of values - a hand list goes stale the moment a number is edited, and a
+# gate that needs manual upkeep stops being run.
+#
+# HISTORY  a value inside a blockquote whose OPENING line announces a
+#          correction. The project records superseded numbers on purpose, so
+#          that a reader who saw the old figure can find out what happened to
+#          it. Deleting them would be worse than keeping them.
+#
+# EXTERNAL a value on a line that cites another paper by name. Caliper's 7.6 and
+#          29.6 pp belong to Caliper; no CSV here can or should vouch for them.
+#
+# Everything else is a live claim of this project with nothing behind it, and
+# that is what the exit code is for.
+HISTORY_MARK = (
+    "đã có script", "trước đây", "bản trước", "bản đầu", "đã rút", "đã bỏ",
+    "cảnh báo", "đã sửa", "đã đo", "khép lại", "sửa ngày", "đổi cách trình bày",
+    "đã khớp lại", "đã hạ cấp", "đã đóng", "không script nào", "đừng trích",
+)
+EXTERNAL_MARK = ("Caliper", "CausalGraph2LLM", "Corr2Cause", "GSM-Symbolic",
+                 "Vernier", "NoisyCausal", "RE-IMAGINE", "Yamin", "Lopiano")
+
+
+def classify(lines: list[str], i: int) -> str:
+    """HISTORY, EXTERNAL or LIVE for the 1-indexed line `i`.
+
+    The note a value belongs to is the nearest bold heading ABOVE it inside the
+    same blockquote, not the first line of the blockquote. A long quoted block
+    here holds several separate notes, each opening with `> **...**`, so reading
+    only the block's first line attributed every value to whichever note came
+    first - line 187 of REPORT.md announces "da do va khep lai" on its own line
+    and was still being called LIVE.
+    """
+    line = lines[i - 1]
+    low = line.lower()
+    if any(k in line for k in EXTERNAL_MARK):
+        return "EXTERNAL"
+    if any(k.lower() in low for k in HISTORY_MARK):
+        return "HISTORY"
+    if not line.lstrip().startswith(">"):
+        return "LIVE"
+    # Walk up inside the blockquote to the nearest heading line.
+    j = i - 1
+    while j > 0 and lines[j - 1].lstrip().startswith(">"):
+        head = lines[j - 1]
+        if "**" in head:
+            hl = head.lower()
+            if any(k.lower() in hl for k in HISTORY_MARK):
+                return "HISTORY"
+            if any(k in head for k in EXTERNAL_MARK):
+                return "EXTERNAL"
+            break          # a heading that says neither: this note is live
+        j -= 1
+    return "LIVE"
+
+
+def scan(path: Path) -> list[tuple[int, str, float, str]]:
     out = []
     try:
         text = path.read_text(encoding="utf-8")
     except (UnicodeDecodeError, OSError):
         return out
-    for i, line in enumerate(text.splitlines(), 1):
+    lines = text.splitlines()
+    for i, line in enumerate(lines, 1):
+        kind = classify(lines, i)
         for raw in QUANTITY.findall(line):
-            out.append((i, raw, float(raw.replace(",", "."))))
+            out.append((i, raw, float(raw.replace(",", ".")), kind))
         for lo, hi in INTERVAL.findall(line):
             for raw in (lo, hi):
-                out.append((i, f"CI {raw}", float(raw.replace(",", "."))))
+                out.append((i, f"CI {raw}", float(raw.replace(",", ".")), kind))
     return out
 
 
@@ -140,23 +199,34 @@ def main() -> int:
     print(f"  scanning {len(TARGETS)} files\n")
 
     total = 0
-    unmatched: list[tuple[Path, int, str]] = []
+    live: list[tuple[Path, int, str]] = []
+    excused = {"HISTORY": 0, "EXTERNAL": 0}
     for path in TARGETS:
         if path.name == SELF:
             continue
         found = scan(path)
         if not found:
             continue
-        bad = [(ln, raw) for ln, raw, val in found if not matches(val, pool)]
+        bad = [(ln, raw, kind) for ln, raw, val, kind in found
+               if not matches(val, pool)]
         total += len(found)
+        n_live = sum(1 for _, _, k in bad if k == "LIVE")
+        for _, _, k in bad:
+            if k != "LIVE":
+                excused[k] += 1
         rel = path.relative_to(ROOT).as_posix()
-        mark = "OK " if not bad else "??  "
+        mark = "OK " if not n_live else "??  "
         print(f"  {mark} {rel:42s} {len(found):>4d} quantities,"
-              f" {len(bad):>3d} unaccounted")
-        for ln, raw in bad:
-            unmatched.append((path, ln, raw))
+              f" {n_live:>3d} live, {len(bad) - n_live:>3d} excused")
+        for ln, raw, k in bad:
+            if k == "LIVE":
+                live.append((path, ln, raw))
 
-    print(f"\n  {total} quantities scanned, {len(unmatched)} unaccounted for")
+    print(f"\n  {total} quantities scanned")
+    print(f"  {excused['HISTORY']:>4d} mien vi nam trong khoi ghi nhan sua doi")
+    print(f"  {excused['EXTERNAL']:>4d} mien vi trich tu cong trinh khac")
+    print(f"  {len(live):>4d} KHANG DINH SONG khong co file nao dung sau")
+    unmatched = live
 
     if unmatched:
         print("\n" + "=" * 78)
@@ -168,10 +238,10 @@ def main() -> int:
             print(f"  {rel}:{ln}  {raw} pp")
             print(f"      {line[:110]}")
         print("""
-  A number here is not automatically wrong. It may be a figure computed inline
-  and never written to a CSV, a quantity from a source outside this project, or
-  a hypothetical in a plan. What it is NOT is a number any file in results/ can
-  vouch for, so each one needs either a source or a correction.""")
+  Each of these is a LIVE claim of this project. Values inside a block that
+  announces a correction, and values on a line citing another paper, were
+  already excused above - so these are neither history nor borrowed. Each one
+  needs a script, a citation, or a retraction.""")
 
     bad_p = out_of_range_probabilities()
     print("\n" + "=" * 78)

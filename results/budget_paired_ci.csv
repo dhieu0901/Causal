@@ -1,4 +1,4 @@
-model,n_shared,ngan_sach_KEEP,ngan_sach_PSEUDO,delta_pp,ci_lo,ci_hi,se,established,n_can_de_p05
-gpt-4.1,382,4.45,9.16,4.71,-0.52,10.21,2.75,no,502
-gpt-4.1-mini,371,6.47,9.97,3.5,-2.16,9.16,2.84,no,935
-gpt-4.1-nano,343,2.33,0.58,-1.75,-8.16,4.96,3.41,no,4998
+model,n_shared,ngan_sach_KEEP,ngan_sach_PSEUDO,delta_pp,ci_lo,ci_hi,se,p_boot,established,n_can_de_p05
+gpt-4.1,382,4.45,9.16,4.71,-0.52,10.21,2.75,0.0915,no,502
+gpt-4.1-mini,371,6.47,9.97,3.5,-2.16,9.16,2.84,0.2455,no,935
+gpt-4.1-nano,343,2.33,0.58,-1.75,-8.16,4.96,3.41,0.6635,no,4998

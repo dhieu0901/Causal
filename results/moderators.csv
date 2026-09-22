@@ -1,0 +1,8 @@
+moderator,level,n_items,did_pp,ci_lo,ci_hi,p_boot
+n_nodes,3 nut,40,3.33,-10.83,17.5,0.6735
+n_nodes,>= 4 nut,45,23.33,9.26,38.52,0.0015
+query_type,ate,24,24.31,6.94,43.06,0.008
+query_type,det-counterfactual,20,15.83,-1.67,35.0,0.0825
+query_type,ett,20,10.0,-15.0,38.33,0.4975
+query_type,nie,11,-4.55,-34.85,27.27,0.7775
+drop_ate,without ate,61,9.84,-2.73,22.14,0.138
