@@ -11,7 +11,7 @@ Xây trên [CLadder](https://github.com/causalNLP/cladder) (Jin et al., NeurIPS 
 
 **Cấp một khối cấu trúc làm giảm tác hại của việc ẩn danh tên biến, trên nhóm câu hỏi thực sự cần suy luận nhân quả.**
 
-**+5,98 pp, CI 95% [+1,78 ; +10,30], p = 0,005, n = 490 item** (gộp ba mẫu, bỏ trùng theo id gốc).
+**+5,98 pp, CI 95% [+1,67 ; +10,19], p = 0,0055, n = 490 item** (gộp ba mẫu, bỏ trùng theo id gốc). Khớp `results/structure_arms.csv`.
 
 Ba điều phải đọc kèm. Cả ba tính trên **cùng mẫu gộp n=490** của con số tiêu đề:
 
@@ -129,7 +129,18 @@ python scripts/analyze_types.py
 
 Mọi lượt gọi được cache theo `sha256(model, temperature, prompt)`, nên chạy lại không tốn thêm tiền và một lần chạy bị ngắt sẽ tiếp tục từ chỗ dừng.
 
-Dữ liệu CLadder không nằm trong repo. Tải từ [causalNLP/cladder](https://github.com/causalNLP/cladder) hoặc [HuggingFace](https://huggingface.co/datasets/causal-nlp/CLadder) vào `data/`.
+Dữ liệu CLadder không nằm trong repo, và phải tải từ **cả hai** nguồn chứ không phải một trong hai - hai kênh mang hai bộ file khác nhau:
+
+| File trong `data/` | Nguồn | Tên gốc |
+|---|---|---|
+| `cladder-meta.json` | [causalNLP/cladder](https://github.com/causalNLP/cladder) `data/` | `cladder-v1-meta-models.json` |
+| `cladder-questions.json` | cùng trên | `cladder-v1-questions.json` |
+| `full_v1.5_default.csv` | [HuggingFace](https://huggingface.co/datasets/causal-nlp/CLadder) `data/` | giữ nguyên tên |
+| `test-*-v1.5.csv` (6 file) | cùng trên | giữ nguyên tên |
+
+Hai file JSON **chỉ có trên GitHub**, các file CSV **chỉ có trên HuggingFace**. Dự án đổi tên hai file JSON khi tải về.
+
+Chạy `python scripts/verify_data_provenance.py` để đối chiếu từng byte với bản phát hành gốc - script so git blob SHA-1 của cả 9 file, và đo lại tỷ lệ prompt có dấu hỏi thay vì trích lại con số. Thoát mã 1 nếu lệch.
 
 ## Việc chưa xong
 
@@ -141,7 +152,7 @@ Dữ liệu CLadder không nằm trong repo. Tải từ [causalNLP/cladder](http
 - **Bảng chín CI trên hiệu giá chưa có script sinh ra** - hiện là chuỗi in cứng trong `scripts/compare_price_lexicon.py`.
 - **Cả ba model đều thuộc dòng GPT-4.1.** Giới hạn duy nhất đủ nghiêm trọng để chặn công bố. Cần ít nhất một dòng khác họ, và một model có suy luận mở rộng kèm nhánh `ORACLE`.
 - Điểm hoà vốn `k*` vẫn **chưa xác lập**: vế giá vững, vế ngân sách đạt ở 2/3 model trên mẫu gộp, nhưng `k*` cần cả hai và tử số của nó phần lớn là `backadj`.
-- `analyze_types.bootstrap_fit` chạy 600 lần - quá thô, hai ô đổi phán quyết theo seed.
+- `analyze_types.bootstrap_fit` **đã nâng 600 lên 10.000 vòng** (2026-09-22). Lý do cũ ghi ở đây - "hai ô đổi phán quyết theo seed" - **đã kiểm và KHÔNG tái lập được**: chín ô model x nhánh, năm seed, ở cả 600 lẫn 10.000 vòng đều cho cùng một bộ phán quyết. Việc nâng vẫn đáng làm vì sai số Monte Carlo ở 600 vòng cỡ 0,1 pp, ngang với các hiệu bảng này phải phân xử.
 
 ## Cấu trúc
 

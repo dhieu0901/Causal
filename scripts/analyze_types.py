@@ -67,8 +67,25 @@ def fit_of(acc, t, kmax=3):
     return -b, a0, r2, int(ks.max()), monotone
 
 
-def bootstrap_fit(df_model, t, kmax=3, boot=600, seed=0, base="RAW"):
+NBOOT_DEFAULT = 10_000
+
+
+def bootstrap_fit(df_model, t, kmax=3, boot=NBOOT_DEFAULT, seed=0, base="RAW"):
     """Percentile CIs for the slope and for k*, resampling items.
+
+    Raised from 600 to 10,000 draws on 2026-09-22, on Monte Carlo grounds: at
+    600 draws the sampling error on a percentile endpoint is about 0.1 pp, the
+    same size as some differences this table is asked to adjudicate. 10,000
+    draws cuts that by roughly a factor of four and costs about a minute.
+
+    A caveat on the stated reason. README justified the raise by recording that
+    at 600 draws "two cells change verdict with the seed". That specific claim
+    was TESTED on 2026-09-22 - the significance verdict for all nine
+    model-by-arm cells, over five seeds, at both 600 and 10,000 draws - and it
+    did NOT reproduce: both settings gave one identical set of verdicts. So the
+    raise is worth having, but not for the reason the README gave, and that
+    sentence in README should be read as unverified rather than as a measured
+    fact.
 
     Every condition is answered by the same items, so the curve and the RAW
     floor move together under a resample; resampling them independently would
@@ -191,9 +208,27 @@ def main():
                 "warning": "" if solid else "CI do doc chua tach khoi 0",
             })
     pr = pd.DataFrame(rows)
+
+    # A point estimate that falls OUTSIDE its own percentile interval. This is
+    # possible for a percentile bootstrap when the resample distribution is badly
+    # skewed, and here it flags a fit that is barely determined: the FE arm has
+    # only k = 1 and k = 2, so the "slope" rests on two points. Such a row must
+    # not be quoted as a price. Detected rather than hidden.
+    bad = pr[(pr.price_pp_per_edge < pr.price_lo) | (pr.price_pp_per_edge > pr.price_hi)]
+    if len(bad):
+        for i in bad.index:
+            w = pr.at[i, "warning"]
+            pr.at[i, "warning"] = (w + "; " if w else "") + "diem uoc luong NGOAI CI - khong duoc trich"
+
     print(pr.to_string(index=False))
+    if len(bad):
+        print(f"\n  !! {len(bad)} of {len(pr)} rows have a point estimate outside their own CI:")
+        for _, r in bad.iterrows():
+            print(f"     {r.model} / {r.error_type}: {r.price_pp_per_edge} vs "
+                  f"[{r.price_lo} ; {r.price_hi}], r2={r.r2}, k_measured={r.k_measured}")
+        print("     Read as: the fit is not determined, not as a price. Do not quote it.")
     print("\n  breakeven_k is solved from the fitted line itself: (fit_intercept - RAW) / price.")
-    print("  gia_lo/gia_hi = CI 95% bootstrap 600 lan, boc lai theo item.")
+    print(f"  price_lo/price_hi = 95% bootstrap CI, {NBOOT_DEFAULT:,} draws, resampled by item.")
     print("  A warning is raised when the slope CI still contains 0: no price per edge")
     print("  is established, so break-even k is left blank rather than reporting a")
     print("  number with nothing behind it.")

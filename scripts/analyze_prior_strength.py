@@ -53,6 +53,86 @@ def label_items(n=200, seed=20260907, kmax=1):
     return it
 
 
+# Same convention as scripts/analyze_vs_raw.py: cluster the resample on the
+# item, because one item contributes several rows (model x lexicon x cond) and
+# those rows are not independent draws.
+SEED = 20260907
+NBOOT = 4000
+
+
+def cell(x, model, cond, group):
+    s = x[(x.model == model) & (x.cond == cond) & (x.parsed == 1) &
+          (x.group == group)]
+    return s.set_index("item").correct
+
+
+def did_series(d, models, anon, group, min_n=10):
+    """Per-item (anon - KEEP | ORACLE) - (anon - KEEP | RAW), averaged over cells.
+
+    Every item must supply all four cells or the difference is not a difference,
+    so the four indices are intersected before subtracting.
+    """
+    cols = []
+    for m in models:
+        for lex in anon:
+            k_raw, k_ora = cell(d["KEEP"], m, "RAW", group), cell(d["KEEP"], m, "ORACLE", group)
+            a_raw, a_ora = cell(d[lex], m, "RAW", group), cell(d[lex], m, "ORACLE", group)
+            i = k_raw.index.intersection(k_ora.index) \
+                           .intersection(a_raw.index).intersection(a_ora.index)
+            if len(i) < min_n:
+                continue
+            cols.append(((a_ora[i] - k_ora[i]) - (a_raw[i] - k_raw[i])).rename(f"{m}|{lex}"))
+    if not cols:
+        return pd.Series(dtype=float)
+    return pd.concat(cols, axis=1).mean(axis=1).dropna()
+
+
+def raw_delta_series(d, models, anon, group, min_n=10):
+    """Per-item (anon - KEEP) under RAW, averaged over cells. The harm itself."""
+    cols = []
+    for m in models:
+        for lex in anon:
+            k, a = cell(d["KEEP"], m, "RAW", group), cell(d[lex], m, "RAW", group)
+            i = k.index.intersection(a.index)
+            if len(i) < min_n:
+                continue
+            cols.append((a[i] - k[i]).rename(f"{m}|{lex}"))
+    if not cols:
+        return pd.Series(dtype=float)
+    return pd.concat(cols, axis=1).mean(axis=1).dropna()
+
+
+def boot(v, seed=SEED, n=NBOOT):
+    """Cluster bootstrap over items. Returns (estimate_pp, lo, hi, p)."""
+    x = v.values
+    if len(x) < 5:
+        return (np.nan,) * 4
+    rng = np.random.default_rng(seed)
+    out = np.empty(n)
+    for b in range(n):
+        out[b] = x[rng.integers(0, len(x), len(x))].mean()
+    # Draws landing exactly on 0 are counted by both tails, so 2*min() can
+    # exceed 1. Clamp, as analyze_vs_raw.py does.
+    p = min(1.0, 2 * min((out <= 0).mean(), (out >= 0).mean()))
+    return (100 * x.mean(), 100 * np.percentile(out, 2.5),
+            100 * np.percentile(out, 97.5), max(p, 2.0 / n))
+
+
+def boot_two_sample(a, b, seed=SEED, n=NBOOT):
+    """Two disjoint item sets, so resample each independently and difference."""
+    xa, xb = a.values, b.values
+    if len(xa) < 5 or len(xb) < 5:
+        return (np.nan,) * 4
+    rng = np.random.default_rng(seed)
+    out = np.empty(n)
+    for i in range(n):
+        out[i] = (xa[rng.integers(0, len(xa), len(xa))].mean()
+                  - xb[rng.integers(0, len(xb), len(xb))].mean())
+    p = min(1.0, 2 * min((out <= 0).mean(), (out >= 0).mean()))
+    return (100 * (xa.mean() - xb.mean()), 100 * np.percentile(out, 2.5),
+            100 * np.percentile(out, 97.5), max(p, 2.0 / n))
+
+
 def main():
     it = label_items()
     d = {}
@@ -70,8 +150,11 @@ def main():
     print("0. SAMPLE COMPOSITION BY CLADDER'S OWN LABEL")
     print("=" * 84)
     print(it.qp.value_counts().to_string())
-    print(f"\n  -> prior dung: {(it.group == 'prior dung').sum()}"
-          f"   prior sai san co: {(it.group == 'prior sai san co').sum()}")
+    # label_items() writes the English labels below. This line compared against
+    # Vietnamese ones, so it printed "0" and "0" on every run since it was
+    # written - a false zero sitting directly under the real counts.
+    print(f"\n  -> correct prior: {(it.group == 'correct prior').sum()}"
+          f"   wrong prior already: {(it.group == 'wrong prior already').sum()}")
 
     print("\n" + "=" * 84)
     print("1. THE KEEP FLOOR: how much has CLADDER'S OWN anticommonsense already removed?")
@@ -140,6 +223,48 @@ def main():
     print("\n  Removing a CORRECT prior costs more than removing one that was already")
     print("  wrong. That is what the mechanism predicts, and it is a test that could")
     print("  have failed.")
+
+    # ------------------------------------------------------------------
+    # The two tests REPORT section 4.1 leans on. Both lived only in prose
+    # until 2026-09-22 - the second was even printed inside a code fence, so
+    # it read as script output while no script produced it. REPORT calls (a)
+    # ESTABLISHED, which is not something a number with no source may claim.
+    # ------------------------------------------------------------------
+    anon = [l for l in LEXICONS if l != "KEEP" and l in d]
+    inter = []
+
+    print("\n" + "=" * 84)
+    print("4. INTERACTION TEST, RUN SEPARATELY INSIDE EACH STRATUM")
+    print("=" * 84)
+    print("  Per item: (anon - KEEP | ORACLE) - (anon - KEEP | RAW), pooled over")
+    print("  models and anonymised lexicons, then cluster bootstrap over items.")
+    print("  This asks whether the graph rescues MORE where the prior was right.\n")
+    for g in ["correct prior", "wrong prior already"]:
+        v = did_series(d, models, anon, g)
+        est, lo, hi, p = boot(v)
+        print(f"  {g:20s} DiD {est:+7.2f} pp  CI [{lo:+7.2f} ; {hi:+7.2f}]  "
+              f"p={p:.4f}  n={len(v)}")
+        inter.append({"quantity": "DiD | ORACLE vs RAW", "stratum": g,
+                      "estimate_pp": round(est, 2), "ci_lo": round(lo, 2),
+                      "ci_hi": round(hi, 2), "p_boot": round(p, 4), "n_items": len(v)})
+
+    print("\n" + "=" * 84)
+    print("5. DIFFERENCE BETWEEN THE TWO STRATA - NOT a paired test")
+    print("=" * 84)
+    print("  The two strata are disjoint item sets, so there is nothing to pair.")
+    print("  Bootstrap each stratum independently and difference the means.\n")
+    a = raw_delta_series(d, models, anon, "correct prior")
+    b = raw_delta_series(d, models, anon, "wrong prior already")
+    est, lo, hi, p = boot_two_sample(a, b)
+    print(f"  mean on CORRECT prior minus mean on ALREADY-WRONG prior")
+    print(f"    {est:+.2f} pp   CI 95% [{lo:+.2f} ; {hi:+.2f}]   p = {p:.4f}")
+    print(f"    n = {len(a)} vs {len(b)} items")
+    inter.append({"quantity": "harm on correct prior minus harm on wrong prior",
+                  "stratum": "between strata", "estimate_pp": round(est, 2),
+                  "ci_lo": round(lo, 2), "ci_hi": round(hi, 2),
+                  "p_boot": round(p, 4), "n_items": f"{len(a)} vs {len(b)}"})
+    pd.DataFrame(inter).to_csv(
+        ROOT / "results" / "prior_strength_interaction.csv", index=False)
 
 
 if __name__ == "__main__":

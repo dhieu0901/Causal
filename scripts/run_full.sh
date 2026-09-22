@@ -48,14 +48,21 @@ mkdir -p results
 : > "$LOG"
 echo "BAT DAU $(date '+%Y-%m-%d %H:%M:%S')  n=$N  models=$MODELS" | tee -a "$LOG"
 
+# 0. Prove data/ is the real upstream release BEFORE spending ~70 USD on it.
+#    data/ is gitignored and two of its files are renamed on download, so a
+#    truncated or wrong-version copy would sit there silently and every number
+#    downstream would be wrong in a way no analysis script could detect.
+stage "1/8 verify data provenance" \
+  python scripts/verify_data_provenance.py
+
 # 1. Main branch. The primary result: what each error type costs, and where the
 #    curve crosses the no-graph floor.
-stage "1/5 pilot commonsense n=$N" \
+stage "2/8 pilot commonsense n=$N" \
   python scripts/pilot.py --n $N --models "$MODELS" --kmax 3 --types DR,ED,FE \
                           --tag _n800
 
 # 2. Where a real agent's own graph lands on that curve.
-stage "2/5 induction commonsense n=$N" \
+stage "3/8 induction commonsense n=$N" \
   python scripts/induction.py --n $N --models "$MODELS" --tag _n800
 
 # 3. The lexical contrast, done WITHIN item. The earlier version of this stage
@@ -63,31 +70,31 @@ stage "2/5 induction commonsense n=$N" \
 #    all (0% of its prompts contain a '?') and make_items now refuses it. See
 #    REPORT.md section 2. The four lexicons below are the replacement design.
 for LEX in KEEP PERMUTE SYMBOL PSEUDO; do
-  stage "3/6 pilot lexicon=$LEX n=$N"     python scripts/pilot.py --n $N --models "$MODELS" --kmax 1 --types DR                             --drop-nonsense --lexicon "$LEX" --tag "_n800_lex$LEX"
+  stage "4/8 pilot lexicon=$LEX n=$N"     python scripts/pilot.py --n $N --models "$MODELS" --kmax 1 --types DR                             --drop-nonsense --lexicon "$LEX" --tag "_n800_lex$LEX"
 done
 
 # 4. Whether induction quality survives losing the lexical anchors.
 for LEX in KEEP PERMUTE SYMBOL PSEUDO; do
-  stage "4/6 induction lexicon=$LEX n=$N"     python scripts/induction.py --n $N --models "$MODELS" --drop-nonsense                                 --lexicon "$LEX" --tag "_n800_lex$LEX"
+  stage "5/8 induction lexicon=$LEX n=$N"     python scripts/induction.py --n $N --models "$MODELS" --drop-nonsense                                 --lexicon "$LEX" --tag "_n800_lex$LEX"
 done
 
 # 5. Pricing the error types on the main branch.
-stage "5/6 pricing the error types"   python scripts/analyze_types.py --pilot pilot_raw_n800.csv                                   --induction induction_raw_n800.csv --tag _n800
+stage "6/8 pricing the error types"   python scripts/analyze_types.py --pilot pilot_raw_n800.csv                                   --induction induction_raw_n800.csv --tag _n800
 
 # 6. Headline analysis. analyze_querygroup.py carries the stratification and the
 #    interaction tests that review round 6 required; analyze_lexical.py is the
 #    pooled view kept for comparison.
-stage "6/7 lexical analysis"   python scripts/analyze_lexical.py
-stage "6/7 stratify by query group"   python scripts/analyze_querygroup.py
+stage "7/8 lexical analysis"   python scripts/analyze_lexical.py
+stage "7/8 stratify by query group"   python scripts/analyze_querygroup.py
 
 # 7. Checks that do not depend on the run above and cost nothing, but that the
 #    report leans on. verify_groundtruth enumerates all 7,064 SCMs rather than
 #    trusting CLadder's labels; analyze_chains is the only direct evidence that
 #    the supplied graph reaches the model's reasoning and not just its answer.
-stage "7/7 verify the answer key over every SCM"   python scripts/verify_groundtruth.py
-stage "7/7 do the chains use the graph"   python scripts/analyze_chains.py
-stage "7/7 bat thuong va residue"   python scripts/analyze_anomaly_residue.py
-stage "7/7 ngan sach ghep cap"   python scripts/analyze_budget_paired.py
+stage "8/8 verify the answer key over every SCM"   python scripts/verify_groundtruth.py
+stage "8/8 do the chains use the graph"   python scripts/analyze_chains.py
+stage "8/8 bat thuong va residue"   python scripts/analyze_anomaly_residue.py
+stage "8/8 ngan sach ghep cap"   python scripts/analyze_budget_paired.py
 
 echo "" | tee -a "$LOG"
 echo "HOAN TAT $(date '+%Y-%m-%d %H:%M:%S')" | tee -a "$LOG"

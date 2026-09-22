@@ -1,10 +1,10 @@
 model,error_type,price_pp_per_edge,price_lo,price_hi,r2,k_measured,budget_pp,fit_intercept,breakeven_k,breakeven_lo,breakeven_hi,warning
-gpt-4.1-nano,ED (missing edge),2.32,-0.16,4.05,0.72,3,2.22,81.98,,,,CI do doc chua tach khoi 0
+gpt-4.1-nano,ED (missing edge),2.32,0.0,3.97,0.72,3,2.22,81.98,0.43,-15.18,3.21,
 gpt-4.1-nano,FE (spurious edge),0.58,-7.53,2.05,0.5,2,2.22,82.88,,,,CI do doc chua tach khoi 0
-gpt-4.1-nano,DR (reversed),2.32,-0.32,4.96,0.86,3,2.22,82.17,,,,CI do doc chua tach khoi 0
-gpt-4.1-mini,ED (missing edge),2.27,-0.0,4.44,0.79,3,4.79,88.4,,,,CI do doc chua tach khoi 0
+gpt-4.1-nano,DR (reversed),2.32,-0.32,4.8,0.86,3,2.22,82.17,,,,CI do doc chua tach khoi 0
+gpt-4.1-mini,ED (missing edge),2.27,0.0,4.59,0.79,3,4.79,88.4,2.39,-3.5,4.0,
 gpt-4.1-mini,FE (spurious edge),1.48,-1.33,6.67,0.51,2,4.79,88.6,,,,CI do doc chua tach khoi 0
-gpt-4.1-mini,DR (reversed),3.35,1.39,7.13,0.83,3,4.79,85.93,0.88,-1.38,2.96,
-gpt-4.1,ED (missing edge),2.97,0.6,5.3,0.68,3,7.29,89.68,2.56,-0.22,4.93,
-gpt-4.1,FE (spurious edge),2.09,-5.19,2.6,0.19,2,7.29,86.87,,,,CI do doc chua tach khoi 0
-gpt-4.1,DR (reversed),4.2,1.79,6.57,0.88,3,7.29,88.52,1.54,0.13,3.4,
+gpt-4.1-mini,DR (reversed),3.35,1.24,7.05,0.83,3,4.79,85.93,0.88,-1.15,2.75,
+gpt-4.1,ED (missing edge),2.97,0.45,5.22,0.68,3,7.29,89.68,2.56,-0.17,5.25,
+gpt-4.1,FE (spurious edge),2.09,-5.19,1.95,0.19,2,7.29,86.87,,,,CI do doc chua tach khoi 0; diem uoc luong NGOAI CI - khong duoc trich
+gpt-4.1,DR (reversed),4.2,1.72,6.49,0.88,3,7.29,88.52,1.54,0.18,3.52,

@@ -173,7 +173,10 @@ def boot(W, seed=SEED, n=NBOOT):
     for b in range(n):
         out[b] = 100 * np.nanmean(W.loc[rng.choice(idx, len(idx), replace=True)].values)
     est = 100 * np.nanmean(W.values)
-    p = 2 * min((out <= 0).mean(), (out >= 0).mean())
+    # See the note in analyze_vs_raw.boot(): both tails count a draw that
+    # lands exactly on 0, so this can exceed 1 without the clamp. This is the
+    # helper analyze_by_family.py uses, and it is where the 1.0255 came from.
+    p = min(1.0, 2 * min((out <= 0).mean(), (out >= 0).mean()))
     return est, np.percentile(out, 2.5), np.percentile(out, 97.5), max(p, 2.0 / n)
 
 

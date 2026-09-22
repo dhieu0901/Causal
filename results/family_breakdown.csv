@@ -1,5 +1,5 @@
 slice,section,family,n_nodes,n_edges,arm,suspect_labels,estimate_pp,ci_lo,ci_hi,p_boot,n_items,survives_BH
-"chain (3 nodes, 2 edges)",1,chain,3,2,ORACLE,False,0.0,-15.24,16.19,1.0255,35,False
+"chain (3 nodes, 2 edges)",1,chain,3,2,ORACLE,False,0.0,-15.24,16.19,1.0,35,False
 "collision (3 nodes, 2 edges)",1,collision,3,2,ORACLE,False,10.84,1.19,21.95,0.045,29,False
 "fork (3 nodes, 2 edges)",1,fork,3,2,ORACLE,False,6.14,-5.0,17.95,0.309,36,False
 "confounding (3 nodes, 3 edges)",1,confounding,3,3,ORACLE,False,17.06,2.35,32.76,0.0235,59,False

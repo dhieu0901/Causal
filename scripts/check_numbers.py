@@ -51,6 +51,14 @@ TARGETS = (sorted((ROOT / "docs").glob("*.md"))
 # A number followed by "pp" within a short window, sign optional, comma or dot.
 QUANTITY = re.compile(r"([+-]?\d{1,3}[.,]\d{1,2})\s*(?:pp\b|percentage points)")
 
+# Confidence bounds are written "[-11,41 ; -3,81]" and almost never carry a "pp",
+# so QUANTITY above walked straight past them. That is not a small gap: on
+# 2026-09-22 REVIEW.md was still showing [-11,21 ; -3,69] for a table whose CSV
+# had moved to [-11,41 ; -3,81], and nothing in this file could see it. A CI is
+# the part a reviewer checks first, so it gets its own pattern.
+INTERVAL = re.compile(
+    r"\[\s*([+-]?\d{1,3}[.,]\d{1,2})\s*[;,]\s*([+-]?\d{1,3}[.,]\d{1,2})\s*\]")
+
 SELF = Path(__file__).name
 
 
@@ -88,7 +96,38 @@ def scan(path: Path) -> list[tuple[int, str, float]]:
     for i, line in enumerate(text.splitlines(), 1):
         for raw in QUANTITY.findall(line):
             out.append((i, raw, float(raw.replace(",", "."))))
+        for lo, hi in INTERVAL.findall(line):
+            for raw in (lo, hi):
+                out.append((i, f"CI {raw}", float(raw.replace(",", "."))))
     return out
+
+
+def out_of_range_probabilities() -> list[str]:
+    """Any p outside [0, 1] sitting in a shipped CSV.
+
+    This is a class-level guard, not a spot fix. A two-tailed bootstrap p is
+    2*min(left, right), and a draw landing exactly on 0 is counted by BOTH
+    tails, so the product can exceed 1 whenever an effect sits near zero. Three
+    separate helpers in this repo computed it that way; two were clamped and the
+    third kept shipping p=1.0255 in results/family_breakdown.csv for weeks. The
+    number is never wrong in an interesting way - it is wrong in the way that
+    tells a reviewer the table was never read.
+    """
+    bad = []
+    for f in sorted(RESULTS.glob("*.csv")):
+        try:
+            d = pd.read_csv(f)
+        except Exception:
+            continue
+        for col in d.columns:
+            name = col.lower()
+            if not (name == "p" or "p_boot" in name or "pval" in name
+                    or "p_value" in name):
+                continue
+            v = pd.to_numeric(d[col], errors="coerce").dropna()
+            for x in v[(v > 1.0) | (v < 0.0)]:
+                bad.append(f"{f.name}:{col} = {x}")
+    return bad
 
 
 def main() -> int:
@@ -133,6 +172,20 @@ def main() -> int:
   and never written to a CSV, a quantity from a source outside this project, or
   a hypothetical in a plan. What it is NOT is a number any file in results/ can
   vouch for, so each one needs either a source or a correction.""")
+
+    bad_p = out_of_range_probabilities()
+    print("\n" + "=" * 78)
+    print("PROBABILITIES OUTSIDE [0, 1]")
+    print("=" * 78)
+    if bad_p:
+        for line in bad_p:
+            print(f"  {line}")
+        print("\n  A two-tailed bootstrap p is 2*min(left, right) and a draw landing")
+        print("  exactly on 0 is counted by both tails. Clamp it with min(1.0, ...).")
+    else:
+        print("\n  Khong co. Moi cot p deu nam trong [0, 1].")
+
+    if unmatched or bad_p:
         return 1
 
     print("\n  Every quantity in pp traces to a value in results/.")

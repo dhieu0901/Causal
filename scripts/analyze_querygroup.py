@@ -153,7 +153,11 @@ def boot_mean(W, seed, n=4000):
         out[k] = 100 * np.nanmean(W.loc[s].mean(axis=0).values)
     est = 100 * np.nanmean(W.mean(axis=0).values)
     lo, hi = np.percentile(out, [2.5, 97.5])
-    p = 2 * min((out <= 0).mean(), (out >= 0).mean())
+    # Draws landing exactly on 0 are counted by BOTH tails, so 2*min() can
+    # exceed 1. results/family_breakdown.csv shipped a p of 1.0255 from this
+    # very expression. A probability above 1 does not read as a rounding
+    # curiosity to anyone opening the CSV - it discredits the whole table.
+    p = min(1.0, 2 * min((out <= 0).mean(), (out >= 0).mean()))
     return est, lo, hi, max(p, 1.0 / n)
 
 

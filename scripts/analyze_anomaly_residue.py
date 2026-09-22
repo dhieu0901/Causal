@@ -173,9 +173,14 @@ def main():
             if rem:
                 dirty += 1
                 leftover.update(rem)
+        # most_common() breaks ties by insertion order, and `rem` above is a set,
+        # whose iteration order for strings is randomised per process. Equal-count
+        # words therefore swapped places between runs - verify_determinism.py caught
+        # `lung`/`cancer` and `tar`/`deposit` trading ranks. Sort explicitly.
+        top = sorted(leftover.items(), key=lambda kv: (-kv[1], kv[0]))[:8]
         rows.append({"lexicon": lex, "n_item": tot, "items_with_residue": dirty,
                      "percent": round(100 * dirty / tot, 1) if tot else None,
-                     "tu_sot_hay_gap": ", ".join(w for w, _ in leftover.most_common(8))})
+                     "tu_sot_hay_gap": ", ".join(w for w, _ in top)})
     res = pd.DataFrame(rows)
     print(res.to_string(index=False))
     res.to_csv(ROOT / "results" / "lexicon_residue.csv", index=False)
