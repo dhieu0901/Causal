@@ -108,6 +108,13 @@ HISTORY_MARK = (
     "đã khớp lại", "đã hạ cấp", "đã đóng", "không script nào", "đừng trích",
     "bản cũ", "đã bị thay thế", "con số dịch", "đã rút",
 )
+# Scripts carry their history in English docstrings and printed notes, and the
+# marks above are Vietnamese, so a script saying "Until 2026-09-23 this block
+# printed -0.11 [-1.62 ; 1.42] as though it were a result" was read as a live
+# claim. These are only consulted for .py files, over the whole paragraph the
+# value sits in, because a docstring sentence runs across several lines.
+HISTORY_MARK_EN = ("until 2026-", "retracted", "as though it were a result",
+                   "no longer stands", "was rejected")
 EXTERNAL_MARK = ("Caliper", "CausalGraph2LLM", "Corr2Cause", "GSM-Symbolic",
                  "Vernier", "NoisyCausal", "RE-IMAGINE", "Yamin", "Lopiano")
 
@@ -181,6 +188,23 @@ def classify(lines: list[str], i: int) -> str:
     return "LIVE"
 
 
+def paragraph_kind(lines: list[str], i: int) -> str | None:
+    """HISTORY if the blank-line-delimited paragraph around line `i` says so.
+
+    Only used for .py files - see HISTORY_MARK_EN.
+    """
+    a = i - 1
+    while a > 0 and lines[a - 1].strip():
+        a -= 1
+    b = i
+    while b < len(lines) and lines[b].strip():
+        b += 1
+    para = " ".join(lines[a:b]).lower()
+    if any(k in para for k in HISTORY_MARK_EN):
+        return "HISTORY"
+    return None
+
+
 def column_kind(lines: list[str], i: int, pos: int) -> str | None:
     """HISTORY/EXTERNAL if the COLUMN this value sits in is marked, else None.
 
@@ -229,6 +253,8 @@ def scan(path: Path) -> list[tuple[int, str, float, str]]:
     lines = text.splitlines()
     for i, line in enumerate(lines, 1):
         kind = classify(lines, i)
+        if kind == "LIVE" and path.suffix == ".py":
+            kind = paragraph_kind(lines, i) or kind
         for m in QUANTITY.finditer(line):
             raw = m.group(1)
             k = kind if kind != "LIVE" else (column_kind(lines, i, m.start(1)) or kind)
@@ -239,6 +265,82 @@ def scan(path: Path) -> list[tuple[int, str, float, str]]:
                 k = kind if kind != "LIVE" else (column_kind(lines, i, m.start(gi)) or kind)
                 out.append((i, f"CI {raw}", float(raw.replace(",", ".")), k))
     return out
+
+
+# The pool above is DENSE, and that makes a single-value match weak evidence.
+# Measured on 2026-09-23 over 3,236 distinct values: 99% of every 2-dp number
+# below 1 is somewhere in results/, 75% of those in [1, 5), 48% in [5, 10).
+# Most of this project's effects live in exactly that range, so a made-up +4.37
+# pp "traces to a file" three times in four. The gate reported 0 live claims
+# while WALKTHROUGH still carried -0.11 [-1.62 ; +1.42], a CI that no function
+# here ever computed: -1.62 and 1.42 each matched some unrelated cell.
+#
+# An interval is a much stronger fingerprint. Its two bounds - and the estimate
+# written just before it - must sit in ONE ROW of ONE CSV. Three numbers landing
+# in the same row by chance is negligible, so a claim that passes this test was
+# produced by the computation it claims to come from.
+TAIL = re.compile(r"([+-]?\d{1,3}[.,]\d{1,2})\s*(?:pp)?\s*\**\s*(?:,?\s*CI\s*)?$")
+
+
+def row_index() -> tuple[dict[float, set[int]], dict[int, str]]:
+    """|value| rounded to 2 dp -> the set of (file, row) ids holding it."""
+    idx: dict[float, set[int]] = {}
+    where: dict[int, str] = {}
+    rid = 0
+    for f in sorted(RESULTS.glob("*.csv")):
+        try:
+            d = pd.read_csv(f, low_memory=False)
+        except Exception:
+            continue
+        num = d.apply(pd.to_numeric, errors="coerce").to_numpy()
+        for r in num:
+            for x in r:
+                if x == x:                      # not NaN
+                    idx.setdefault(round(abs(float(x)), 2), set()).add(rid)
+            where[rid] = f.name
+            rid += 1
+    return idx, where
+
+
+def _rows(idx: dict[float, set[int]], v: float) -> set[int]:
+    # One unit of rounding either way: a CSV holding 5.975 prints as 5.98 in
+    # prose but may round to 5.97 here.
+    out: set[int] = set()
+    for k in (round(v - .01, 2), round(v, 2), round(v + .01, 2)):
+        out |= idx.get(k, set())
+    return out
+
+
+def intervals_without_a_row(idx: dict[float, set[int]]) -> list[tuple[Path, int, str]]:
+    """LIVE intervals whose bounds and estimate never share a CSV row."""
+    f2 = lambda t: abs(float(t.replace(",", ".")))
+    bad = []
+    for path in TARGETS:
+        if path.name == SELF or path.name in LOG_FILES:
+            continue
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except (UnicodeDecodeError, OSError):
+            continue
+        for i, line in enumerate(lines, 1):
+            kind = classify(lines, i)
+            if kind == "LIVE" and path.suffix == ".py":
+                kind = paragraph_kind(lines, i) or kind
+            for m in INTERVAL.finditer(line):
+                k = kind if kind != "LIVE" else (column_kind(lines, i, m.start(1)) or kind)
+                if k != "LIVE":
+                    continue
+                lo, hi = f2(m.group(1)), f2(m.group(2))
+                if (lo, hi) == (2.5, 97.5):     # np.percentile(..., [2.5, 97.5])
+                    continue
+                head = line[:m.start()]
+                t = TAIL.search(head) or TAIL.search(head.rstrip(" |*"))
+                common = _rows(idx, lo) & _rows(idx, hi)
+                if t:
+                    common &= _rows(idx, f2(t.group(1)))
+                if not common:
+                    bad.append((path, i, (t.group(1) + " " if t else "") + m.group(0)))
+    return bad
 
 
 def out_of_range_probabilities() -> list[str]:
@@ -325,6 +427,28 @@ def main() -> int:
   already excused above - so these are neither history nor borrowed. Each one
   needs a script, a citation, or a retraction.""")
 
+    idx, _ = row_index()
+    rowless = intervals_without_a_row(idx)
+    print("\n" + "=" * 78)
+    print("INTERVALS WHOSE ESTIMATE AND BOUNDS SHARE NO ROW")
+    print("=" * 78)
+    absp = {round(abs(x), 2) for x in pool}
+    dens = []
+    for lo_, hi_ in ((1, 5), (5, 10), (10, 20)):
+        grid = [round(lo_ + k / 100, 2) for k in range((hi_ - lo_) * 100)]
+        dens.append(f"[{lo_},{hi_}) {100 * sum(g in absp for g in grid) / len(grid):.0f}%")
+    print("\n  Why this test exists: a lone value matching the pool is weak evidence.")
+    print("  Share of all 2-dp values already in the pool: " + ", ".join(dens) + ".")
+    if rowless:
+        print()
+        for path, ln, txt in rowless:
+            print(f"  {path.relative_to(ROOT).as_posix()}:{ln}  {txt}")
+        print("\n  Each bound may match SOMETHING, but no single CSV row holds the")
+        print("  interval with its estimate. Trace it to the script that computed it,")
+        print("  or mark it as history.")
+    else:
+        print("\n  Khong co. Moi khoang tin cay song deu nam tron tren mot dong CSV.")
+
     bad_p = out_of_range_probabilities()
     print("\n" + "=" * 78)
     print("PROBABILITIES OUTSIDE [0, 1]")
@@ -337,7 +461,7 @@ def main() -> int:
     else:
         print("\n  Khong co. Moi cot p deu nam trong [0, 1].")
 
-    if unmatched or bad_p:
+    if unmatched or bad_p or rowless:
         return 1
 
     print("\n  Every quantity in pp traces to a value in results/.")

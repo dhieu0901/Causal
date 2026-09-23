@@ -28,11 +28,11 @@ def make_items(n, seed, kmax=3, data="full_v1.5_default.csv", pair_to=None,
                drop_nonsense=False):
     """Draw a stratified item sample.
 
-    `data` should stay `full_v1.5_default.csv`. CLadder also ships three
-    test-*-v1.5.csv files whose variable names are commonsense,
-    anticommonsense, or pseudowords, and reaching for those looks like the
-    natural way to run a lexical contrast - but they carry no question (see the
-    guard below), so they cannot be scored at all. The lexical contrast is done
+    `data` should stay `full_v1.5_default.csv`. CLadder also ships six
+    test-*-v1.5.csv files - commonsense, anticommonsense and noncommonsense
+    (pseudoword) names, plus balanced, easy and hard - and reaching for the
+    first three looks like the natural way to run a lexical contrast. But all
+    six carry no question (see the guard below), so none can be scored. The lexical contrast is done
     within item instead, by `--lexicon` / `src/lexical.py`, which rewrites the
     variable names of a complete prompt and leaves its graph, its numbers, its
     question, and its gold label untouched.
@@ -40,8 +40,10 @@ def make_items(n, seed, kmax=3, data="full_v1.5_default.csv", pair_to=None,
     That is also the stronger design. Comparing two separately drawn splits is a
     between-items contrast that McNemar cannot touch, on the one comparison
     where pairing matters most. Caliper (arXiv:2606.04915) perturbs within item
-    for the same reason; Caliper reports 7.6 to 29.6 pp drops from anonymising
-    names. Those two figures are Caliper's, not this project's.
+    for the same reason. Caliper reports a 7.6 pp gap on CLadder's
+    interventional rung over its five local models, and Caliper's 29.6 pp is on
+    CRASS over nine frontier models - two benchmarks and two model sets, not one
+    range. Both figures are Caliper's, not this project's.
 
     `pair_to` reuses the ids sampled from another file, for the case where two
     files really are item-matched.

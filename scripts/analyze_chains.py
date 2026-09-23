@@ -53,7 +53,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import pandas as pd
 from perturb import ENUMERATORS
 from pilot import make_items
-from prompts import build, strip_structure, parse_prose_graph
+from prompts import build, parse_answer, strip_structure, parse_prose_graph
 
 CACHE = ROOT / "cache"
 TIER = ["gpt-4.1-nano", "gpt-4.1-mini", "gpt-4.1"]
@@ -138,6 +138,8 @@ def main():
         if flipped is None:
             continue
         cases.append({"item": i, "u": flipped[0], "v": flipped[1],
+                      "gold": str(r.label).strip().lower(),
+                      "raw": build(prompt, "RAW"),
                       "oracle": build(prompt, "ORACLE", edges),
                       "dr": build(prompt, "PERTURB", bad)})
 
@@ -221,6 +223,94 @@ def main():
     print("  figure is an UPPER BOUND on indifference, not a measurement of it - a chain")
     print("  can reason over that edge without ever naming it.")
 
+    # ------------------------------------------------------------------
+    # 3. The two caveats REPORT section 9b rests on. Both were computed once,
+    # quoted, and never written down: the RAW floor that the 1.9% has to be
+    # read against, and whether a chain that states the WRONG direction also
+    # gives a different answer. Review item V7-18 asked for the floor column;
+    # the prose was toned down but the column never arrived. Correctness is
+    # scored here from the chain text and the item's gold label directly, so
+    # nothing depends on item ids lining up with another file.
+    # ------------------------------------------------------------------
+    print("\n" + "=" * W)
+    print("3. THE FLOOR, AND WHETHER A STATED DIRECTION REACHES THE ANSWER")
+    print("=" * W)
+
+    def first_pos(text, a, b):
+        m = re.search(re.escape(a) + LINK + re.escape(b), text or "", re.IGNORECASE)
+        return m.start() / max(len(text), 1) if m else None
+
+    det, all_pos = [], []
+    for m in TIER:
+        raw_true = raw_rev = raw_n = 0
+        fol_ok, sil_ok, differ, both_parsed, pos = [], [], 0, 0, []
+        for k in cases:
+            tr = cache_text(m, k["raw"])
+            if tr is not None:
+                raw_n += 1
+                rc = code_direction(tr, k["u"], k["v"])
+                raw_true += rc == "kept_true_direction"
+                # The matching floor for the 45% "followed the supplied edge":
+                # how often v -> u is stated when nothing supplied it.
+                raw_rev += rc == "followed_graph"
+            td, to = cache_text(m, k["dr"]), cache_text(m, k["oracle"])
+            if td is None:
+                continue
+            code = code_direction(td, k["u"], k["v"])
+            ad = parse_answer(td)
+            # Accuracy on parsed answers only, the convention every other
+            # accuracy in this project uses.
+            if code == "followed_graph":
+                if ad is not None:
+                    fol_ok.append(ad == k["gold"])
+                p = first_pos(td, k["v"], k["u"])
+                if p is not None:
+                    pos.append(p)
+                ao = parse_answer(to) if to is not None else None
+                if ad is not None and ao is not None:
+                    both_parsed += 1
+                    differ += ad != ao
+            elif code == "silent" and ad is not None:
+                sil_ok.append(ad == k["gold"])
+        s_pos = pd.Series(pos, dtype=float)
+        all_pos.extend(pos)
+        det.append({
+            "model": m,
+            "RAW_n": raw_n,
+            "RAW_states_true_direction_pct": round(100 * raw_true / max(raw_n, 1), 1),
+            "RAW_states_reversed_direction_pct": round(100 * raw_rev / max(raw_n, 1), 1),
+            "DR_k1_followed_n": len(fol_ok),
+            "acc_when_followed_pct": round(100 * sum(fol_ok) / max(len(fol_ok), 1), 1),
+            "DR_k1_silent_n": len(sil_ok),
+            "acc_when_silent_pct": round(100 * sum(sil_ok) / max(len(sil_ok), 1), 1),
+            "followed_both_parsed_n": both_parsed,
+            "answer_differs_from_ORACLE_pct": round(100 * differ / max(both_parsed, 1), 1),
+            "answer_same_as_ORACLE_pct": round(100 * (both_parsed - differ) / max(both_parsed, 1), 1),
+            "median_position_pct": round(100 * s_pos.median(), 1) if len(s_pos) else None,
+            "in_first_10pct_share": round(100 * (s_pos <= 0.10).mean(), 1) if len(s_pos) else None,
+        })
+    # Where in the chain the wrong direction is stated, pooled over the three
+    # models: early means it is said while setting up, and rarely revisited.
+    ap_ = pd.Series(all_pos, dtype=float)
+    det.append({"model": "pooled", "DR_k1_followed_n": len(ap_),
+                "median_position_pct": round(100 * ap_.median(), 1) if len(ap_) else None,
+                "in_first_10pct_share": round(100 * (ap_ <= 0.10).mean(), 1) if len(ap_) else None})
+    dd = pd.DataFrame(det)
+    for c in [c for c in dd.columns if c.endswith("_n")]:
+        dd[c] = dd[c].astype("Int64")      # the pooled row leaves NaN in counts
+    print(dd.to_string(index=False))
+    per = dd[dd.model != "pooled"]
+    fl = per.RAW_states_true_direction_pct
+    print(f"\n  RAW floor (states u -> v with no block at all): "
+          f"{fl.min():.1f}-{fl.max():.1f}%, mean {fl.mean():.1f}%.")
+    print(f"  DR_k1 'keeps the true direction' averages {kep:.1f}% - read it against that floor.")
+    same = per.answer_same_as_ORACLE_pct
+    print(f"  Chains that state the WRONG direction still give ORACLE's answer "
+          f"{same.min():.1f}-{same.max():.1f}% of the time.")
+    out2 = ROOT / "results" / "chain_graph_use_detail.csv"
+    dd.to_csv(out2, index=False)
+    print(f"  Da ghi: {out2.name}")
+
     if a.dump:
         f = ROOT / "results" / "chain_sample_for_hand_coding.md"
         with f.open("w", encoding="utf-8") as fh:
@@ -230,8 +320,10 @@ def main():
                      "compare against `auto_code` to check the automatic coder.\n\n")
             for k, c in enumerate(dump, 1):
                 fh.write(f"---\n\n## {k}. {c['model']} - item {c['item']}\n\n")
-                fh.write(f"- that: `{c['canh_that']}`\n")
-                fh.write(f"- prompt cap: `{c['canh_cap']}`\n")
+                # These two keys were renamed to English in the dict above and
+                # not here, so every --dump run died with a KeyError.
+                fh.write(f"- that: `{c['true_edge']}`\n")
+                fh.write(f"- prompt cap: `{c['given_edge']}`\n")
                 fh.write(f"- ma tu dong: **{c['ma_tu_dong']}**\n")
                 fh.write(f"- ma cua ban: ____________\n\n```\n{c['chuoi']}\n```\n\n")
         print(f"\n  Da ghi {len(dump)} chuoi ra {f.name} de cham tay.")

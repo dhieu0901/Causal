@@ -196,6 +196,31 @@ def main():
                          "ci_hi": round(hi, 2), "p_boot": round(p, 4),
                          "n_items": n})
 
+    # Arms that exist in ONE sample only. price400 ran the full error ladder, so
+    # it alone carries DR_k2 and DR_k3. REPORT section 4.3 answers the objection
+    # "one reversed edge out of 2-5 is still nearly right" with DR_k3 on this
+    # sample, and that figure had no script until 2026-09-23. It is reported per
+    # sample and never pooled, because pooling would silently mean "price400".
+    print("\n5. Arms present in one sample only (not pooled)")
+    for tag, *_ in SAMPLES:
+        for arm in ("DR_k2", "DR_k3"):
+            W = did_sample(tag, imaps[tag], [POOL_LEXICON], arm=arm)
+            if W.empty:
+                continue
+            B = did_sample(tag, imaps[tag], [POOL_LEXICON], arm="ORACLE")
+            cols = [c for c in B.columns if c in W.columns]
+            i = B.index.intersection(W.index)
+            for label, M in ((f"DiD | {arm} | {tag}", W),
+                             (f"ORACLE minus {arm} | {tag}", B.loc[i, cols] - W.loc[i, cols])):
+                est, lo, hi, p_ = boot(M)
+                n = len(M.index.unique())
+                print(f"  {label:28s} {est:+7.2f}  [{lo:+7.2f} ; {hi:+7.2f}]  "
+                      f"p={p_:.4f}  n={n}")
+                rows.append({"quantity": label, "sample": tag,
+                             "estimate_pp": round(est, 2), "ci_lo": round(lo, 2),
+                             "ci_hi": round(hi, 2), "p_boot": round(p_, 4),
+                             "n_items": n})
+
     out = ROOT / "results" / "structure_arms.csv"
     df = pd.DataFrame(rows)
     if "sample" in df.columns:

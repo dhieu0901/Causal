@@ -294,7 +294,15 @@ def main():
                          "p_boot": round(p2, 4)})
         print()
     did = pd.DataFrame(rows)
+    # BH over the whole family of 16 interaction tests. REPORT section 1 says
+    # that under BH only 1/3 models passes on its own, not 2/3 - review item
+    # V7-10 - and until now that verdict lived in prose with no column behind it.
+    did["bh_q05_family16"] = bh(did.p_boot.tolist())
     did.to_csv(ROOT / "results" / "querygroup_interaction.csv", index=False)
+    per_m = did[(did.group == NHAN["causal"]) & (did.scope != "9 cells pooled")]
+    print(f"  BH q=.05 over all {len(did)} interaction tests: "
+          f"{int(per_m.bh_q05_family16.sum())}/{len(per_m)} models pass alone "
+          f"in the genuinely-causal group.\n")
 
     print("=" * W)
     print("4. THE LEXICAL LADDER: EQUIVALENCE BOUNDS instead of counting cells")

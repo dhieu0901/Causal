@@ -14,3 +14,5 @@ residue,clean items in causal group,5.0,,,,86,"confounded with query_type, split
 lucky slice,DiD on causal subset,14.35,-0.49,9.54,0.0005,86,0/2000 random slices reach it
 scoring sensitivity,drop unparsed,14.35,6.65,22.8,0.0005,86,
 scoring sensitivity,unparsed = wrong,14.6,6.72,23.26,0.0005,86,
+p floor,t-test on per-item DiD,15.13,,,0.00074,86,bootstrap p floors at 2/B = 0.0005
+p floor,Wilcoxon on per-item DiD,15.13,,,0.00133,86,bootstrap p floors at 2/B = 0.0005

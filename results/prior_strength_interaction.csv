@@ -2,3 +2,4 @@ quantity,stratum,estimate_pp,ci_lo,ci_hi,p_boot,n_items
 DiD | ORACLE vs RAW,correct prior,8.99,3.02,15.67,0.0005,95
 DiD | ORACLE vs RAW,wrong prior already,0.99,-6.83,9.01,0.8185,79
 harm on correct prior minus harm on wrong prior,between strata,-3.38,-12.6,6.33,0.488,95 vs 79
+DiD on correct prior minus DiD on wrong prior,between strata,8.01,-2.14,18.33,0.1185,95 vs 79

@@ -1,0 +1,3 @@
+agent,reversed,f1,n_items
+"random, same edge count",1.345,0.362,174
+world knowledge only (emit KEEP graph),0.966,0.181,174

@@ -77,6 +77,17 @@ def main():
           f"{b.rnd_rev.mean():10.3f} {b.rnd_f1.mean():8.3f}")
     print(f"{'Chi dung tri thuc the gioi (xuat do thi KEEP)':46s} "
           f"{b.wk_rev.mean():10.3f} {b.wk_f1.mean():8.3f}")
+    # REPORT section 9 quotes both floors (0.966 reversals, F1 0.362), and they
+    # were only ever printed. Persisted so the two endpoints of the "percent of
+    # the way to the knowledge agent" scale have a file behind them - including
+    # the one that complicates it: a random guesser reverses MORE edges than the
+    # knowledge agent, so many reversals do not by themselves mean prior-driven.
+    pd.DataFrame([
+        {"agent": "random, same edge count", "reversed": round(b.rnd_rev.mean(), 3),
+         "f1": round(b.rnd_f1.mean(), 3), "n_items": len(b)},
+        {"agent": "world knowledge only (emit KEEP graph)", "reversed": round(b.wk_rev.mean(), 3),
+         "f1": round(b.wk_f1.mean(), 3), "n_items": len(b)},
+    ]).to_csv(ROOT / "results" / "induction_agent_floors.csv", index=False)
 
     ind = {l: pd.read_csv(ROOT / "results" / f"induction_raw_lex{l}.csv")
            for l in LEXICONS

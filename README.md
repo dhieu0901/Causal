@@ -19,7 +19,7 @@ Phần thực nghiệm bên dưới chạy trên **một họ model** và n = 17
 | `DR_k2` | 0/197 | **-7,36 pp** |
 | `DR_k3` | 0/198 | **-6,90 pp** |
 
-Tỷ lệ nhiễu loạn vô hại tụt **23% xuống 0**, chỉ vì càng hỏng nhiều cạnh thì càng khó hỏng mà không chạm vào đại lượng. Liều lượng vì thế **lẫn hoàn toàn với thành phần mẫu**. Điều kiện hoá trên việc estimand thật sự đổi thì tác hại **phẳng**. Chạy `scripts/classify_perturbations.py`, khớp `results/perturbation_split.csv`.
+Tỷ lệ nhiễu loạn vô hại tụt **23% xuống 0** (45/197 item của tập dùng để tách tác hại), chỉ vì càng hỏng nhiều cạnh thì càng khó hỏng mà không chạm vào đại lượng. Liều lượng vì thế **lẫn hoàn toàn với thành phần mẫu**. Điều kiện hoá trên việc estimand thật sự đổi thì tác hại **phẳng**. Chạy `scripts/classify_perturbations.py`, khớp `results/perturbation_split.csv`.
 
 **2. Năm lỗi trong CLadder v1.5**, kèm lệnh tái lập từng lỗi - xem mục cảnh báo bên dưới và `docs/CLADDER_DATA_ERRORS.md`. Xuất xứ dữ liệu kiểm được từng byte bằng `scripts/verify_data_provenance.py`.
 
@@ -34,13 +34,13 @@ Ba điều phải đọc kèm. Cả ba tính trên **cùng mẫu gộp n=490** c
 | | |
 |---|---|
 | **Đồ thị có cần ĐÚNG không** | **Phải tách theo nhóm truy vấn, gộp lại là đọc sai.** Với `backadj`, nơi đồ thị LÀ đáp án: **+27,36 đến +43,77 pp**, 6/6 ô. Với suy luận nhân quả thật trên từ vựng quen: đồ thị đúng đáng **khoảng 0** (-5,04 / -0,17 / -0,08, không ô nào đạt ngưỡng), đồ thị đảo một cạnh lấy đi **-8,72 / -6,11 / -5,16**. Thiệt hại xác lập được, lợi ích thì không. Chạy `scripts/analyze_vs_raw.py` |
-| **Liều hỏng có đo được không** | **Không như đã tưởng.** 20,6% phép đảo cạnh ở k=1 **không đổi ước lượng ATE**, ở k=2 và k=3 thì 0%. Điều kiện trên việc nhiễu thật sự đổi đáp án, tác hại **phẳng**: -6,36 / -7,36 / -6,90. Đường liều cũ là hiệu ứng thành phần mẫu. Chạy `scripts/classify_perturbations.py` |
+| **Liều hỏng có đo được không** | **Không như đã tưởng.** 20,6% phép đảo cạnh ở k=1 (82/399 item, toàn mẫu price400) **không đổi ước lượng ATE**, ở k=2 và k=3 thì 0%. Điều kiện trên việc nhiễu thật sự đổi đáp án, tác hại **phẳng**: -6,36 / -7,36 / -6,90. Đường liều cũ là hiệu ứng thành phần mẫu. Chạy `scripts/classify_perturbations.py` |
 | **Có "xoá sạch tác hại" không** | **Hiệu ứng gần như toàn bộ là nâng thật.** Đồ thị nâng nhánh ẩn danh +5,12 pp và hạ nhánh `KEEP` chỉ -0,50 pp, tức 9% - mà vế "hạ" không tách khỏi 0 (CI [-3,43 ; +2,36]). Chạy `scripts/analyze_structure_arms.py` |
 | **Hiệu ứng nằm ở đâu** | **Không đơn điệu theo độ phức tạp.** Dồn vào nhóm đồ thị 4 cạnh (+9,61 pp, p=0,001, n=230); nhóm 3 cạnh +3,81 và nhóm 2 cạnh +5,30 đều không tách khỏi 0; nhóm 5 cạnh âm (-4,05 pp, n=40). Thứ hạng **giữa từng họ** thì không tái lập được giữa các mẫu. Chạy `scripts/analyze_by_family.py` |
 
 Con số tiêu đề tái lập bằng `scripts/pool_samples.py`, script này cũng phục hồi ánh xạ item sang id gốc CLadder mà `pilot.py` không ghi vào CSV.
 
-**Bốn giả thuyết cạnh tranh đã loại trừ được:** độ dài prompt (prompt dài hơn làm *tệ* hơn, 8 ô âm có ý nghĩa, 0 dương), residue từ thật còn sót (làm *co* hiệu ứng), một lát cắt may mắn (0/2.000 lần bốc ngẫu nhiên chạm tới mức ban đầu), và độ nhạy chấm điểm.
+**Ba trong bốn giả thuyết cạnh tranh đã loại trừ được:** độ dài prompt (prompt dài hơn làm *tệ* hơn, 8 ô âm có ý nghĩa, 0 dương), một lát cắt may mắn (0/2.000 lần bốc ngẫu nhiên chạm tới mức ban đầu), và độ nhạy chấm điểm. **Giả thuyết thứ tư, residue từ thật còn sót, không kiểm được:** residue trùng khít với loại truy vấn (`backadj` và `correlation` sạch 100%, các loại nhân quả 0-12,5%), nên tách theo residue chính là tách theo loại truy vấn. Chạy `scripts/analyze_falsification.py`.
 
 **Cái gì mất đi khi ẩn danh: tri thức, không phải sự quen mắt.** Bậc thang năm bậc:
 
@@ -82,7 +82,7 @@ CLadder trộn ba loại câu hỏi phản ứng khác hẳn nhau với đồ th
 | `backadj` | 18,4% | Đồ thị **chính là** đáp án |
 | `ate`, `ett`, `nde`, `nie`, ... | 49,4% | Công cụ dẫn đường cho suy luận nhiều bước |
 
-Tiêu chí thành văn: một loại truy vấn thuộc nhóm nhận dạng nếu đáp án của nó là hàm của riêng đồ thị, độc lập với mọi tham số số học. Bỏ nhóm một là do **định lý** Causal Hierarchy; tách nhóm hai là một **lập luận**, không phải định lý. Mọi con số tiêu đề đều báo trên nhóm thứ ba.
+Tiêu chí thành văn: một loại truy vấn thuộc nhóm nhận dạng nếu đáp án của nó là hàm của riêng đồ thị, độc lập với mọi tham số số học. Bỏ nhóm một vì CLadder cho sẵn **đúng những con số cần dùng**, nên câu hỏi chỉ còn là số học - một sự thật về cách đóng gói prompt, không phải một định lý; tách nhóm hai cũng là một **lập luận**. *(Sửa 23/09/2026 theo REPORT mục 4.0, vòng 7: bản trước dựa việc này vào định lý Causal Hierarchy, nhưng CHT không nói một DAG vô dụng khi tính đại lượng bậc 1.)* Mọi con số tiêu đề đều báo trên nhóm thứ ba.
 
 ## Nếu bạn đang dựng pipeline tăng cường bằng đồ thị
 
@@ -96,11 +96,11 @@ Năm câu, tất cả rút thẳng từ `results/vs_raw.csv`. Phạm vi: ba chec
 | Như trên nhưng tên biến vô nghĩa (mã nội bộ, cột ẩn danh) | **Gắn** | +6,30 pp [+1,95 ; +10,77] |
 | Không chắc chiều một cạnh | **Bỏ cạnh, đừng đoán** | thiếu cạnh 0/6 ô hại; đảo cạnh 4/10 ô hại |
 
-Hệ quả đáng chú ý nhất: ở dòng ba, **lợi ích không xác lập được còn thiệt hại thì có**, nên một pipeline tự trích DAG rồi đưa lại cho model có **kỳ vọng âm ở mọi tỉ lệ lỗi trích xuất lớn hơn 0**. Và theo mục 9 của báo cáo, LLM tự trích đồ thị đảo chiều nhiều gấp 5,1 đến 7,7 lần khi prior sai - tức loại lỗi bộ trích xuất sinh ra nhiều nhất đúng là loại đắt nhất.
+Hệ quả đáng chú ý nhất: ở dòng ba, **lợi ích không xác lập được còn thiệt hại thì có**, nên một pipeline tự trích DAG rồi đưa lại cho model có **kỳ vọng âm ở mọi tỉ lệ lỗi trích xuất lớn hơn 0**. Và theo mục 9 của báo cáo, prior sai làm LLM tự trích đồ thị đảo chiều nhiều gấp 5,1 đến 7,7 lần - tức nó làm tăng đúng loại lỗi có tác hại đã xác lập. *(Sửa 23/09/2026: bản trước gọi đảo chiều là loại lỗi "sinh ra nhiều nhất" và "đắt nhất"; thiếu cạnh phổ biến hơn, và thứ bậc giá giữa các loại lỗi đã rút ở REPORT mục 8b.)*
 
 ## Cảnh báo cho ai dùng CLadder v1.5
 
-**Ba file `test-commonsense`, `test-anticommonsense`, `test-noncommonsense` không chứa câu hỏi.** 0,00% prompt của chúng có dấu `?`, trong khi `full_v1.5_default.csv` là 100%. Chấm điểm trên chúng cho ra đúng 50% và trông y hệt một phát hiện về nhận thức của LLM.
+**Cả sáu file `test-*-v1.5.csv` không chứa câu hỏi** - `commonsense`, `anticommonsense`, `noncommonsense`, `balanced`, `easy`, `hard`. 0,00% prompt của cả sáu có dấu `?`, trong khi `full_v1.5_default.csv` là 100%. Chấm điểm trên chúng cho ra đúng 50% và trông y hệt một phát hiện về nhận thức của LLM.
 
 `make_items` trong repo này từ chối chạy trên dữ liệu thiếu câu hỏi.
 
@@ -109,7 +109,7 @@ Hệ quả đáng chú ý nhất: ở dòng ba, **lợi ích không xác lập �
 ```bash
 pip install numpy pandas scipy networkx statsmodels openai
 export PYTHONIOENCODING=utf-8          # bắt buộc trên Windows
-echo "OPENAI_API_KEY=sk-..." > .env
+echo "OPENAI_API_KEY=sk-..." >> .env   # >> để không ghi đè key khác đã có
 
 # Không cần API key
 python scripts/verify_groundtruth.py   # kiểm chứng 7.064 SCM bằng giải tích
@@ -126,7 +126,7 @@ python scripts/make_figures.py         # sinh hình cho slide từ CSV
 python scripts/feasibility.py          # khả thi, độ phân giải mẫu, dự toán
 
 # Hai cổng chặn - chạy trước khi tin bất kỳ con số nào
-python scripts/check_numbers.py        # mọi đại lượng pp trong văn bản có truy được về CSV không
+python scripts/check_numbers.py        # mọi đại lượng pp, và mọi CI cùng ước lượng của nó, có truy được về một dòng CSV không
 python scripts/verify_determinism.py   # chạy lại có ra đúng file cũ không (--all cho đầy đủ)
 
 # Thí nghiệm từ vựng ghép cặp - kết quả chính
@@ -165,7 +165,6 @@ Chạy `python scripts/verify_data_provenance.py` để đối chiếu từng by
 - **Bậc thang từ vựng trên mẫu n=580** - RQ3 hiện vẫn đứng trên n=85 mỗi ô.
 - **Điều kiện `NAMES_ONLY`** - **hạ cấp 2026-09-22**, không còn là phép kiểm sống chết. Mục 4.3b đã bác giả thuyết tái gắn ký hiệu bằng dữ liệu sẵn có: `DR_k1` mang **y hệt** bộ tên biến của `ORACLE` mà giữ được **0** lợi ích. `NAMES_ONLY` giờ là việc củng cố, cho một bậc thang sạch hơn.
 - **Điều kiện `SCRAMBLE`** - một DAG ngẫu nhiên trên đúng bộ nút, không giữ cạnh nào của đồ thị thật.
-- **Bảng chín CI trên hiệu giá chưa có script sinh ra** - hiện là chuỗi in cứng trong `scripts/compare_price_lexicon.py`.
 - **Cả ba model đều thuộc dòng GPT-4.1.** Giới hạn duy nhất đủ nghiêm trọng để chặn công bố. Cần ít nhất một dòng khác họ, và một model có suy luận mở rộng kèm nhánh `ORACLE`.
 - Điểm hoà vốn `k*` vẫn **chưa xác lập**: vế giá vững, vế ngân sách đạt ở 2/3 model trên mẫu gộp, nhưng `k*` cần cả hai và tử số của nó phần lớn là `backadj`.
 - `analyze_types.bootstrap_fit` **đã nâng 600 lên 10.000 vòng** (2026-09-22). Lý do cũ ghi ở đây - "hai ô đổi phán quyết theo seed" - **đã kiểm và KHÔNG tái lập được**: chín ô model x nhánh, năm seed, ở cả 600 lẫn 10.000 vòng đều cho cùng một bộ phán quyết. Việc nâng vẫn đáng làm vì sai số Monte Carlo ở 600 vòng cỡ 0,1 pp, ngang với các hiệu bảng này phải phân xử.
@@ -174,8 +173,11 @@ Chạy `python scripts/verify_data_provenance.py` để đối chiếu từng by
 
 ```
 src/       lexical.py (đổi từ vựng, 5 bộ), perturb.py (làm hỏng DAG),
-           prompts.py (RAW / RAW_INSTR / ORACLE / PERTURB), induce.py,
+           prompts.py (RAW / RAW_INSTR / NAMES_ONLY / ORACLE / PERTURB / PROSE), induce.py,
            noise.py, runner.py (có guard lỗi API), stats.py
-scripts/   pilot.py, induction.py, và 15 script phân tích
+scripts/   pilot.py, induction.py (hai script gọi API, tốn tiền), 18 script analyze_*,
+           5 script kiểm chứng nhãn và dữ liệu (verify_*, audit_*), 3 cổng
+           (check_numbers, check_pipeline_order, verify_determinism), và 7 script
+           phụ trợ - tổng 35, mọi script trừ hai cái đầu chạy 0 USD
 results/   các bảng CSV kết quả và log chạy thật
 ```

@@ -226,6 +226,27 @@ def test_scoring(d, rows):
                      "note": ""})
 
 
+def test_p_floor(d, rows):
+    """What p=0.0005 hides. Bootstrap p floors at 2/B, so read two exact tests."""
+    print("\n5. SAN P CUA BOOTSTRAP")
+    from scipy import stats as st
+    W = did_cells(d, causal_qs(d))
+    per = W.mean(axis=1).dropna()
+    t_p = float(st.ttest_1samp(per, 0).pvalue)
+    w_p = float(st.wilcoxon(per).pvalue)
+    # REPORT section 4.0 quotes both. They are tests on the per-ITEM mean, so
+    # they describe that estimator (+15.13 here), not the per-cell +14.35 -
+    # same data, same sign, a different average.
+    print(f"   {len(per)} item, trung binh theo item {100 * per.mean():+.2f} pp")
+    print(f"   t-test mot mau  p = {t_p:.5f}")
+    print(f"   Wilcoxon        p = {w_p:.5f}")
+    for lab, p in (("t-test on per-item DiD", t_p), ("Wilcoxon on per-item DiD", w_p)):
+        rows.append({"test": "p floor", "quantity": lab,
+                     "value": round(100 * float(per.mean()), 2), "ci_lo": None,
+                     "ci_hi": None, "p_boot": round(p, 5), "n": len(per),
+                     "note": "bootstrap p floors at 2/B = 0.0005"})
+
+
 def main() -> int:
     d = load()
     print("=" * 84)
@@ -236,6 +257,7 @@ def main() -> int:
     test_residue(d, rows)
     test_lucky_slice(d, rows)
     test_scoring(d, rows)
+    test_p_floor(d, rows)
     pd.DataFrame(rows).to_csv(ROOT / "results" / "falsification.csv", index=False)
     print("\n  ghi ra results/falsification.csv")
     return 0

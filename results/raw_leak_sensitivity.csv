@@ -1,0 +1,5 @@
+subset,n_items,did_pp,ci_lo,ci_hi,p_boot
+all items (headline),490,5.98,1.67,10.19,0.0055
+drop edge stated in prose,375,5.07,0.17,9.9,0.046
+drop latent disclosed,337,4.65,-0.1,9.42,0.059
+drop either,269,3.77,-0.93,8.64,0.1275

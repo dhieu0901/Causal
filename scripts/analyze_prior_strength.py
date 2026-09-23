@@ -261,6 +261,22 @@ def main():
                   "stratum": "between strata", "estimate_pp": round(est, 2),
                   "ci_lo": round(lo, 2), "ci_hi": round(hi, 2),
                   "p_boot": round(p, 4), "n_items": f"{len(a)} vs {len(b)}"})
+
+    # Section 4 asks whether the graph rescues MORE where the prior was right,
+    # and REPORT section 4.1(a) answered yes because one stratum clears zero and
+    # the other does not. That is two separate tests, not the comparison: a
+    # significant and a non-significant estimate need not differ significantly.
+    # This is the comparison itself.
+    a2 = did_series(d, models, anon, "correct prior")
+    b2 = did_series(d, models, anon, "wrong prior already")
+    est, lo, hi, p = boot_two_sample(a2, b2)
+    print("\n  DiD on CORRECT prior minus DiD on ALREADY-WRONG prior")
+    print(f"    {est:+.2f} pp   CI 95% [{lo:+.2f} ; {hi:+.2f}]   p = {p:.4f}")
+    print(f"    n = {len(a2)} vs {len(b2)} items")
+    inter.append({"quantity": "DiD on correct prior minus DiD on wrong prior",
+                  "stratum": "between strata", "estimate_pp": round(est, 2),
+                  "ci_lo": round(lo, 2), "ci_hi": round(hi, 2),
+                  "p_boot": round(p, 4), "n_items": f"{len(a2)} vs {len(b2)}"})
     pd.DataFrame(inter).to_csv(
         ROOT / "results" / "prior_strength_interaction.csv", index=False)
 
