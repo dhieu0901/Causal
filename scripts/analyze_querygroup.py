@@ -207,7 +207,11 @@ def main():
     rows, summary = [], []
     for g in ["all", "causal", "identify", "rung1_arith"]:
         qs = qset(base, g)
-        for cond in ["RAW", "ORACLE"]:
+        # PROSE and DR_k1 were in REPORT section 4.0's table from the start but
+        # never in this loop, so two of its four rows had no file behind them.
+        # Each (group, cond) is its own BH family, so widening the loop cannot
+        # move a number that was already here.
+        for cond in ["RAW", "ORACLE", "PROSE", "DR_k1"]:
             ds, ps = [], []
             for m in TIER:
                 for lex in ANON:
@@ -221,16 +225,41 @@ def main():
             sig = int(np.nansum([p < 0.05 for p in ps]))
             sig_bh = int(bh(ps).sum())
             mean_harm = float(np.nanmean(ds))
+            # The report's fourth column is the WORST single cell, not the mean.
+            worst = float(np.nanmin(ds)) if np.isfinite(ds).any() else float("nan")
             print(f"  {NHAN[g]:16} {cond:7} tho {sig}/9   BH q=.05 {sig_bh}/9   "
-                  f"mean harm {mean_harm:+7.2f} pp")
+                  f"mean harm {mean_harm:+7.2f} pp   worst {worst:+7.2f} pp")
             # These three numbers are quoted verbatim in REPORT section 4.0 and
             # section 5. Until now they existed only in this print statement, so
             # nothing in results/ could vouch for them and scripts/check_numbers.py
             # flagged them as unaccounted. Persist them.
             summary.append({"group": NHAN[g], "cond": cond,
                             "n_sig_raw": sig, "n_sig_bh": sig_bh, "n_cells": len(ps),
-                            "mean_harm_pp": round(mean_harm, 2)})
+                            "mean_harm_pp": round(mean_harm, 2),
+                            "worst_harm_pp": round(worst, 2)})
         print()
+    # Scoring sensitivity, computed by the SAME loop above rather than a
+    # parallel one - that is the point of the check. REPORT section 10 quotes
+    # the pair -10.73 -> -10.79 and only the first half had a file.
+    d2 = {k: v.copy() for k, v in d.items()}
+    for k in d2:
+        d2[k].loc[d2[k].parsed == 0, "correct"] = 0
+        d2[k]["parsed"] = 1
+    for g in ["all", "causal"]:
+        qs = qset(base, g)
+        for cond in ["RAW", "ORACLE"]:
+            ds2, ps2 = [], []
+            for m in TIER:
+                for lex in ANON:
+                    _, dl, pv = paired(d2[lex], d2["KEEP"], m, cond, qs)
+                    ds2.append(dl)
+                    ps2.append(pv)
+            summary.append({"group": NHAN[g] + " (unparsed=wrong)", "cond": cond,
+                            "n_sig_raw": int(np.nansum([pv < 0.05 for pv in ps2])),
+                            "n_sig_bh": int(bh(ps2).sum()), "n_cells": len(ps2),
+                            "mean_harm_pp": round(float(np.nanmean(ds2)), 2),
+                            "worst_harm_pp": round(float(np.nanmin(ds2)), 2)})
+
     mc = pd.DataFrame(rows)
     mc.to_csv(ROOT / "results" / "querygroup_mcnemar.csv", index=False)
     pd.DataFrame(summary).to_csv(
@@ -323,7 +352,13 @@ def main():
             ("chi bo rung-1", ARITH),
             ("chi bo backadj", IDENT),
             ("bo ca hai (hien tai)", ARITH | IDENT),
-            ("de xuat V7-13", ARITH | IDENT | {"exp_away", "collider_bias"})]:
+            ("de xuat V7-13", ARITH | IDENT | {"exp_away", "collider_bias"}),
+            # REPORT section 4.1's caveat on strip_structure(): for
+            # det-counterfactual the two surviving sentences ARE the structural
+            # equations, so RAW is not "no graph" for that type. The report
+            # quotes the DiD without it as the robustness answer; until now no
+            # cut here produced it.
+            ("bo ca hai, bo det-cf", ARITH | IDENT | {"det-counterfactual"})]:
         qs = set(base.query_type.unique()) - drop
         # The DiD, via the same did_cells() the rest of this file uses. An
         # earlier draft of this block computed Delta_struct (ORACLE - RAW on

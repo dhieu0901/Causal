@@ -181,6 +181,45 @@ def classify(lines: list[str], i: int) -> str:
     return "LIVE"
 
 
+def column_kind(lines: list[str], i: int, pos: int) -> str | None:
+    """HISTORY/EXTERNAL if the COLUMN this value sits in is marked, else None.
+
+    Rule four, and the first one that is not about blockquotes. REPORT.md
+    section 4.4 holds a table whose header reads
+
+        | | Do thi lam thay doi | mau n=86, **da rut** | mau gop n=490, **hien hanh** |
+
+    so one row carries a retracted value and a live value side by side:
+    `+9,75 pp` is history, `+5,12 pp` next to it is the current headline. A
+    line-level marker cannot express that - marking the row would excuse the
+    live number too, which is worse than the miss it fixes. Status here is a
+    property of the COLUMN, so that is what gets read.
+    """
+    line = lines[i - 1]
+    if not line.lstrip().startswith("|"):
+        return None
+    # Walk up to the first row of this table; that row is the header.
+    j = i
+    while j > 1 and lines[j - 2].lstrip().startswith("|"):
+        j -= 1
+    if j == i:
+        return None                      # this IS the header row
+    head = lines[j - 1]
+    # Which cell does `pos` fall into? Count the pipes before it. Both header
+    # and row are split the same way, so a ragged row simply misses and the
+    # function falls through to None rather than guessing a neighbour.
+    col = line.count("|", 0, pos)
+    cells = head.split("|")
+    if col >= len(cells):
+        return None
+    cell = cells[col]
+    if any(k.lower() in cell.lower() for k in HISTORY_MARK):
+        return "HISTORY"
+    if any(k in cell for k in EXTERNAL_MARK):
+        return "EXTERNAL"
+    return None
+
+
 def scan(path: Path) -> list[tuple[int, str, float, str]]:
     out = []
     try:
@@ -190,11 +229,15 @@ def scan(path: Path) -> list[tuple[int, str, float, str]]:
     lines = text.splitlines()
     for i, line in enumerate(lines, 1):
         kind = classify(lines, i)
-        for raw in QUANTITY.findall(line):
-            out.append((i, raw, float(raw.replace(",", ".")), kind))
-        for lo, hi in INTERVAL.findall(line):
-            for raw in (lo, hi):
-                out.append((i, f"CI {raw}", float(raw.replace(",", ".")), kind))
+        for m in QUANTITY.finditer(line):
+            raw = m.group(1)
+            k = kind if kind != "LIVE" else (column_kind(lines, i, m.start(1)) or kind)
+            out.append((i, raw, float(raw.replace(",", ".")), k))
+        for m in INTERVAL.finditer(line):
+            for gi in (1, 2):
+                raw = m.group(gi)
+                k = kind if kind != "LIVE" else (column_kind(lines, i, m.start(gi)) or kind)
+                out.append((i, f"CI {raw}", float(raw.replace(",", ".")), k))
     return out
 
 
