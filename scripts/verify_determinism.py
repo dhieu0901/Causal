@@ -51,13 +51,22 @@ FAST = [
     "induction",                 # writes induction_raw.csv
     "analyze_lexical", "analyze_types",   # both read it
 ]
-SLOW = [
-    "analyze_vs_raw", "analyze_structure_arms", "analyze_anomaly_residue",
-    "analyze_by_family", "analyze_querygroup", "pool_samples",
-    "audit_cladder_arithmetic", "verify_groundtruth",
-    "induction_baselines", "feasibility", "analyze_budget_paired",
-]
 # pilot.py is excluded on purpose: it spends API credit and is not an analysis.
+
+# --all used to mean FAST plus a second hand-kept list (SLOW), a copy of the pipeline order
+# that had fallen seven scripts behind (moderators, falsification, price_paired,
+# raw_leak, explanations, provenance, figures) - so "everything" was not
+# everything. Review round 10 (finding P1). --all now reads the canonical ORDER
+# from check_pipeline_order.py, minus the three gates, which do not write
+# results/. One list, so it cannot drift again.
+def _canonical_order() -> list[str]:
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "cpo", str(Path(__file__).resolve().parent / "check_pipeline_order.py"))
+    cpo = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cpo)
+    gates = {"check_numbers", "check_pipeline_order", "verify_determinism"}
+    return [s for s in cpo.ORDER if s not in gates]
 
 
 def snapshot(dst: Path) -> list[str]:
@@ -69,7 +78,7 @@ def snapshot(dst: Path) -> list[str]:
 
 def main() -> int:
     args = [a for a in sys.argv[1:] if not a.startswith("-")]
-    scripts = args or (FAST + SLOW if "--all" in sys.argv else FAST)
+    scripts = args or (_canonical_order() if "--all" in sys.argv else FAST)
 
     print("=" * 72)
     print("DETERMINISM CHECK - rerun, then diff every results CSV byte for byte")

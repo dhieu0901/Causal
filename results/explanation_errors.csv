@@ -1,0 +1,8 @@
+check,count,n
+"error 3: minus in arithmetic, plus in formula",1580,1580
+error 4: conclusion compares with 0,1580,1580
+error 4: conclusion contradicts own label,790,1580
+control: 0.5 threshold with polarity reproduces label,1535,1535
+"control: value printed as exactly 0.50, undecidable",45,1580
+printed result equals the plus computation,1510,1580
+printed result equals the minus computation,38,1580

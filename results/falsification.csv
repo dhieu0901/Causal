@@ -12,6 +12,8 @@ residue,pct clean | nde,0.0,,,,2,
 residue,pct clean | nie,9.1,,,,11,
 residue,clean items in causal group,5.0,,,,86,"confounded with query_type, split not testable"
 lucky slice,DiD on causal subset,14.35,-0.49,9.54,0.0005,86,0/2000 random slices reach it
+lucky slice,"random slices, mean",4.54,,,,2000,
+lucky slice,"random slices, sd",2.54,,,,2000,
 scoring sensitivity,drop unparsed,14.35,6.65,22.8,0.0005,86,
 scoring sensitivity,unparsed = wrong,14.6,6.72,23.26,0.0005,86,
 p floor,t-test on per-item DiD,15.13,,,0.00074,86,bootstrap p floors at 2/B = 0.0005

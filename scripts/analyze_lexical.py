@@ -121,6 +121,15 @@ def main():
     mc = pd.DataFrame(out)
     print(mc.to_string(index=False))
     mc.to_csv(ROOT / "results" / f"lexical_mcnemar{a.tag}.csv", index=False)
+    # REPORT section 4.0 quotes the mean harm per lexicon across the three
+    # models (e.g. PERMUTE under ORACLE -6.61, 2/3 significant). Those means
+    # were computed from this table by hand and never written down.
+    summ = (mc.assign(sig=mc.meaning == "*")
+              .groupby(["cond", "n_compared"])
+              .agg(mean_delta_pp=("delta_pp", "mean"), n_sig=("sig", "sum"),
+                   n_models=("delta_pp", "size"))
+              .round({"mean_delta_pp": 2}).reset_index())
+    summ.to_csv(ROOT / "results" / f"lexical_mcnemar_summary{a.tag}.csv", index=False)
 
     print("\n" + "=" * 88)
     print("3. PHAN RA THEO query_type  (dieu kien ORACLE: do thi dung 100%)")
@@ -203,6 +212,33 @@ def main():
         print(pvd.to_string(index=False))
         pvd.to_csv(ROOT / "results" / f"prose_gain_by_lexicon{a.tag}.csv", index=False)
 
+    # ---- 4c. clustering by story ------------------------------------------
+    # REPORT section 10b argues against story-level memorisation from an ICC
+    # of correctness by story_id near zero. The three ICCs were quoted and never
+    # computed by any script. One-way ANOVA ICC(1) per model, KEEP / RAW.
+    ic = []
+    for m in models:
+        s = d["KEEP"][(d["KEEP"].model == m) & (d["KEEP"].cond == "RAW") &
+                      (d["KEEP"].parsed == 1)]
+        g = s.groupby("story_id").correct
+        k = g.size()
+        n, n_st = len(s), len(k)          # not `a`: that is the argparse namespace
+        if n_st < 2:
+            continue
+        grand = s.correct.mean()
+        msb = float((k * (g.mean() - grand) ** 2).sum() / (n_st - 1))
+        msw = float(((s.correct - s.story_id.map(g.mean())) ** 2).sum() / (n - n_st))
+        k0 = (n - float((k ** 2).sum()) / n) / (n_st - 1)
+        icc = (msb - msw) / (msb + (k0 - 1) * msw)
+        ic.append({"model": m, "n_items": n, "n_stories": n_st,
+                   "icc_story": round(icc, 3),
+                   "design_effect": round(1 + (float(k.mean()) - 1) * max(icc, 0.0), 2)})
+    if ic:
+        icd = pd.DataFrame(ic)
+        print("\n  4c. ICC of correctness by story_id, KEEP / RAW:")
+        print(icd.to_string(index=False))
+        icd.to_csv(ROOT / "results" / f"story_icc{a.tag}.csv", index=False)
+
     # ---- 5. does the lexicon change the graph the model BUILDS? ------------
     ind = {}
     for lex in LEXICONS:
@@ -246,6 +282,18 @@ def main():
                 "missing_edges": round(s_.n_missing.mean(), 2),
             })
     idf = pd.DataFrame(rows)
+    # Nine Wilcoxon tests (3 models x 3 anonymised lexicons) were reported
+    # uncorrected. Benjamini-Hochberg over that family (review round 10, M6).
+    pv = idf.p_wilcoxon
+    ok = pv.notna()
+    order = pv[ok].sort_values()
+    m_ = len(order)
+    cut = 0
+    for r_, (idx, val) in enumerate(order.items(), start=1):
+        if val <= 0.05 * r_ / m_:
+            cut = r_
+    idf["survives_BH"] = False
+    idf.loc[order.index[:cut], "survives_BH"] = True
     print(idf.to_string(index=False))
     idf.to_csv(ROOT / "results" / f"lexical_induction{a.tag}.csv", index=False)
     print("\n  Prior SAI (PERMUTE) gay dao chieu nhieu gap may lan prior VANG MAT")

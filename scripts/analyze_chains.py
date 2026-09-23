@@ -244,6 +244,7 @@ def main():
     for m in TIER:
         raw_true = raw_rev = raw_n = 0
         fol_ok, sil_ok, differ, both_parsed, pos = [], [], 0, 0, []
+        sil_both = sil_differ = 0
         for k in cases:
             tr = cache_text(m, k["raw"])
             if tr is not None:
@@ -272,6 +273,13 @@ def main():
                     differ += ad != ao
             elif code == "silent" and ad is not None:
                 sil_ok.append(ad == k["gold"])
+                # Baseline for "the stated direction changes the answer":
+                # how often DR_k1 and ORACLE disagree when the chain names no
+                # direction at all (review round 10, finding M5).
+                ao = parse_answer(to) if to is not None else None
+                if ao is not None:
+                    sil_both += 1
+                    sil_differ += ad != ao
         s_pos = pd.Series(pos, dtype=float)
         all_pos.extend(pos)
         det.append({
@@ -286,6 +294,7 @@ def main():
             "followed_both_parsed_n": both_parsed,
             "answer_differs_from_ORACLE_pct": round(100 * differ / max(both_parsed, 1), 1),
             "answer_same_as_ORACLE_pct": round(100 * (both_parsed - differ) / max(both_parsed, 1), 1),
+            "silent_differs_from_ORACLE_pct": round(100 * sil_differ / max(sil_both, 1), 1),
             "median_position_pct": round(100 * s_pos.median(), 1) if len(s_pos) else None,
             "in_first_10pct_share": round(100 * (s_pos <= 0.10).mean(), 1) if len(s_pos) else None,
         })

@@ -1,0 +1,80 @@
+arm,k,subset,n,harmless_pct,harmless_strict_pct,harmless_but_touches_path
+DR,1,all query types,399,20.6,3.0,70
+DR,1,ate only (exact),66,18.2,3.0,10
+DR,1,ate,66,18.2,3.0,10
+DR,1,backadj,67,20.9,3.0,12
+DR,1,correlation,68,22.1,2.9,13
+DR,1,det-counterfactual,51,13.7,3.9,5
+DR,1,ett,51,27.5,5.9,11
+DR,1,marginal,65,12.3,1.5,7
+DR,1,nde,12,41.7,0.0,5
+DR,1,nie,19,36.8,0.0,7
+DR,2,all query types,399,0.0,0.0,0
+DR,2,ate only (exact),66,0.0,0.0,0
+DR,2,ate,66,0.0,0.0,0
+DR,2,backadj,67,0.0,0.0,0
+DR,2,correlation,68,0.0,0.0,0
+DR,2,det-counterfactual,51,0.0,0.0,0
+DR,2,ett,51,0.0,0.0,0
+DR,2,marginal,65,0.0,0.0,0
+DR,2,nde,12,0.0,0.0,0
+DR,2,nie,19,0.0,0.0,0
+DR,3,all query types,399,0.0,0.0,0
+DR,3,ate only (exact),66,0.0,0.0,0
+DR,3,ate,66,0.0,0.0,0
+DR,3,backadj,67,0.0,0.0,0
+DR,3,correlation,68,0.0,0.0,0
+DR,3,det-counterfactual,51,0.0,0.0,0
+DR,3,ett,51,0.0,0.0,0
+DR,3,marginal,65,0.0,0.0,0
+DR,3,nde,12,0.0,0.0,0
+DR,3,nie,19,0.0,0.0,0
+ED,1,all query types,399,31.8,10.5,85
+ED,1,ate only (exact),66,33.3,13.6,13
+ED,1,ate,66,33.3,13.6,13
+ED,1,backadj,67,28.4,11.9,11
+ED,1,correlation,68,36.8,7.4,20
+ED,1,det-counterfactual,51,19.6,11.8,4
+ED,1,ett,51,25.5,7.8,9
+ED,1,marginal,65,32.3,9.2,15
+ED,1,nde,12,66.7,25.0,5
+ED,1,nie,19,47.4,5.3,8
+ED,2,all query types,399,8.0,1.8,25
+ED,2,ate only (exact),66,7.6,0.0,5
+ED,2,ate,66,7.6,0.0,5
+ED,2,backadj,67,9.0,1.5,5
+ED,2,correlation,68,8.8,2.9,4
+ED,2,det-counterfactual,51,2.0,0.0,1
+ED,2,ett,51,5.9,0.0,3
+ED,2,marginal,65,3.1,1.5,1
+ED,2,nde,12,50.0,16.7,4
+ED,2,nie,19,15.8,5.3,2
+ED,3,all query types,399,3.8,0.0,15
+ED,3,ate only (exact),66,4.5,0.0,3
+ED,3,ate,66,4.5,0.0,3
+ED,3,backadj,67,1.5,0.0,1
+ED,3,correlation,68,4.4,0.0,3
+ED,3,det-counterfactual,51,3.9,0.0,2
+ED,3,ett,51,3.9,0.0,2
+ED,3,marginal,65,1.5,0.0,1
+ED,3,nde,12,8.3,0.0,1
+ED,3,nie,19,10.5,0.0,2
+FE,1,all query types,285,55.1,25.3,85
+FE,1,ate only (exact),49,59.2,26.5,16
+FE,1,ate,49,59.2,26.5,16
+FE,1,backadj,46,50.0,28.3,10
+FE,1,correlation,50,60.0,22.0,19
+FE,1,det-counterfactual,39,64.1,38.5,10
+FE,1,ett,35,45.7,14.3,11
+FE,1,marginal,45,51.1,22.2,13
+FE,1,nde,7,0.0,0.0,0
+FE,1,nie,14,78.6,35.7,6
+FE,2,all query types,228,50.0,0.0,114
+FE,2,ate only (exact),39,56.4,0.0,22
+FE,2,ate,39,56.4,0.0,22
+FE,2,backadj,37,43.2,0.0,16
+FE,2,correlation,42,52.4,0.0,22
+FE,2,det-counterfactual,37,29.7,0.0,11
+FE,2,ett,28,57.1,0.0,16
+FE,2,marginal,34,47.1,0.0,16
+FE,2,nie,11,100.0,0.0,11

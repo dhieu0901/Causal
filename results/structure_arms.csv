@@ -15,6 +15,10 @@ DiD | DR_k1 | n600,4.65,-0.51,9.89,0.085,288,n600
 DiD | ORACLE | price400,1.72,-5.27,8.27,0.6395,195,price400
 DiD | PROSE | price400,1.99,-3.59,7.43,0.4875,198,price400
 DiD | DR_k1 | price400,4.28,-2.56,11.41,0.2285,196,price400
+"PSEUDO branch, ORACLE minus DR_k1 | lex",7.38,0.41,13.89,0.0425,86,lex
+"PSEUDO branch, ORACLE minus DR_k1 | n600",8.19,4.37,12.02,0.0005,291,n600
+"PSEUDO branch, ORACLE minus DR_k1 | price400",2.73,-1.84,7.32,0.2655,199,price400
+"PSEUDO branch, ORACLE minus DR_k1",6.22,3.39,9.01,0.0005,497,pooled
 DiD | DR_k2 | price400,5.86,-0.57,12.26,0.079,195,price400
 ORACLE minus DR_k2 | price400,-3.29,-9.34,2.73,0.2935,192,price400
 DiD | DR_k3 | price400,1.76,-4.59,8.12,0.6205,193,price400

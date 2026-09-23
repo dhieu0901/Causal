@@ -199,6 +199,11 @@ def test_lucky_slice(d, rows):
                  "ci_hi": round(float(np.percentile(draws, 97.5)), 2),
                  "p_boot": round((beat + 1) / (NPERM + 1), 4), "n": k,
                  "note": f"{beat}/{NPERM} random slices reach it"})
+    # REPORT section 4.7 quotes the mean and spread of the random slices.
+    for q, v in (("random slices, mean", draws.mean()),
+                 ("random slices, sd", draws.std(ddof=1))):
+        rows.append({"test": "lucky slice", "quantity": q, "value": round(float(v), 2),
+                     "ci_lo": None, "ci_hi": None, "p_boot": None, "n": NPERM, "note": ""})
 
 
 def test_scoring(d, rows):

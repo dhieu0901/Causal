@@ -19,7 +19,7 @@ Phần thực nghiệm bên dưới chạy trên **một họ model** và n = 17
 | `DR_k2` | 0/197 | **-7,36 pp** |
 | `DR_k3` | 0/198 | **-6,90 pp** |
 
-Tỷ lệ nhiễu loạn vô hại tụt **23% xuống 0** (45/197 item của tập dùng để tách tác hại), chỉ vì càng hỏng nhiều cạnh thì càng khó hỏng mà không chạm vào đại lượng. Liều lượng vì thế **lẫn hoàn toàn với thành phần mẫu**. Điều kiện hoá trên việc estimand thật sự đổi thì tác hại **phẳng**. Chạy `scripts/classify_perturbations.py`, khớp `results/perturbation_split.csv`.
+Tỷ lệ nhiễu loạn vô hại tụt **23% xuống 0** (45/197 item của tập dùng để tách tác hại), chỉ vì càng hỏng nhiều cạnh thì càng khó hỏng mà không chạm vào đại lượng. Liều lượng vì thế **lẫn hoàn toàn với thành phần mẫu**. Điều kiện hoá trên việc estimand thật sự đổi thì tác hại **phẳng**. Chạy `scripts/classify_perturbations.py`, khớp `results/perturbation_split.csv`. *Sửa 23/09/2026: tiêu chí backdoor đếm dư nhiễu vô hại ở `nde`/`nie`/`det-counterfactual`; với cờ theo loại truy vấn còn 28/197 item vô hại, và tác hại trên item đổi estimand là -7,79 / -7,36 / -6,90 - vẫn phẳng (`results/perturbation_split_qt.csv`).*
 
 **2. Năm lỗi trong CLadder v1.5**, kèm lệnh tái lập từng lỗi - xem mục cảnh báo bên dưới và `docs/CLADDER_DATA_ERRORS.md`. Xuất xứ dữ liệu kiểm được từng byte bằng `scripts/verify_data_provenance.py`.
 
@@ -111,8 +111,12 @@ pip install numpy pandas scipy networkx statsmodels openai
 export PYTHONIOENCODING=utf-8          # bắt buộc trên Windows
 echo "OPENAI_API_KEY=sk-..." >> .env   # >> để không ghi đè key khác đã có
 
-# Không cần API key
+# Không cần API key - chạy lại MỌI file kết quả theo thứ tự phụ thuộc, rồi ba cổng
+bash scripts/run_analysis.sh           # thứ tự đọc từ ORDER trong check_pipeline_order.py
+
+# Hoặc từng bước:
 python scripts/verify_groundtruth.py   # kiểm chứng 7.064 SCM bằng giải tích
+python scripts/verify_explanations.py  # lỗi 3 và 4: chuỗi giải thích `marginal`, kèm đối chứng nhãn
 python scripts/verify_labels.py        # nhãn yes/no đi theo giá trị nào
 python scripts/verify_counterfactual.py   # bậc 3 và va chạm: 1.812 nhãn còn lại
 python scripts/audit_cladder_arithmetic.py  # phạm vi chính xác của lỗi CLadder
@@ -176,8 +180,9 @@ src/       lexical.py (đổi từ vựng, 5 bộ), perturb.py (làm hỏng DAG)
            prompts.py (RAW / RAW_INSTR / NAMES_ONLY / ORACLE / PERTURB / PROSE), induce.py,
            noise.py, runner.py (có guard lỗi API), stats.py
 scripts/   pilot.py, induction.py (hai script gọi API, tốn tiền), 18 script analyze_*,
-           5 script kiểm chứng nhãn và dữ liệu (verify_*, audit_*), 3 cổng
+           6 script kiểm chứng nhãn và dữ liệu (verify_*, audit_*), 3 cổng
            (check_numbers, check_pipeline_order, verify_determinism), và 7 script
-           phụ trợ - tổng 35, mọi script trừ hai cái đầu chạy 0 USD
+           phụ trợ - tổng 36, mọi script trừ hai cái đầu chạy 0 USD.
+           run_analysis.sh chạy lại toàn bộ phần phân tích, không gọi API
 results/   các bảng CSV kết quả và log chạy thật
 ```

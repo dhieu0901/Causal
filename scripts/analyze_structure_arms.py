@@ -196,6 +196,40 @@ def main():
                          "ci_hi": round(hi, 2), "p_boot": round(p, 4),
                          "n_items": n})
 
+    # The direct contrast on the anonymised branch. The manuscript rejects the
+    # symbol-rebinding reading ("the block helps only because it repeats the
+    # names") by setting ORACLE +6.30 beside DR_k1 -1.26 on n600 - one estimate
+    # significant, one not, which is not a test of their difference. Review
+    # round 10 (finding M3). This is the test: per item, ORACLE minus DR_k1 on
+    # PSEUDO, causal group, same blocks and names, one edge's direction apart.
+    print("\n4b. Direct contrast on the anonymised branch: ORACLE minus DR_k1")
+    per_direct = []
+    for tag, *_ in SAMPLES:
+        L = load(tag, POOL_LEXICON, imaps[tag])
+        qs = set(L.query_type.unique()) - ARITH - IDENT
+        cols = []
+        for m in TIER:
+            o, d_ = cell(L, m, "ORACLE", qs), cell(L, m, "DR_k1", qs)
+            i = o.index.intersection(d_.index)
+            if len(i) >= 10:
+                cols.append(pd.Series((o[i] - d_[i]).values, index=i, name=f"{tag}|{m}"))
+        if not cols:
+            continue
+        W = pd.concat(cols, axis=1).groupby(level=0).mean()
+        per_direct.append(W)
+        est, lo, hi, p = boot(W)
+        print(f"  {tag:9s} {est:+7.2f}  [{lo:+7.2f} ; {hi:+7.2f}]  p={p:.4f}  n={len(W)}")
+        rows.append({"quantity": f"PSEUDO branch, ORACLE minus DR_k1 | {tag}", "sample": tag,
+                     "estimate_pp": round(est, 2), "ci_lo": round(lo, 2),
+                     "ci_hi": round(hi, 2), "p_boot": round(p, 4), "n_items": len(W)})
+    if per_direct:
+        P = pd.concat(per_direct, axis=1)
+        est, lo, hi, p = boot(P)
+        print(f"  {'pooled':9s} {est:+7.2f}  [{lo:+7.2f} ; {hi:+7.2f}]  p={p:.4f}  n={len(P)}")
+        rows.append({"quantity": "PSEUDO branch, ORACLE minus DR_k1", "sample": "pooled",
+                     "estimate_pp": round(est, 2), "ci_lo": round(lo, 2),
+                     "ci_hi": round(hi, 2), "p_boot": round(p, 4), "n_items": len(P)})
+
     # Arms that exist in ONE sample only. price400 ran the full error ladder, so
     # it alone carries DR_k2 and DR_k3. REPORT section 4.3 answers the objection
     # "one reversed edge out of 2-5 is still nearly right" with DR_k3 on this

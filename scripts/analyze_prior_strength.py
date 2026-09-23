@@ -169,6 +169,32 @@ def main():
     # written, so check_numbers.py had nothing to check it against.
     floor.to_csv(ROOT / "results" / "prior_keep_floor.csv", index=False)
 
+    # 1b. The same gap after balancing query types. REPORT section 4.2 was
+    # downgraded in review round 6 because the two strata differ in query-type
+    # mix, and it quotes a reweighted gap and the composition figures - none of
+    # which any script produced. Reweight the correct-prior stratum to the
+    # wrong-prior stratum's query-type distribution; types absent from the
+    # wrong-prior stratum get weight zero.
+    print("\n  1b. Query-type composition, and the gap after reweighting:")
+    k0 = d["KEEP"][(d["KEEP"].cond == "RAW") & (d["KEEP"].model == models[0])]
+    comp = (k0.groupby("group").query_type.value_counts(normalize=True)
+              .mul(100).round(1).rename("pct").reset_index())
+    comp.to_csv(ROOT / "results" / "prior_group_composition.csv", index=False)
+    brow = []
+    for m in models:
+        s = d["KEEP"][(d["KEEP"].model == m) & (d["KEEP"].cond == "RAW") &
+                      (d["KEEP"].parsed == 1)]
+        cp, wp = s[s.group == "correct prior"], s[s.group == "wrong prior already"]
+        w = wp.query_type.value_counts(normalize=True)
+        acc_c = cp.groupby("query_type").correct.mean()
+        q = [t for t in w.index if t in acc_c.index]
+        bal = 100 * float((acc_c[q] * w[q]).sum() / w[q].sum())
+        brow.append({"model": m, "raw_gap_pp": round(100 * (cp.correct.mean() - wp.correct.mean()), 1),
+                     "balanced_gap_pp": round(bal - 100 * wp.correct.mean(), 1)})
+    bal_df = pd.DataFrame(brow)
+    print(bal_df.to_string(index=False))
+    bal_df.to_csv(ROOT / "results" / "prior_keep_floor_balanced.csv", index=False)
+
     print("\n" + "=" * 84)
     print("2. THE LEXICON EFFECT, SPLIT BY HOW STRONG THE ORIGINAL PRIOR WAS")
     print("=" * 84)

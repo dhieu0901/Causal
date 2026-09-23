@@ -343,6 +343,40 @@ def intervals_without_a_row(idx: dict[float, set[int]]) -> list[tuple[Path, int,
     return bad
 
 
+# Table cells are the third blind spot. Every results table in this project is
+# written as "| gpt-4.1 | +43,75 | ..." - no "pp", no interval - so neither test
+# above ever looked at them. On 2026-09-23 that let through a whole moderator
+# table in WALKTHROUGH (+22,44, +27,44, +16,29 ...) and a per-model table in
+# REPORT (-12,39 / -7,68 / +6,27) that no file had produced for days. A signed
+# decimal is how this project writes an effect; counts and sample sizes carry
+# no sign. So: every signed decimal in a LIVE table cell must match the pool.
+# This is only as strong as the single-value test - the pool is dense - but it
+# is the difference between checking those cells weakly and not at all.
+SIGNED_CELL = re.compile(r"(?<![\w.,/])([+-]\d{1,3}[.,]\d{1,2})(?![\d%])")
+
+
+def signed_table_cells_unmatched(pool: set[float]) -> list[tuple[Path, int, str]]:
+    bad = []
+    for path in TARGETS:
+        if path.suffix != ".md" or path.name in LOG_FILES:
+            continue
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except (UnicodeDecodeError, OSError):
+            continue
+        for i, line in enumerate(lines, 1):
+            if not line.lstrip().startswith("|"):
+                continue
+            kind = classify(lines, i)
+            for m in SIGNED_CELL.finditer(line):
+                k = kind if kind != "LIVE" else (column_kind(lines, i, m.start(1)) or kind)
+                if k != "LIVE":
+                    continue
+                if not matches(float(m.group(1).replace(",", ".")), pool):
+                    bad.append((path, i, m.group(1)))
+    return bad
+
+
 def out_of_range_probabilities() -> list[str]:
     """Any p outside [0, 1] sitting in a shipped CSV.
 
@@ -449,6 +483,19 @@ def main() -> int:
     else:
         print("\n  Khong co. Moi khoang tin cay song deu nam tron tren mot dong CSV.")
 
+    cells = signed_table_cells_unmatched(pool)
+    print("\n" + "=" * 78)
+    print("SIGNED TABLE CELLS WITH NOTHING BEHIND THEM")
+    print("=" * 78)
+    if cells:
+        print()
+        for path, ln, txt in cells:
+            print(f"  {path.relative_to(ROOT).as_posix()}:{ln}  {txt}")
+        print("\n  A signed decimal in a live table is an effect size, and it matches")
+        print("  no value in results/. Regenerate the table from its script.")
+    else:
+        print("\n  Khong co. Moi o bang co dau deu khop mot gia tri trong results/.")
+
     bad_p = out_of_range_probabilities()
     print("\n" + "=" * 78)
     print("PROBABILITIES OUTSIDE [0, 1]")
@@ -461,7 +508,7 @@ def main() -> int:
     else:
         print("\n  Khong co. Moi cot p deu nam trong [0, 1].")
 
-    if unmatched or bad_p or rowless:
+    if unmatched or bad_p or rowless or cells:
         return 1
 
     print("\n  Every quantity in pp traces to a value in results/.")

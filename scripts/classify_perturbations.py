@@ -27,12 +27,21 @@ per-family structure from data/cladder-meta.json covers all of them, and this
 script ASSERTS that the two agree wherever both exist (332 of 332, 0 mismatches)
 before relying on it.
 
-Limit of the criterion, stated plainly. The backdoor test is exact for `ate`. For
-`ett`, `nde`, `nie` and `det-counterfactual` it is an approximation: those
-estimands can depend on parts of the graph that the backdoor sets for (X, Y) do
-not capture, so a perturbation called harmless here may still change such a
-label. The split is therefore reported on the causal group as a whole and read
-as a lower bound on how many draws are harmless, not as an exact partition.
+Limit of the criterion, stated plainly. The backdoor test is exact for `ate`
+(and for `ett` and `backadj`, which use the same adjustment sets). For `nde`,
+`nie` and `det-counterfactual` it is an approximation: those estimands depend on
+the mediator's role, which the (X, Y) backdoor sets do not capture, so a
+perturbation called harmless here may still change the label.
+
+An earlier version of this paragraph called the harmless share a LOWER bound.
+The error runs the other way. Section 1b checks it: every `nde` and `nie`
+reversal the backdoor test calls harmless touches an edge on a directed X -> Y
+path, i.e. changes the mediator structure. So for those types the backdoor
+share OVER-counts harmless draws. Section 2b re-runs the split with a
+query-type-aware flag (backdoor test for ate/ett/backadj, additionally requiring
+every directed X -> Y path untouched for nde/nie/det-counterfactual); the
+answer-changing harm becomes -7.79 / -7.36 / -6.90 at k = 1, 2, 3, flatter than
+with the backdoor-only flag, and the k=1 cell now clears zero.
 
 Run:  python scripts/classify_perturbations.py
 Writes: results/perturbation_classes.csv
@@ -145,6 +154,23 @@ def backdoor_sets(edges, nodes, x, y):
     return frozenset(ok)
 
 
+def touches_causal_path(true_edges, bad_edges, x="X", y="Y"):
+    """Does the corruption change an edge that lies on a directed x -> y path?
+
+    An edge (u, v) is on such a path when x reaches u and v reaches y. Checked
+    in both graphs, over the edges the corruption added or removed. For `nde`
+    and `nie` this is what the backdoor test cannot see: reversing M -> Y keeps
+    X an ancestor of Y through X -> Y and leaves the (X, Y) backdoor sets alone,
+    so same_estimand() calls it harmless, yet M is no longer a mediator.
+    """
+    def on_path(e, edges):
+        u, v = e
+        return ((u == x or u in descendants(edges, x))
+                and (v == y or v in ancestors(edges, y)))
+    diff = set(map(tuple, true_edges)) ^ set(map(tuple, bad_edges))
+    return any(on_path(e, true_edges) or on_path(e, bad_edges) for e in diff)
+
+
 def same_estimand(true_edges, bad_edges, nodes, x="X", y="Y"):
     """Does the corrupted graph still imply the same ATE estimand for (x, y)?"""
     if (y in descendants(true_edges, x)) != (y in descendants(bad_edges, x)):
@@ -210,7 +236,8 @@ def classify() -> pd.DataFrame:
                 bad = random.Random(f"{SEED}:{i}:{t}:{k}").choice(opts)
                 rows.append(dict(item=i, family=r["graph_id"], query_type=r["query_type"],
                                  cond=f"{t}_k{k}", arm=t, k=k,
-                                 estimand_unchanged=same_estimand(edges, bad, nodes)))
+                                 estimand_unchanged=same_estimand(edges, bad, nodes),
+                                 touches_causal_path=touches_causal_path(edges, bad)))
     return pd.DataFrame(rows)
 
 
@@ -259,6 +286,53 @@ def main() -> int:
     print("""
   The reversal arm goes 20.6 -> 0.0 -> 0.0. That collapse, not the dose, is what
   separates the k=1 cell from the k=2 and k=3 cells.""")
+
+    # ------------------------------------------------------------------
+    # 1b. Which way does the approximation err? (review item MOI-3)
+    # The backdoor test is exact for `ate` only. An earlier docstring called
+    # the harmless share a LOWER bound; for the natural effects it errs the
+    # other way, because same_estimand() cannot see a mediator losing its
+    # role. So report the exact `ate`-only share next to the pooled one, and a
+    # strict share that also requires every directed X -> Y path untouched.
+    # ------------------------------------------------------------------
+    print("\n" + "=" * 78)
+    print("1b. HARMLESS SHARE BY QUERY TYPE - where the criterion is exact, and where not")
+    print("=" * 78 + "\n")
+    C["strict_unchanged"] = C.estimand_unchanged & ~C.touches_causal_path
+    qrows = []
+    for (arm, k), g in C.groupby(["arm", "k"]):
+        for label, s in [("all query types", g), ("ate only (exact)", g[g.query_type == "ate"])] + \
+                        [(q, g[g.query_type == q]) for q in sorted(g.query_type.unique())]:
+            if not len(s):
+                continue
+            qrows.append({"arm": arm, "k": k, "subset": label, "n": len(s),
+                          "harmless_pct": round(100 * s.estimand_unchanged.mean(), 1),
+                          "harmless_strict_pct": round(100 * s.strict_unchanged.mean(), 1),
+                          "harmless_but_touches_path": int((s.estimand_unchanged & s.touches_causal_path).sum())})
+    Q = pd.DataFrame(qrows)
+    Q.to_csv(ROOT / "results" / "perturbation_classes_by_query.csv", index=False)
+    show = Q[(Q.arm == "DR")]
+    print(show.to_string(index=False))
+    print("""
+  harmless_pct is the backdoor test; harmless_strict_pct additionally requires
+  that no edge on a directed X -> Y path was touched. Which one is RIGHT
+  depends on the query type:
+
+    ate, ett, backadj   the backdoor test. If X stays an ancestor of Y and the
+                        valid adjustment sets are unchanged, the adjustment
+                        formula is unchanged, so the answer is too - touching
+                        a directed path elsewhere does not matter. The strict
+                        test is too conservative here.
+    nde, nie,           the strict test. These depend on the mediator's role,
+    det-counterfactual  which the (X, Y) backdoor test cannot see. Every nde
+                        and nie reversal it called harmless touches a directed
+                        X -> Y path, so the backdoor share OVER-counts there:
+                        it is an upper bound, not the lower bound an earlier
+                        docstring claimed.""")
+    # Query-type-aware flag, used by the split in section 2b.
+    strict_types = {"nde", "nie", "det-counterfactual"}
+    C["unchanged_qt"] = np.where(C.query_type.isin(strict_types),
+                                 C.strict_unchanged, C.estimand_unchanged)
 
     print("\n" + "=" * 78)
     print("2. THE EFFECT SPLIT BY THAT COLUMN  -  causal query group only")
@@ -329,6 +403,36 @@ def main() -> int:
     for _, r in surv.sort_values("p_boot").iterrows():
         print(f"    {r.lexicon:7s} {r.cond:7s} {r.subset:10s} {r.delta_pp:+7.2f}"
               f"  p={r.p_boot:.4f}  n={r.n_items}")
+
+    # ------------------------------------------------------------------
+    # 2b. The same split with the query-type-aware flag of section 1b. The
+    # table above uses the (X, Y) backdoor test for every query type, which
+    # section 1b shows over-counts harmless reversals for nde, nie and
+    # det-counterfactual. Only k=1 has harmless draws, so only k=1 can move.
+    # Written to its own file so the table above keeps its numbers.
+    # ------------------------------------------------------------------
+    print("\n" + "=" * 78)
+    print("2b. THE SPLIT AGAIN, WITH THE QUERY-TYPE-AWARE FLAG")
+    print("=" * 78 + "\n")
+    qt_rows = []
+    for lex in ("KEEP", "PSEUDO"):
+        d = pd.read_csv(ROOT / "results" / f"pilot_raw_price400{lex}.csv")
+        d = d[d.parsed == 1]
+        for cond in ("DR_k1", "DR_k2", "DR_k3"):
+            v = paired_causal(d, cond)
+            flag = C[C.cond == cond].set_index("item").unchanged_qt.reindex(v.index)
+            for label, mask in (("unchanged (qt)", flag == True), ("changed (qt)", flag == False)):
+                x = v[mask.fillna(False)].values
+                if len(x) < 5:
+                    qt_rows.append(dict(lexicon=lex, cond=cond, subset=label, n_items=len(x)))
+                    continue
+                e, lo, hi, p = boot(x)
+                print(f"  {lex:7s} {cond:6s} {label:15s} {e:+7.2f} [{lo:+7.2f} ; {hi:+7.2f}]"
+                      f"  p={p:.4f}  n={len(x)}")
+                qt_rows.append(dict(lexicon=lex, cond=cond, subset=label,
+                                    delta_pp=round(e, 2), ci_lo=round(lo, 2),
+                                    ci_hi=round(hi, 2), p_boot=round(p, 4), n_items=len(x)))
+    pd.DataFrame(qt_rows).to_csv(ROOT / "results" / "perturbation_split_qt.csv", index=False)
 
     C.to_csv(ROOT / "results" / "perturbation_classes.csv", index=False)
     out.to_csv(ROOT / "results" / "perturbation_split.csv", index=False)

@@ -1,0 +1,4 @@
+model,n_items,n_stories,icc_story,design_effect
+gpt-4.1-nano,173,37,-0.006,1.0
+gpt-4.1-mini,172,37,-0.043,1.0
+gpt-4.1,172,37,-0.009,1.0

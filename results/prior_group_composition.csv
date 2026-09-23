@@ -1,0 +1,19 @@
+group,query_type,pct
+correct prior,marginal,20.0
+correct prior,correlation,18.9
+correct prior,ate,14.7
+correct prior,backadj,14.7
+correct prior,det-counterfactual,9.5
+correct prior,ett,9.5
+correct prior,nie,6.3
+correct prior,exp_away,4.2
+correct prior,collider_bias,2.1
+wrong prior already,backadj,22.8
+wrong prior already,marginal,15.2
+wrong prior already,ett,15.2
+wrong prior already,det-counterfactual,13.9
+wrong prior already,ate,12.7
+wrong prior already,correlation,8.9
+wrong prior already,nie,6.3
+wrong prior already,nde,2.5
+wrong prior already,collider_bias,2.5

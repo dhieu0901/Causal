@@ -1,0 +1,4 @@
+model,raw_gap_pp,balanced_gap_pp
+gpt-4.1-nano,3.6,-0.2
+gpt-4.1-mini,11.7,6.3
+gpt-4.1,11.6,6.2
