@@ -47,7 +47,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import numpy as np
 import pandas as pd
 
-from stats import boot_p
+from stats import boot_interval, boot_p, cluster_boot
 
 TIER = ["gpt-4.1-nano", "gpt-4.1-mini", "gpt-4.1"]
 LADDER = ["KEEP", "PERMUTE", "IRRELEVANT", "SYMBOL", "PSEUDO"]
@@ -94,11 +94,8 @@ def boot(by_model, seed, n=4000):
     items = sorted(set().union(*[set(s.index) for s in by_model.values()]))
     rng = np.random.default_rng(seed)
     M = np.vstack([by_model[m].reindex(items).values for m in by_model])
-    out = np.empty(n)
-    for b in range(n):
-        pick = rng.integers(0, len(items), len(items))
-        out[b] = np.nanmean(M[:, pick])
-    return 100 * np.nanmean(M), 100 * out
+    out = cluster_boot(len(items), lambda i: 100 * np.nanmean(M[:, i]), seed, n)
+    return 100 * np.nanmean(M), out
 
 
 def main():

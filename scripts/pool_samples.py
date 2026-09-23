@@ -61,7 +61,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import numpy as np
 import pandas as pd
 
-from stats import boot_p
+from stats import boot_interval, boot_p, cluster_boot
 
 from analyze_querygroup import ARITH, IDENT, TIER
 
@@ -171,9 +171,8 @@ def boot(W, seed=SEED, n=NBOOT):
     """
     rng = np.random.default_rng(seed)
     idx = W.index.values
-    out = np.empty(n)
-    for b in range(n):
-        out[b] = 100 * np.nanmean(W.loc[rng.choice(idx, len(idx), replace=True)].values)
+    out = cluster_boot(len(idx),
+                       lambda i: 100 * np.nanmean(W.loc[idx[i]].values), seed, n)
     est = 100 * np.nanmean(W.values)
     # This is the helper analyze_by_family.py uses, and it is where the
     # p = 1.0255 in family_breakdown.csv came from.

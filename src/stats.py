@@ -109,3 +109,41 @@ def boot_p(draws, n_draws=None) -> float:
         return float("nan")
     p = 2.0 * min(float((d <= 0).mean()), float((d >= 0).mean()))
     return min(1.0, max(p, 2.0 / b))
+
+
+def cluster_boot(n_units, stat, seed, n_draws):
+    """Resample unit POSITIONS with replacement; apply `stat` to each draw.
+
+    One resampling mechanism for the whole repository. Eleven bootstraps were
+    written separately, nine drawing with `rng.integers(0, n, n)` and eight with
+    `rng.choice(arr, n, replace=True)`. Those two are not obviously the same
+    call, so the divergence looked like it might carry a cost to fix.
+
+    It does not. Given one freshly seeded Generator the two consume the stream
+    identically - verified on arange, on a non-contiguous id array and on a
+    pandas Index - so routing every caller through this function leaves every
+    published number exactly where it was. That is why this is a cleanup and
+    not a reanalysis.
+
+    What is deliberately NOT unified is the STATISTIC. pool_samples averages
+    over every (item, cell) pair while analyze_vs_raw averages per item first;
+    those are different estimators on purpose, and its docstring says so.
+    Collapsing them would silently change results under the banner of tidying
+    up. `stat` therefore stays with the caller: it receives an array of
+    positions into that caller's own units and returns one number.
+    """
+    rng = np.random.default_rng(seed)
+    out = np.empty(n_draws, dtype=float)
+    for b in range(n_draws):
+        out[b] = stat(rng.integers(0, n_units, n_units))
+    return out
+
+
+def boot_interval(point, draws, n_draws=None):
+    """(estimate, lo, hi, p) from a point estimate and its bootstrap replicates."""
+    d = np.asarray(draws, dtype=float)
+    d = d[np.isfinite(d)]
+    if d.size == 0:
+        return point, float("nan"), float("nan"), float("nan")
+    lo, hi = np.percentile(d, [2.5, 97.5])
+    return point, float(lo), float(hi), boot_p(d, n_draws or len(d))

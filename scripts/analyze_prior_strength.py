@@ -33,7 +33,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import numpy as np
 import pandas as pd
 from pilot import make_items
-from stats import boot_p, mcnemar_exact_p
+from stats import boot_interval, boot_p, cluster_boot, mcnemar_exact_p
 
 LEXICONS = ["KEEP", "PERMUTE", "SYMBOL", "PSEUDO"]
 TIER = ["gpt-4.1-nano", "gpt-4.1-mini", "gpt-4.1"]
@@ -107,12 +107,9 @@ def boot(v, seed=SEED, n=NBOOT):
     x = v.values
     if len(x) < 5:
         return (np.nan,) * 4
-    rng = np.random.default_rng(seed)
-    out = np.empty(n)
-    for b in range(n):
-        out[b] = x[rng.integers(0, len(x), len(x))].mean()
-    return (100 * x.mean(), 100 * np.percentile(out, 2.5),
-            100 * np.percentile(out, 97.5), boot_p(out, n))
+    out = cluster_boot(len(x), lambda i: x[i].mean(), seed, n)
+    est, lo, hi, p = boot_interval(x.mean(), out, n)
+    return 100 * est, 100 * lo, 100 * hi, p
 
 
 def boot_two_sample(a, b, seed=SEED, n=NBOOT):
@@ -165,7 +162,12 @@ def main():
         b = 100 * s[s.group == "wrong prior already"].correct.mean()
         rows.append({"model": m, "correct_prior": round(a, 1),
                      "wrong_prior_already": round(b, 1), "chenh_pp": round(a - b, 1)})
-    print(pd.DataFrame(rows).to_string(index=False))
+    floor = pd.DataFrame(rows)
+    print(floor.to_string(index=False))
+    # REPORT section 4.2 quotes this column as "CLadder's own anticommonsense
+    # gap" beside the project's own PERMUTE figures. It was printed and never
+    # written, so check_numbers.py had nothing to check it against.
+    floor.to_csv(ROOT / "results" / "prior_keep_floor.csv", index=False)
 
     print("\n" + "=" * 84)
     print("2. THE LEXICON EFFECT, SPLIT BY HOW STRONG THE ORIGINAL PRIOR WAS")

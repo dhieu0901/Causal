@@ -63,7 +63,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "src"))
 
-from stats import boot_p
+from stats import boot_interval, boot_p, cluster_boot
 RESULTS = ROOT / "results"
 
 from analyze_querygroup import ARITH, IDENT
@@ -135,13 +135,10 @@ def boot(v: pd.Series, seed: int = SEED, n: int = NBOOT):
     x = v.values
     if len(x) < 5:
         return (np.nan,) * 4
-    rng = np.random.default_rng(seed)
-    out = np.empty(n)
-    for b in range(n):
-        out[b] = x[rng.integers(0, len(x), len(x))].mean()
-    # One definition for every bootstrap in the repo - see stats.boot_p.
-    return (100 * x.mean(), 100 * np.percentile(out, 2.5),
-            100 * np.percentile(out, 97.5), boot_p(out, n))
+    # One resampler and one interval for every bootstrap in the repo.
+    out = cluster_boot(len(x), lambda i: x[i].mean(), seed, n)
+    est, lo, hi, p = boot_interval(x.mean(), out, n)
+    return 100 * est, 100 * lo, 100 * hi, p
 
 
 def benjamini_hochberg(p: np.ndarray, alpha: float = ALPHA) -> np.ndarray:

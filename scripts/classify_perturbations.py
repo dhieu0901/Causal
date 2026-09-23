@@ -54,7 +54,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from stats import boot_p
+from stats import boot_interval, boot_p, cluster_boot
 
 from perturb import to_edges                      # noqa: E402
 from pilot import make_items, ENUMERATORS         # noqa: E402
@@ -228,10 +228,9 @@ def benjamini_hochberg(p: np.ndarray, alpha: float = 0.05) -> np.ndarray:
 def boot(x: np.ndarray):
     if len(x) < 5:
         return (np.nan,) * 4
-    rng = np.random.default_rng(SEED)
-    b = np.array([x[rng.integers(0, len(x), len(x))].mean() for _ in range(NBOOT)])
-    return (100 * x.mean(), 100 * np.percentile(b, 2.5),
-            100 * np.percentile(b, 97.5), boot_p(b, NBOOT))
+    b = cluster_boot(len(x), lambda i: x[i].mean(), SEED, NBOOT)
+    est, lo, hi, p = boot_interval(x.mean(), b, NBOOT)
+    return 100 * est, 100 * lo, 100 * hi, p
 
 
 def paired_causal(d: pd.DataFrame, cond: str) -> pd.Series:

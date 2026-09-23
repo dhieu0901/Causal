@@ -159,6 +159,12 @@ def main():
     print(f"  Tu xuat hien rong hon = khuon mau CLadder: {len(template)}.\n")
 
     rows = []
+    # Per item as well as per lexicon. The summary below says what share of
+    # items kept a real word; it cannot say WHICH, and the falsification test in
+    # REPORT section 4.7 needs exactly that - it splits the effect by whether an
+    # item's anonymisation was clean. Without this flag that test had no way to
+    # run and was carried in prose alone.
+    per_item = {}
     for lex in ["PERMUTE", "SYMBOL", "PSEUDO"]:
         dirty, tot, leftover = 0, 0, Counter()
         for k in keys:
@@ -170,6 +176,7 @@ def main():
             tot += 1
             sw = set(WORD.findall(src.lower())) & story
             rem = sw & set(WORD.findall(dst.lower()))
+            per_item.setdefault(k[0], {"item": k[0]})[f"residue_{lex}"] = bool(rem)
             if rem:
                 dirty += 1
                 leftover.update(rem)
@@ -184,6 +191,14 @@ def main():
     res = pd.DataFrame(rows)
     print(res.to_string(index=False))
     res.to_csv(ROOT / "results" / "lexicon_residue.csv", index=False)
+    if per_item:
+        pi = pd.DataFrame(sorted(per_item.values(), key=lambda r: r["item"]))
+        cols = [c for c in pi.columns if c.startswith("residue_")]
+        pi["clean_all"] = ~pi[cols].any(axis=1)
+        pi.to_csv(ROOT / "results" / "residue_by_item.csv", index=False)
+        print(f"\n  {int(pi.clean_all.sum())}/{len(pi)} item sach o MOI bo tu vung")
+        print("  an danh. Ghi ra results/residue_by_item.csv - nhan theo tung item,")
+        print("  thu ma bang tong hop tren khong the noi.")
     print("\n  relabel() only replaces phrases listed in variable_mapping. CLadder also")
     print("  refers to the same variable through grammatical variants that are not in")
     print("  the mapping, so those survive. Residue biases SYMBOL/PSEUDO TOWARDS KEEP -")

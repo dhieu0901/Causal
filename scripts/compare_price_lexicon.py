@@ -109,7 +109,7 @@ def main():
   What that file says: 0 of 9 cells separate from zero, so the price cannot be
   told apart between lexical regimes. But the equivalence bound is only tight
   for DR on the strong models (about 1.7 pp). Across all nine cells the data
-  rule out only a difference larger than about 8.9 pp, because FE fits three
+  rule out only a difference larger than about 8.86 pp, because FE fits three
   points on the smallest item counts. Quote the bound from the WEAKEST cell.
 
   NOT ESTABLISHED: the claim that "the budget doubles once the lexical anchor is

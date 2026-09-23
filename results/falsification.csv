@@ -1,0 +1,16 @@
+test,quantity,value,ci_lo,ci_hi,p_boot,n,note
+prompt length,mean r within cell,-0.113,,,,24,"8 negative significant, 0 positive"
+residue,pct clean | ate,12.5,,,,24,
+residue,pct clean | backadj,100.0,,,,32,
+residue,pct clean | collider_bias,0.0,,,,4,
+residue,pct clean | correlation,100.0,,,,25,
+residue,pct clean | det-counterfactual,5.0,,,,20,
+residue,pct clean | ett,0.0,,,,21,
+residue,pct clean | exp_away,0.0,,,,4,
+residue,pct clean | marginal,16.1,,,,31,
+residue,pct clean | nde,0.0,,,,2,
+residue,pct clean | nie,9.1,,,,11,
+residue,clean items in causal group,5.0,,,,86,"confounded with query_type, split not testable"
+lucky slice,DiD on causal subset,14.35,-0.49,9.54,0.0005,86,0/2000 random slices reach it
+scoring sensitivity,drop unparsed,14.35,6.65,22.8,0.0005,86,
+scoring sensitivity,unparsed = wrong,14.6,6.72,23.26,0.0005,86,

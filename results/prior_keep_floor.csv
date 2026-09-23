@@ -1,0 +1,4 @@
+model,correct_prior,wrong_prior_already,chenh_pp
+gpt-4.1-nano,80.9,77.2,3.6
+gpt-4.1-mini,83.2,71.4,11.7
+gpt-4.1,80.9,69.2,11.6

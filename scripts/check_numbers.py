@@ -106,6 +106,7 @@ HISTORY_MARK = (
     "đã có script", "trước đây", "bản trước", "bản đầu", "đã rút", "đã bỏ",
     "cảnh báo", "đã sửa", "đã đo", "khép lại", "sửa ngày", "đổi cách trình bày",
     "đã khớp lại", "đã hạ cấp", "đã đóng", "không script nào", "đừng trích",
+    "bản cũ", "đã bị thay thế", "con số dịch", "đã rút",
 )
 EXTERNAL_MARK = ("Caliper", "CausalGraph2LLM", "Corr2Cause", "GSM-Symbolic",
                  "Vernier", "NoisyCausal", "RE-IMAGINE", "Yamin", "Lopiano")
@@ -152,10 +153,17 @@ def classify(lines: list[str], i: int) -> str:
                              or lines[j - 1].lstrip().startswith("|")):
                 j -= 1
             if j > 0 and lines[j - 1].lstrip().startswith(">"):
-                gov = lines[j - 1].lower()
-                if any(k.lower() in gov for k in HISTORY_MARK):
+                # Read the WHOLE governing blockquote, not just its last line. A
+                # warning block usually opens with the marker and then explains
+                # itself over several lines, so looking only at the nearest one
+                # found the explanation and missed the warning.
+                k0 = j
+                while k0 > 1 and lines[k0 - 2].lstrip().startswith(">"):
+                    k0 -= 1
+                gov = " ".join(lines[k0 - 1:j])
+                if any(k.lower() in gov.lower() for k in HISTORY_MARK):
                     return "HISTORY"
-                if any(k in lines[j - 1] for k in EXTERNAL_MARK):
+                if any(k in gov for k in EXTERNAL_MARK):
                     return "EXTERNAL"
         return "LIVE"
     # Walk up inside the blockquote to the nearest heading line.

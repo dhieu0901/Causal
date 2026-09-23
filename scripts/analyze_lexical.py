@@ -173,6 +173,36 @@ def main():
     print(pd_.to_string(index=False))
     pd_.to_csv(ROOT / "results" / f"lexical_price{a.tag}.csv", index=False)
 
+    # ---- 4b. PROSE minus RAW, per lexicon ---------------------------------
+    # REPORT section 10 leans on these four numbers for its contamination
+    # argument: the PROSE/KEEP cell is the only one matching CLadder character
+    # for character, so if the model were living off string memory that cell
+    # should gain the MOST from prose. It gains the least. The four figures were
+    # quoted with no file behind them; paired within item, as the design allows.
+    pv = []
+    for lex in LEXICONS:
+        cols = []
+        for m in models:
+            s = d[lex][(d[lex].model == m) & (d[lex].parsed == 1)]
+            w = s.pivot_table(index="item", columns="cond", values="correct",
+                              aggfunc="first")
+            if not {"PROSE", "RAW"} <= set(w.columns):
+                continue
+            w = w[["PROSE", "RAW"]].dropna()
+            if len(w) < 10:
+                continue
+            cols.append(pd.Series((w.PROSE - w.RAW).values, index=w.index, name=m))
+        if not cols:
+            continue
+        v = pd.concat(cols, axis=1).mean(axis=1).dropna()
+        pv.append({"lexicon": lex, "n_items": len(v),
+                   "prose_minus_raw_pp": round(100 * v.mean(), 2)})
+    if pv:
+        pvd = pd.DataFrame(pv)
+        print("\n  4b. PROSE - RAW, ghep cap trong tung item, gop ba model:")
+        print(pvd.to_string(index=False))
+        pvd.to_csv(ROOT / "results" / f"prose_gain_by_lexicon{a.tag}.csv", index=False)
+
     # ---- 5. does the lexicon change the graph the model BUILDS? ------------
     ind = {}
     for lex in LEXICONS:

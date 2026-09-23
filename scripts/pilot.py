@@ -40,8 +40,8 @@ def make_items(n, seed, kmax=3, data="full_v1.5_default.csv", pair_to=None,
     That is also the stronger design. Comparing two separately drawn splits is a
     between-items contrast that McNemar cannot touch, on the one comparison
     where pairing matters most. Caliper (arXiv:2606.04915) perturbs within item
-    for the same reason, and reports 7.6 to 29.6 pp drops from anonymising
-    names.
+    for the same reason; Caliper reports 7.6 to 29.6 pp drops from anonymising
+    names. Those two figures are Caliper's, not this project's.
 
     `pair_to` reuses the ids sampled from another file, for the case where two
     files really are item-matched.

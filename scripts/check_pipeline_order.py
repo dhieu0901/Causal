@@ -52,7 +52,7 @@ ORDER = [
     "analyze_by_family", "analyze_querygroup", "analyze_dose", "analyze_ladder5",
     "analyze_pilot", "analyze_instruction", "analyze_prior_strength",
     "analyze_chains", "analyze_errortypes_lexical", "analyze_anomaly_residue",
-    "analyze_budget_paired", "analyze_moderators",
+    "analyze_budget_paired", "analyze_moderators", "analyze_falsification",
     "compare_price_lexicon", "analyze_price_paired",
     "feasibility", "make_figures",
     "measure_raw_leak",
