@@ -17,7 +17,8 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 import pandas as pd
-from perturb import FAMILY_STRUCTURE, to_edges, max_k, ENUMERATORS
+from perturb import (FAMILY_STRUCTURE, to_edges, max_k, ENUMERATORS,
+                     enumerate_scramble)
 from prompts import build, parse_answer, strip_structure, parse_prose_graph
 from lexical import relabel_item, residue
 from runner import run_batch, usage_summary, guard_errors, is_ok
@@ -92,7 +93,8 @@ def make_items(n, seed, kmax=3, data="full_v1.5_default.csv", pair_to=None,
 
 
 def build_jobs(items, kmax=3, seed=0, types=("DR",), lexicon="KEEP",
-               drop_residue=False, with_instr=False, with_names=False):
+               drop_residue=False, with_instr=False, with_names=False,
+               with_scramble=False):
     """Every graph is built over the story's own variable names.
 
     Using the symbol DAG (X -> V2 -> Y) beside a body about husbands and wives
@@ -162,6 +164,15 @@ def build_jobs(items, kmax=3, seed=0, types=("DR",), lexicon="KEEP",
             jobs.append(dict(cond="NAMES_ONLY",
                              prompt=build(prompt, "NAMES_ONLY", edges), **meta))
         nodes = sorted({n for e in edges for n in e})
+        if with_scramble:
+            # A random DAG on the same names, with as many arrows as ORACLE and
+            # not one true edge (perturb.enumerate_scramble). Seeded per item
+            # like the DR draws, so adding it re-draws nothing else. Opt-in, for
+            # the same reason as NAMES_ONLY.
+            bad = random.Random(f"{seed}:{i}:SCRAMBLE").choice(
+                enumerate_scramble(edges, nodes))
+            jobs.append(dict(cond="SCRAMBLE",
+                             prompt=build(prompt, "PERTURB", bad), **meta))
         for t in types:
             for k in range(1, kmax + 1):
                 opts = ENUMERATORS[t](edges, nodes, k)
@@ -210,15 +221,77 @@ def main():
                     help="drop items that still carry real nouns outside "
                          "variable_mapping. This CHANGES the sample, so results are "
                          "NOT directly comparable with earlier runs")
+    ap.add_argument("--scramble", action="store_true", dest="with_scramble",
+                    help="add the SCRAMBLE condition: a random DAG on the same names "
+                         "with as many edges as ORACLE and none of the true ones")
+    ap.add_argument("--sample-kmax", type=int, default=None, dest="sample_kmax",
+                    help="the kmax used to DRAW the items (default: --kmax). Items "
+                         "come only from families with a valid k=kmax reversal, so "
+                         "raising --kmax alone changes the sample; pass the old "
+                         "value here to add deeper perturbations to an existing one")
+    ap.add_argument("--conds", default="",
+                    help="comma list; keep only these conditions. Every condition "
+                         "is still built first, so no draw changes. Use it to add "
+                         "conditions to a sample already run without writing its "
+                         "old rows into a second file")
+    ap.add_argument("--dry-run", action="store_true", dest="dry_run",
+                    help="send nothing; print how many calls are already cached and "
+                         "what the rest would cost")
+    ap.add_argument("--cost-ref", default="", dest="cost_ref",
+                    help="FILE:COND, with --dry-run. Price each new call at the SAME "
+                         "item's output tokens under COND in results/FILE, which must "
+                         "be a run of this very sample, e.g. "
+                         "pilot_raw_n600PSEUDO.csv:DR_k1")
     a = ap.parse_args()
 
-    items = make_items(a.n, a.seed, a.kmax, a.data, a.pair_to, a.drop_nonsense)
+    sample_kmax = a.kmax if a.sample_kmax is None else a.sample_kmax
+    items = make_items(a.n, a.seed, sample_kmax, a.data, a.pair_to, a.drop_nonsense)
     jobs = build_jobs(items, a.kmax, a.seed,
                       tuple(t.strip() for t in a.types.split(",")), a.lexicon,
                       drop_residue=a.drop_residue, with_instr=a.with_instr,
-                      with_names=a.with_names)
+                      with_names=a.with_names, with_scramble=a.with_scramble)
+    if a.conds:
+        keep = {c.strip() for c in a.conds.split(",") if c.strip()}
+        unknown = keep - {j["cond"] for j in jobs}
+        if unknown:
+            raise SystemExit(f"--conds names conditions this run does not build: "
+                             f"{sorted(unknown)}")
+        jobs = [j for j in jobs if j["cond"] in keep]
     print(f"items={len(items)}  jobs/model={len(jobs)}  lexicon={a.lexicon}  "
           f"paired_to={a.pair_to}  families={sorted(items.graph_id.unique())}")
+
+    if a.dry_run:
+        from runner import estimate_cost
+        ref = None
+        if a.cost_ref:
+            fname, cond = a.cost_ref.rsplit(":", 1)
+            ref = pd.read_csv(ROOT / "results" / fname)
+            # `item` is a row index into THIS sample, so a file from another
+            # sample would price every call at an unrelated question.
+            meta = {j["item"]: (j["graph_id"], j["gold"]) for j in jobs}
+            chk = ref.drop_duplicates("item").set_index("item")
+            bad = [i for i, m in meta.items()
+                   if i in chk.index and (chk.graph_id[i], chk.gold[i]) != m]
+            if bad:
+                raise SystemExit(f"--cost-ref {fname}: {len(bad)} items disagree on "
+                                 f"graph or label; it is not a run of this sample")
+            ref = ref[ref.cond == cond]
+        total, known = 0.0, True
+        for model in a.models.split(","):
+            model = model.strip()
+            ro = (None if ref is None else
+                  ref[ref.model == model].set_index("item").out_tok)
+            e = estimate_cost(jobs, model, ref_out=ro)
+            print(f"  {e['model']:14s} calls={e['calls']:5d} distinct={e['distinct']:5d} "
+                  f"cached={e['cached']:5d} new={e['new']:5d}  usd={e['usd']}  "
+                  f"{e.get('new_by_cond', '')}")
+            if e["usd"] is None:
+                known = False
+            else:
+                total += e["usd"]
+        print(f"  ESTIMATE, nothing sent: {total:.2f} USD"
+              + ("" if known else "  (plus models with no price or no cache)"))
+        return
 
     allrows = []
     for model in a.models.split(","):

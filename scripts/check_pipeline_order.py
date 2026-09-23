@@ -140,7 +140,9 @@ def main() -> int:
             return 1
 
     pos = {s: i for i, s in enumerate(ORDER)}
-    missing = [s for s in flows if s not in pos and s != "pilot"]
+    # The scripts that spend API credit sit outside the analysis order: they
+    # produce the pilot_raw_* inputs rather than consume analysis outputs.
+    missing = [s for s in flows if s not in pos and s not in ("pilot", "check_drift")]
 
     print("=" * 78)
     print("PIPELINE ORDER - doc truoc khi ghi?")

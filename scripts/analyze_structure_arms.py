@@ -128,6 +128,91 @@ def report(label, W, rows):
                  "p_boot": round(p, 4), "n_items": n})
 
 
+# Conditions by the run that produced them on n600. A contrast between two
+# conditions of one run compares answers given at the same time; a contrast
+# across runs also carries any change in the served model between 2026-09-16
+# and 2026-09-24, which nothing in this file can see.
+N600_OLD = {"RAW", "PROSE", "ORACLE", "DR_k1"}
+N600_NEW = {"NAMES_ONLY", "SCRAMBLE", "DR_k2", "DR_k3"}
+
+
+def load_n600(lex, imap):
+    """n600 with the conditions scripts/run_n600_extensions.sh added."""
+    d = load("n600", lex, imap)
+    extra = ROOT / "results" / f"pilot_raw_n600arms{lex}.csv"
+    if extra.exists():
+        e = pd.read_csv(extra).merge(imap, on="item", how="left")
+        if e.id.isna().any():
+            raise SystemExit(f"n600arms{lex}: some items could not be mapped to an id")
+        d = pd.concat([d, e], ignore_index=True)
+    return d
+
+
+def matched_controls(imap, rows):
+    """Section 6: NAMES_ONLY and SCRAMBLE on n600, the only sample that has them.
+
+    The ladder, from least to most structure in the block:
+        RAW         no block
+        NAMES_ONLY  the block, the names, the instruction, not one arrow
+        SCRAMBLE    as many arrows as ORACLE, none of them true
+        DR_k1..3    the true graph with k arrows reversed
+        ORACLE      the true graph
+    ORACLE minus NAMES_ONLY is what the arrows are worth once the names are
+    there; SCRAMBLE minus NAMES_ONLY is what WRONG arrows cost against none.
+    """
+    extra = ROOT / "results" / "pilot_raw_n600armsKEEP.csv"
+    if not extra.exists():
+        print("\n6. NAMES_ONLY / SCRAMBLE: no data (run scripts/run_n600_extensions.sh)")
+        return
+    print("\n6. Matched controls on n600, genuinely-causal group, paired within item")
+    print("   'same run' contrasts compare answers given at the same time; 'crosses")
+    print("   runs' ones also carry any drift in the served model between runs.\n")
+    pairs = [("NAMES_ONLY", "RAW"), ("ORACLE", "NAMES_ONLY"), ("SCRAMBLE", "RAW"),
+             ("SCRAMBLE", "NAMES_ONLY"), ("ORACLE", "SCRAMBLE"), ("DR_k1", "SCRAMBLE"),
+             ("DR_k2", "NAMES_ONLY"), ("DR_k3", "DR_k2"), ("SCRAMBLE", "DR_k3"),
+             ("ORACLE", "DR_k1")]
+    L = {lx: load_n600(lx, imap) for lx in ("KEEP", POOL_LEXICON)}
+    qs = set(L["KEEP"].query_type.unique()) - ARITH - IDENT
+    for lx in ("KEEP", POOL_LEXICON):
+        for a_, b_ in pairs:
+            cols = []
+            for m in TIER:
+                x, y = cell(L[lx], m, a_, qs), cell(L[lx], m, b_, qs)
+                i = x.index.intersection(y.index)
+                if len(i) >= 10:
+                    cols.append(pd.Series((x[i] - y[i]).values, index=i, name=m))
+            if not cols:
+                continue
+            W = pd.concat(cols, axis=1).groupby(level=0).mean()
+            est, lo, hi, p = boot(W)
+            same = ({a_, b_} <= N600_OLD) or ({a_, b_} <= N600_NEW)
+            run = "same run" if same else "crosses runs"
+            label = f"{lx} | {a_} minus {b_} | n600"
+            print(f"  {label:36s} {est:+7.2f}  [{lo:+7.2f} ; {hi:+7.2f}]  p={p:.4f}"
+                  f"  n={len(W)}  {run}")
+            rows.append({"quantity": label, "sample": "n600", "run": run,
+                         "estimate_pp": round(est, 2), "ci_lo": round(lo, 2),
+                         "ci_hi": round(hi, 2), "p_boot": round(p, 4), "n_items": len(W)})
+    # The interaction for the two new blocks, same estimator as section 1.
+    for arm in ("NAMES_ONLY", "SCRAMBLE"):
+        cols = []
+        for m in TIER:
+            kr, lr = cell(L["KEEP"], m, "RAW", qs), cell(L[POOL_LEXICON], m, "RAW", qs)
+            ka, la = cell(L["KEEP"], m, arm, qs), cell(L[POOL_LEXICON], m, arm, qs)
+            i = kr.index.intersection(lr.index).intersection(ka.index).intersection(la.index)
+            if len(i) >= 10:
+                cols.append(pd.Series(((kr[i] - lr[i]) - (ka[i] - la[i])).values,
+                                      index=i, name=m))
+        W = pd.concat(cols, axis=1).groupby(level=0).mean()
+        est, lo, hi, p = boot(W)
+        label = f"DiD | {arm} | n600"
+        print(f"  {label:36s} {est:+7.2f}  [{lo:+7.2f} ; {hi:+7.2f}]  p={p:.4f}"
+              f"  n={len(W)}  crosses runs")
+        rows.append({"quantity": label, "sample": "n600", "run": "crosses runs",
+                     "estimate_pp": round(est, 2), "ci_lo": round(lo, 2),
+                     "ci_hi": round(hi, 2), "p_boot": round(p, 4), "n_items": len(W)})
+
+
 def main():
     imaps = all_item_maps()
 
@@ -254,6 +339,8 @@ def main():
                              "estimate_pp": round(est, 2), "ci_lo": round(lo, 2),
                              "ci_hi": round(hi, 2), "p_boot": round(p_, 4),
                              "n_items": n})
+
+    matched_controls(imaps["n600"], rows)
 
     out = ROOT / "results" / "structure_arms.csv"
     df = pd.DataFrame(rows)

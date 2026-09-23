@@ -396,8 +396,9 @@ def main() -> None:
   rather than a qualitative dissociation.
 
   DOSE IS CONFOUNDED WITH COMPOSITION. See scripts/classify_perturbations.py:
-  20.6% of the reversals actually drawn at k=1 leave the ATE estimand unchanged,
-  against 0.0% at k=2 and k=3. The apparent slope across k is largely that share
+  about a quarter of the reversals actually drawn at k=1 leave the ATE estimand
+  unchanged, against none at k=2 and k=3 (the share is computed there, not typed
+  here: this script runs first). The apparent slope across k is largely that share
   collapsing, not the dose biting harder. Do not quote a pp-per-edge slope from
   the trend table without that column beside it.""")
 

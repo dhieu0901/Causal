@@ -65,7 +65,19 @@ STEPS = [
 ]
 
 
-def load(lex):
+# n600 carries KEEP and PSEUDO from its 2026-09-16 run and the other three rungs
+# from scripts/run_n600_extensions.sh (2026-09-24, RAW only). A step between the
+# two runs also carries any drift in the served model; one inside a run does not.
+N600_NEW = {"PERMUTE", "IRRELEVANT", "SYMBOL"}
+
+
+def load(lex, sample="lex"):
+    if sample == "n600":
+        tag = f"_n600ladder{lex}" if lex in N600_NEW else f"_n600{lex}"
+        p = ROOT / "results" / f"pilot_raw{tag}.csv"
+        if not p.exists():
+            raise SystemExit(f"thieu {p.name}: chay bash scripts/run_n600_extensions.sh")
+        return pd.read_csv(p)
     for tag in (f"_lex{lex}", f"_instr{lex}"):
         p = ROOT / "results" / f"pilot_raw{tag}.csv"
         if p.exists():
@@ -104,11 +116,26 @@ def main():
     ap.add_argument("--boot", type=int, default=4000)
     ap.add_argument("--cond", default="RAW",
                     help="the structure condition to compare within (default RAW)")
+    ap.add_argument("--sample", default="both", choices=["both", "lex", "n600"],
+                    help="lex: the 174-item exploratory sample (86 causal items); "
+                         "n600: 580 items, rungs PERMUTE/IRRELEVANT/SYMBOL at RAW only; "
+                         "both (default): lex, then n600 when its data exists")
     ap.add_argument("--all-queries", action="store_true",
                     help="use the whole sample instead of the genuinely-causal group only")
     a = ap.parse_args()
+    samples = [a.sample] if a.sample != "both" else (
+        ["lex", "n600"] if (ROOT / "results" / "pilot_raw_n600ladderSYMBOL.csv").exists()
+        else ["lex"])
+    for sample in samples:
+        run(a, sample)
+
+
+def run(a, sample):
+    a.sample = sample
     causal = not a.all_queries
-    D = {lex: load(lex) for lex in LADDER}
+    D = {lex: load(lex, a.sample) for lex in LADDER}
+    sfx = "" if a.sample == "lex" else f"_{a.sample}"
+    print(f"\n##### sample: {a.sample} #####\n")
     W = 96
 
     print("=" * W)
@@ -126,7 +153,7 @@ def main():
         rows.append(r)
     acc = pd.DataFrame(rows)
     print(acc[["model"] + LADDER].to_string(index=False))
-    acc.to_csv(ROOT / "results" / "ladder5_accuracy.csv", index=False)
+    acc.to_csv(ROOT / "results" / f"ladder5_accuracy{sfx}.csv", index=False)
 
     print("\n" + "=" * W)
     print("2. EACH RUNG CHANGES EXACTLY ONE THING - this is what IRRELEVANT buys")
@@ -148,8 +175,13 @@ def main():
                      "established": "yes" if clo > 0 or chi < 0 else "no",
                      "equivalence_bound": round(max(abs(clo), abs(chi)), 2)})
     st = pd.DataFrame(rows)
+    if a.sample == "n600":
+        # Only n600 mixes runs; the lex file keeps its columns unchanged.
+        ends = {lb: {h, l} for lb, h, l, _ in STEPS}
+        st["run"] = ["same run" if (ends[s_] <= N600_NEW or not ends[s_] & N600_NEW)
+                     else "crosses runs" for s_ in st.step]
     print(st.to_string(index=False))
-    st.to_csv(ROOT / "results" / "ladder5_steps.csv", index=False)
+    st.to_csv(ROOT / "results" / f"ladder5_steps{sfx}.csv", index=False)
     print("\n  Read 'equivalence_bound' whenever a step is NOT established: it says")
     print("  how large the true effect could still be, instead of only reporting a")
     print("  failure to reject.")
@@ -187,7 +219,7 @@ def main():
             print("  gone on both sides, whether the words are real no longer matters -")
             print("  which supports the claim that what was lost is KNOWLEDGE, not")
             print("  familiarity of surface form.")
-    print("\n  Wrote: results/ladder5_accuracy.csv, results/ladder5_steps.csv")
+    print(f"\n  Wrote: results/ladder5_accuracy{sfx}.csv, results/ladder5_steps{sfx}.csv")
 
 
 if __name__ == "__main__":

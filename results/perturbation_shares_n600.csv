@@ -1,0 +1,5 @@
+cond,n,harmless_backdoor_pct,harmless_qt_pct
+DR_k1,580,16.0,12.4
+DR_k2,580,0.0,0.0
+DR_k3,420,0.0,0.0
+SCRAMBLE,580,2.8,2.2

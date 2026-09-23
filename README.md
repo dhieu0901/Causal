@@ -13,13 +13,17 @@ Phần thực nghiệm bên dưới chạy trên **một họ model** và n = 17
 
 **1. Một bậc thang liều lượng đo không đúng thứ nó tưởng.** Cách hiển nhiên để hỏi *đồ thị sai nhiều có hại hơn sai ít không* là làm hỏng k = 1, 2, 3 cạnh rồi so. Cách đó hỏng, và hỏng theo kiểu không lộ ra trong bảng nào. Đảo một cạnh có thể **không đổi gì** về mặt nhân quả - nếu tập hiệu chỉnh cửa sau và quan hệ d-separation giữa `X` với `Y` còn nguyên thì đại lượng cần ước lượng không đổi, đáp án đúng cũng không đổi.
 
-| Liều | Nhiễu loạn **không** đổi estimand | Tác hại, chỉ tính item **có** đổi estimand |
-|---|---|---|
-| `DR_k1` | 45/197 item | **-6,36 pp** |
-| `DR_k2` | 0/197 | **-7,36 pp** |
-| `DR_k3` | 0/198 | **-6,90 pp** |
+| Liều | Phép đảo **không** đổi estimand (toàn mẫu) | Tác hại khi estimand đổi, `price400` | Tác hại khi estimand đổi, `n600` (7 họ) |
+|---|---|---|---|
+| `DR_k1` | 99/399 (`price400`), 93/420 (`n600`) | **-8,38 pp** | **-8,06 pp** |
+| `DR_k2` | 0 | **-7,36 pp** | **-10,63 pp** |
+| `DR_k3` | 0 | **-6,90 pp** | **-13,73 pp** |
 
-Tỷ lệ nhiễu loạn vô hại tụt **23% xuống 0** (45/197 item của tập dùng để tách tác hại), chỉ vì càng hỏng nhiều cạnh thì càng khó hỏng mà không chạm vào đại lượng. Liều lượng vì thế **lẫn hoàn toàn với thành phần mẫu**. Điều kiện hoá trên việc estimand thật sự đổi thì tác hại **phẳng**. Chạy `scripts/classify_perturbations.py`, khớp `results/perturbation_split.csv`. *Sửa 23/09/2026: tiêu chí backdoor đếm dư nhiễu vô hại ở `nde`/`nie`/`det-counterfactual`; với cờ theo loại truy vấn còn 28/197 item vô hại, và tác hại trên item đổi estimand là -7,79 / -7,36 / -6,90 - vẫn phẳng (`results/perturbation_split_qt.csv`).*
+Tỷ lệ phép đảo vô hại tụt từ **24,8%** (`price400`) và **22,1%** (`n600`, cùng 7 họ) ở k=1 **xuống 0** ở k=2 và k=3, chỉ vì càng hỏng nhiều cạnh thì càng khó hỏng mà không chạm vào đại lượng. Liều lượng vì thế **lẫn với thành phần mẫu** - phần này không phụ thuộc model và tái lập trên hai mẫu. Chạy `scripts/classify_perturbations.py`; số ở `results/perturbation_split_qt.csv` và `results/perturbation_split_n600.csv`, cờ theo loại truy vấn.
+
+**Điều kiện hoá trên estimand đổi thì tác hại có phẳng không: chưa phân xử được.** Trên `price400` thì phẳng. Trên `n600` thì tăng theo k, độ dốc -3,36 pp mỗi cạnh [-5,79 ; -0,97]. Nhưng `DR_k1` của `n600` được trả lời khoảng 16/09, còn `DR_k2` và `DR_k3` vào 24/09. Bước từ k=2 sang k=3, nằm trong cùng một đợt chạy, chỉ là -2,33 [-6,33 ; +1,83] và không tách khỏi 0. `scripts/check_drift.py` kiểm xem model được phục vụ có đổi giữa hai đợt không; phép kiểm này tốn credit và chưa chạy.
+
+*Sửa 24/09/2026: bản trước ghi 45/197, -6,36 và -7,79 / -7,36 / -6,90. Các số ấy tính trên một bản phát lại sai phép bốc nhiễu: `classify_perturbations.py` bốc lại trên đồ thị ký hiệu có cạnh đã sắp xếp, còn `pilot.py` bốc trên đồ thị tên biến theo thứ tự câu văn. Cùng seed, cùng chỉ số, nhưng hai danh sách xếp khác nhau, nên gần một nửa số item bị gán phán quyết của một đồ thị khác với đồ thị model đã thấy. Bản sửa phát lại đúng cách `pilot.py` bốc, và chứng minh bằng cache: 5.814/5.814 prompt dựng lại đều đúng là prompt đã gửi.*
 
 **2. Năm lỗi trong CLadder v1.5**, kèm lệnh tái lập từng lỗi - xem mục cảnh báo bên dưới và `docs/CLADDER_DATA_ERRORS.md`. Xuất xứ dữ liệu kiểm được từng byte bằng `scripts/verify_data_provenance.py`.
 
@@ -34,7 +38,7 @@ Ba điều phải đọc kèm. Cả ba tính trên **cùng mẫu gộp n=490** c
 | | |
 |---|---|
 | **Đồ thị có cần ĐÚNG không** | **Phải tách theo nhóm truy vấn, gộp lại là đọc sai.** Với `backadj`, nơi đồ thị LÀ đáp án: **+27,36 đến +43,77 pp**, 6/6 ô. Với suy luận nhân quả thật trên từ vựng quen: đồ thị đúng đáng **khoảng 0** (-5,04 / -0,17 / -0,08, không ô nào đạt ngưỡng), đồ thị đảo một cạnh lấy đi **-8,72 / -6,11 / -5,16**. Thiệt hại xác lập được, lợi ích thì không. Chạy `scripts/analyze_vs_raw.py` |
-| **Liều hỏng có đo được không** | **Không như đã tưởng.** 20,6% phép đảo cạnh ở k=1 (82/399 item, toàn mẫu price400) **không đổi ước lượng ATE**, ở k=2 và k=3 thì 0%. Điều kiện trên việc nhiễu thật sự đổi đáp án, tác hại **phẳng**: -6,36 / -7,36 / -6,90. Đường liều cũ là hiệu ứng thành phần mẫu. Chạy `scripts/classify_perturbations.py` |
+| **Liều hỏng có đo được không** | **Không như đã tưởng.** 24,8% phép đảo cạnh ở k=1 (99/399 item, toàn mẫu price400) **không đổi ước lượng ATE**, ở k=2 và k=3 thì 0%. Điều kiện trên việc nhiễu thật sự đổi đáp án: price400 **phẳng** (-8,38 / -7,36 / -6,90), n600 **tăng** (-8,06 / -10,63 / -13,73) nhưng bước k=1 sang k=2 của n600 vắt qua hai đợt chạy. Chạy `scripts/classify_perturbations.py` |
 | **Có "xoá sạch tác hại" không** | **Hiệu ứng gần như toàn bộ là nâng thật.** Đồ thị nâng nhánh ẩn danh +5,12 pp và hạ nhánh `KEEP` chỉ -0,50 pp, tức 9% - mà vế "hạ" không tách khỏi 0 (CI [-3,43 ; +2,36]). Chạy `scripts/analyze_structure_arms.py` |
 | **Hiệu ứng nằm ở đâu** | **Không đơn điệu theo độ phức tạp.** Dồn vào nhóm đồ thị 4 cạnh (+9,61 pp, p=0,001, n=230); nhóm 3 cạnh +3,81 và nhóm 2 cạnh +5,30 đều không tách khỏi 0; nhóm 5 cạnh âm (-4,05 pp, n=40). Thứ hạng **giữa từng họ** thì không tái lập được giữa các mẫu. Chạy `scripts/analyze_by_family.py` |
 
@@ -42,22 +46,22 @@ Con số tiêu đề tái lập bằng `scripts/pool_samples.py`, script này c�
 
 **Ba trong bốn giả thuyết cạnh tranh đã loại trừ được:** độ dài prompt (prompt dài hơn làm *tệ* hơn, 8 ô âm có ý nghĩa, 0 dương), một lát cắt may mắn (0/2.000 lần bốc ngẫu nhiên chạm tới mức ban đầu), và độ nhạy chấm điểm. **Giả thuyết thứ tư, residue từ thật còn sót, không kiểm được:** residue trùng khít với loại truy vấn (`backadj` và `correlation` sạch 100%, các loại nhân quả 0-12,5%), nên tách theo residue chính là tách theo loại truy vấn. Chạy `scripts/analyze_falsification.py`.
 
-**Cái gì mất đi khi ẩn danh: tri thức, không phải sự quen mắt.** Bậc thang năm bậc:
+**Cái gì mất đi khi ẩn danh: chủ yếu là tri thức, nhưng từ thật không trung tính.** Bậc thang năm bậc:
 
-| Bậc | Đổi đúng một thứ | Chênh | Trạng thái |
-|---|---|---|---|
-| `KEEP` sang `IRRELEVANT` | mất prior đúng | **+17,67 pp** [+9,24 ; +26,53] | xác lập |
-| `IRRELEVANT` sang `PERMUTE` | bị gán prior **sai** | dưới 8,5 pp | chưa phân giải |
-| `IRRELEVANT` sang `SYMBOL` | từ thật sang ký hiệu | dưới 6,37 pp | chưa phân giải |
-| `SYMBOL` sang `PSEUDO` | ký hiệu sang từ giả | dưới 6,3 pp | chưa phân giải |
+| Bậc | Đổi đúng một thứ | Mẫu `lex`, 86 item | **Mẫu `n600`, 290 item** | Hai đầu bậc ở `n600` |
+|---|---|---|---|---|
+| `KEEP` sang `IRRELEVANT` | mất prior đúng | +17,67 [+9,24 ; +26,53] | **+14,99** [+10,41 ; +19,53] | khác đợt chạy |
+| `IRRELEVANT` sang `PERMUTE` | bị gán prior **sai** | dưới 8,5 | **-0,83**, dưới 4,49 | cùng đợt |
+| `IRRELEVANT` sang `SYMBOL` | từ thật sang ký hiệu | dưới 6,37 | **-3,76** [-6,78 ; -0,82] | cùng đợt |
+| `SYMBOL` sang `PSEUDO` | ký hiệu sang từ giả | dưới 6,3 | +2,83 [+0,00 ; +5,63] | khác đợt chạy |
 
-Khi prior đã mất thì từ có thật hay không không còn quan trọng.
+Trên `n600` (chạy 24/09/2026, `results/ladder5_steps_n600.csv`), bị gán prior sai **không** tốn thêm gì ngoài việc mất prior đúng, với cận tương đương thu từ 8,5 xuống 4,49 điểm. Nhưng câu cũ "khi prior đã mất thì từ có thật hay không không còn quan trọng" **không đứng**: từ thật mà không liên quan làm model trả lời **kém hơn** ký hiệu trơn 3,76 điểm, và bậc này nằm trọn trong một đợt chạy. Bậc đầu tiên vắt qua hai đợt chạy (`KEEP` chạy khoảng 16/09), nên nó chờ `scripts/check_drift.py`.
 
 **Một phát hiện về chính benchmark:** CLadder tính nhãn chuẩn bằng cách nhân xác suất biên của các nút cha **như thể chúng độc lập**, ở 7/10 họ đồ thị. Trên các câu mà điều đó quyết định nhãn, **83/91 nhãn đi theo giá trị hỏng**. Ước 0,8% mẫu của dự án bị ảnh hưởng; phần này gần như triệt tiêu khỏi các hiệu ghép cặp nhưng không khỏi các mức tuyệt đối. Chạy `scripts/verify_labels.py` để tái lập con số này, `scripts/audit_cladder_arithmetic.py` để xem phạm vi chính xác của lỗi, và `scripts/verify_groundtruth.py` để kiểm lại toàn bộ 7.064 SCM. Đã báo lên nhóm tác giả ngày 20/09/2026: [issue #15](https://github.com/causalNLP/cladder/issues/15) và [#16](https://github.com/causalNLP/cladder/issues/16).
 
 **Mọi nhãn dự án chấm điểm đều đã tính lại độc lập.** Ba loại truy vấn từng bỏ trống - `det-counterfactual`, `collider_bias`, `exp_away`, cộng 1.812 câu và 28 trong 86 item của nhóm nhân quả - nay đã kiểm: **1.812/1.812 nhãn tái lập chính xác**. Chạy `scripts/verify_counterfactual.py`.
 
-n = 490 item ghép cặp qua ba mẫu, 3 model của **một họ** (giới hạn duy nhất đủ nghiêm trọng để chặn công bố), **73.365** lượt chấm điểm (đếm từ `results/*_raw*.csv`, đã trừ dữ liệu cách ly).
+n = 490 item ghép cặp qua ba mẫu, 3 model của **một họ** (giới hạn duy nhất đủ nghiêm trọng để chặn công bố), **91.545** lượt chấm điểm (đếm từ `results/*_raw*.csv`, đã trừ dữ liệu cách ly).
 
 ## Thiết kế
 
@@ -165,10 +169,11 @@ Chạy `python scripts/verify_data_provenance.py` để đối chiếu từng by
 ## Việc chưa xong
 
 - **Một họ model thứ hai** - việc quan trọng nhất còn lại, và là thứ duy nhất chặn công bố mà không có cách lách.
-- **`DR_k2` và `DR_k3` trên mẫu n600** - đường liều hiện chỉ có trên 399 item và 7 họ; n600 có 580 item đủ 10 họ.
-- **Bậc thang từ vựng trên mẫu n=580** - RQ3 hiện vẫn đứng trên n=85 mỗi ô.
-- **Điều kiện `NAMES_ONLY`** - **hạ cấp 2026-09-22**, không còn là phép kiểm sống chết. Mục 4.3b đã bác giả thuyết tái gắn ký hiệu bằng dữ liệu sẵn có: `DR_k1` mang **y hệt** bộ tên biến của `ORACLE` mà giữ được **0** lợi ích. `NAMES_ONLY` giờ là việc củng cố, cho một bậc thang sạch hơn.
-- **Điều kiện `SCRAMBLE`** - một DAG ngẫu nhiên trên đúng bộ nút, không giữ cạnh nào của đồ thị thật.
+- **Kiểm độ trôi của model được phục vụ** (`scripts/check_drift.py`, 1,40 tới 5,58 USD). Bốn việc dưới đây đã chạy ngày 24/09/2026, cách phần gốc của `n600` khoảng một tuần, nên mọi phép so giữa điều kiện cũ và mới đều chờ phép kiểm này.
+- ~~`DR_k2` và `DR_k3` trên mẫu n600~~ - **đã chạy 24/09/2026**, xem Kết quả 1 ở trên.
+- ~~Bậc thang từ vựng trên mẫu n=580~~ - **đã chạy 24/09/2026** ở điều kiện `RAW`, xem bảng bậc thang.
+- ~~Điều kiện `NAMES_ONLY`~~ và ~~`SCRAMBLE`~~ - **đã chạy 24/09/2026 trên n600**, `analyze_structure_arms.py` mục 6. Cùng đợt chạy: cạnh ngẫu nhiên hại hơn không có cạnh nào, `SCRAMBLE` trừ `NAMES_ONLY` = -13,95 (`KEEP`) và -7,96 (`PSEUDO`); `SCRAMBLE` ngang `DR_k3`. Khác đợt: trên `PSEUDO`, `ORACLE` trừ `NAMES_ONLY` = +4,34 [+0,12 ; +8,58].
+- Toàn bộ đợt 24/09 tốn **15,62 USD** thật (ước tính trước khi chạy: 16,11), 0 lỗi API. Lệnh ở `scripts/run_n600_extensions.sh`.
 - **Cả ba model đều thuộc dòng GPT-4.1.** Giới hạn duy nhất đủ nghiêm trọng để chặn công bố. Cần ít nhất một dòng khác họ, và một model có suy luận mở rộng kèm nhánh `ORACLE`.
 - Điểm hoà vốn `k*` vẫn **chưa xác lập**: vế giá vững, vế ngân sách đạt ở 2/3 model trên mẫu gộp, nhưng `k*` cần cả hai và tử số của nó phần lớn là `backadj`.
 - `analyze_types.bootstrap_fit` **đã nâng 600 lên 10.000 vòng** (2026-09-22). Lý do cũ ghi ở đây - "hai ô đổi phán quyết theo seed" - **đã kiểm và KHÔNG tái lập được**: chín ô model x nhánh, năm seed, ở cả 600 lẫn 10.000 vòng đều cho cùng một bộ phán quyết. Việc nâng vẫn đáng làm vì sai số Monte Carlo ở 600 vòng cỡ 0,1 pp, ngang với các hiệu bảng này phải phân xử.
@@ -179,10 +184,12 @@ Chạy `python scripts/verify_data_provenance.py` để đối chiếu từng by
 src/       lexical.py (đổi từ vựng, 5 bộ), perturb.py (làm hỏng DAG),
            prompts.py (RAW / RAW_INSTR / NAMES_ONLY / ORACLE / PERTURB / PROSE), induce.py,
            noise.py, runner.py (có guard lỗi API), stats.py
-scripts/   pilot.py, induction.py (hai script gọi API, tốn tiền), 18 script analyze_*,
+scripts/   pilot.py, induction.py, check_drift.py (ba script gọi API, tốn tiền;
+           cả ba có --dry-run hoặc cache), 18 script analyze_*,
            6 script kiểm chứng nhãn và dữ liệu (verify_*, audit_*), 3 cổng
            (check_numbers, check_pipeline_order, verify_determinism), và 7 script
-           phụ trợ - tổng 36, mọi script trừ hai cái đầu chạy 0 USD.
-           run_analysis.sh chạy lại toàn bộ phần phân tích, không gọi API
+           phụ trợ - tổng 37, mọi script trừ ba cái đầu chạy 0 USD.
+           run_analysis.sh chạy lại toàn bộ phần phân tích, không gọi API;
+           run_n600_extensions.sh là đợt tốn credit ngày 24/09/2026
 results/   các bảng CSV kết quả và log chạy thật
 ```

@@ -9,17 +9,24 @@ repository ever checked this - src/noise.py line 121 defers the question to a
 
 The answer matters because the share of harmless draws is not constant across k:
 
-    reversals that leave the estimand unchanged:  20.6% at k=1, 0.0% at k=2, 0.0% at k=3
+    reversals that leave the estimand unchanged, price400:  24.8% at k=1, 0.0% at k=2 and k=3
+    the same on n600, same seven families:                  22.1% at k=1, 0.0% at k=2 and k=3
 
 So the "dose-response curve" in results/vs_raw_trend.csv is confounded with
 sample composition. Going from k=1 to k=2 does not only add a reversal, it also
-removes every harmless draw from the cell. Conditioning on the perturbation
-actually changing the answer, more reversed edges is NOT more harmful.
+removes every harmless draw from the cell. Whether the harm grows with k once
+the estimand changes is a separate, model-dependent question: on price400 it
+does not; on n600 it does, but there k=1 and k>=2 were answered a week apart
+(section 3 and scripts/check_drift.py).
 
-How the drawn perturbation is recovered. scripts/pilot.py line 168 picks it with
+How the drawn perturbation is recovered. pilot.py picks it with
 `random.Random(f"{seed}:{i}:{t}:{k}").choice(opts)`, where `i` is the FRAME INDEX
-from `items.iterrows()`. Re-running make_items with the same arguments and
-replaying that generator reproduces the exact perturbation each item was shown.
+from `items.iterrows()` and `opts` is enumerated over the NAME graph parsed from
+the item's prose. classify() replays exactly that and only then maps the draw to
+symbols. Until 2026-09-24 it replayed over the sorted SYMBOL graph instead - a
+differently ordered list, so the same index named the wrong perturbation for
+about half the draws. check_replay() now proves every replay by rebuilding the
+prompt and finding it in the API cache.
 
 Where the graph comes from. Line 2 of CLadder's `reasoning` field carries the
 structure, but 67 of the 399 price400 items have no reasoning text. The
@@ -39,12 +46,14 @@ reversal the backdoor test calls harmless touches an edge on a directed X -> Y
 path, i.e. changes the mediator structure. So for those types the backdoor
 share OVER-counts harmless draws. Section 2b re-runs the split with a
 query-type-aware flag (backdoor test for ate/ett/backadj, additionally requiring
-every directed X -> Y path untouched for nde/nie/det-counterfactual); the
-answer-changing harm becomes -7.79 / -7.36 / -6.90 at k = 1, 2, 3, flatter than
-with the backdoor-only flag, and the k=1 cell now clears zero.
+every directed X -> Y path untouched for nde/nie/det-counterfactual); on
+price400 the answer-changing harm is -8.38 / -7.36 / -6.90 at k = 1, 2, 3.
 
 Run:  python scripts/classify_perturbations.py
-Writes: results/perturbation_classes.csv
+Writes: results/perturbation_classes.csv, perturbation_classes_by_query.csv,
+        perturbation_split.csv, perturbation_split_qt.csv, and for n600
+        perturbation_classes_n600.csv, perturbation_split_n600.csv,
+        perturbation_shares_n600.csv
 """
 
 from __future__ import annotations
@@ -65,13 +74,18 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from stats import boot_interval, boot_p, cluster_boot
 
-from perturb import to_edges                      # noqa: E402
+from perturb import to_edges, enumerate_scramble  # noqa: E402
 from pilot import make_items, ENUMERATORS         # noqa: E402
+from prompts import build, parse_prose_graph, strip_structure  # noqa: E402
+from lexical import relabel_item                  # noqa: E402
+from runner import _key, CACHE as CACHE_DIR       # noqa: E402
 from analyze_querygroup import ARITH, IDENT       # noqa: E402
 
 SEED = 20260907
 NBOOT = 4000
 N_ITEMS, KMAX = 399, 3
+# Any model that ran every condition; its cache keys prove the replay.
+REPLAY_MODEL = "gpt-4.1-nano"
 
 
 # ---------------------------------------------------------------- graph tools
@@ -214,31 +228,130 @@ def check_canonical(items, canon) -> tuple[int, int]:
 
 
 # ------------------------------------------------------------------- analysis
-def classify() -> pd.DataFrame:
-    items = make_items(N_ITEMS, SEED, KMAX, "full_v1.5_default.csv", None, True)
+def meta_mappings() -> dict:
+    """(story_id, graph_id) -> every distinct {symbol: lower-case name} in cladder-meta."""
+    meta = json.loads((ROOT / "data" / "cladder-meta.json").read_text(encoding="utf-8"))
+    out: dict = {}
+    for m in meta:
+        vm = m["variable_mapping"]
+        s2n = tuple(sorted((k[:-4], v.lower()) for k, v in vm.items() if k.endswith("name")))
+        out.setdefault((m["story_id"], m["graph_id"]), set()).add(s2n)
+    return out
+
+
+def prose_graph(prompt: str) -> list[tuple[str, str]]:
+    """The name graph exactly as pilot.build_jobs parses it, edges in prose order."""
+    _, removed = strip_structure(prompt)
+    return parse_prose_graph(removed)
+
+
+def classify(n_items=N_ITEMS, sample_kmax=KMAX, kmax=KMAX, arms=("DR", "ED", "FE"),
+             lexicons=("KEEP", "PSEUDO"), scramble=False) -> pd.DataFrame:
+    """Classify the perturbation each item was SHOWN, per lexicon.
+
+    Until 2026-09-24 this replayed the draw over the canonical SYMBOL graph,
+    whose edges are sorted, while pilot.py draws over the NAME graph parsed from
+    the prose, whose edges come in sentence order. Same seed, same index, two
+    differently ordered lists: on price400 the replay named the perturbation
+    actually shown in only about half the draws, so every split built on it
+    attached each item's answer to another graph's verdict.
+
+    Now the draw is replayed exactly as build_jobs makes it - relabel, parse,
+    enumerate over the name graph, choose - and only then mapped to symbols,
+    through the cladder-meta variable mapping under which the prose graph IS
+    the canonical structure. Where several mappings fit (an automorphism), the
+    verdict must agree under all of them or the draw is left unclassified.
+
+    Proof that the replay is right, not an argument: the prompt rebuilt from the
+    replayed draw must be a key in the API cache. `replay_in_cache` records it;
+    main() refuses to go on if any rebuilt prompt is missing while the cache is
+    present.
+
+    Lexicons are classified separately because FE draws differ between them:
+    candidate_new_edges walks the nodes in sorted-name order, and sorting
+    pseudowords orders the nodes differently. DR and ED depend on edge order
+    only, which relabelling preserves.
+    """
+    items = make_items(n_items, SEED, sample_kmax, "full_v1.5_default.csv", None, True)
     canon = canonical_structures()
     agree, missing = check_canonical(items, canon)
+    maps = meta_mappings()
     print(f"  structure source: {agree} items verified against their reasoning line, "
           f"0 mismatches;\n  {missing} items have no reasoning line and use the "
-          f"per-family structure.\n")
+          f"per-family structure.")
 
-    rows = []
+    rows, no_map, ambiguous = [], 0, 0
     for i, r in items.iterrows():
-        edges = canon[r["graph_id"]]
-        nodes = sorted({n for e in edges for n in e})
-        if "X" not in nodes or "Y" not in nodes:
+        sym = canon[r["graph_id"]]
+        sym_nodes = sorted({n for e in sym for n in e})
+        if "X" not in sym_nodes or "Y" not in sym_nodes:
             continue
-        for t in ("DR", "ED", "FE"):
-            for k in range(1, KMAX + 1):
-                opts = ENUMERATORS[t](edges, nodes, k)
-                if not opts:
+        keep_prompt, _ = relabel_item(r.prompt, "KEEP", seed=str(r.id))
+        keep_edges = prose_graph(keep_prompt)
+        n2s_all = []
+        for m in maps.get((r.story_id, r.graph_id), ()):
+            s2n = dict(m)
+            if (all(a in s2n and b in s2n for a, b in sym)
+                    and sorted((s2n[a], s2n[b]) for a, b in sym) == sorted(keep_edges)):
+                n2s_all.append({v: s for s, v in s2n.items()})
+        if not n2s_all:
+            no_map += 1
+            continue
+        for lex in lexicons:
+            prompt, clean = relabel_item(r.prompt, lex, seed=str(r.id))
+            if not clean:
+                continue                 # build_jobs drops it too
+            edges = prose_graph(prompt)
+            if len(edges) != len(sym):
+                continue                 # build_jobs drops it too
+            # Relabelling keeps sentence order, so edge j here is edge j in KEEP.
+            pos: dict = {}
+            for (a, b), (ka, kb) in zip(edges, keep_edges):
+                if pos.setdefault(a, ka) != ka or pos.setdefault(b, kb) != kb:
+                    raise SystemExit(f"item {i} {lex}: relabelled prose does not align "
+                                     f"with KEEP edge by edge")
+            nodes = sorted({n for e in edges for n in e})
+            draws = []
+            for t in arms:
+                for k in range(1, kmax + 1):
+                    opts = ENUMERATORS[t](edges, nodes, k)
+                    if opts:
+                        draws.append((f"{t}_k{k}", t, k, random.Random(
+                            f"{SEED}:{i}:{t}:{k}").choice(opts)))
+            if scramble:
+                draws.append(("SCRAMBLE", "SCRAMBLE", 0, random.Random(
+                    f"{SEED}:{i}:SCRAMBLE").choice(enumerate_scramble(edges, nodes))))
+            for cond, t, k, shown in draws:
+                verdicts = set()
+                for n2s in n2s_all:
+                    bad = sorted((n2s[pos[a]], n2s[pos[b]]) for a, b in shown)
+                    verdicts.add((same_estimand(sym, bad, sym_nodes),
+                                  touches_causal_path(sym, bad)))
+                if len(verdicts) != 1:
+                    ambiguous += 1
                     continue
-                bad = random.Random(f"{SEED}:{i}:{t}:{k}").choice(opts)
-                rows.append(dict(item=i, family=r["graph_id"], query_type=r["query_type"],
-                                 cond=f"{t}_k{k}", arm=t, k=k,
-                                 estimand_unchanged=same_estimand(edges, bad, nodes),
-                                 touches_causal_path=touches_causal_path(edges, bad)))
+                (unch, touch), = verdicts
+                key = _key(REPLAY_MODEL, 0.0, build(prompt, "PERTURB", shown))
+                rows.append(dict(item=i, lexicon=lex, family=r["graph_id"],
+                                 query_type=r["query_type"], cond=cond, arm=t, k=k,
+                                 estimand_unchanged=unch, touches_causal_path=touch,
+                                 replay_in_cache=key.exists()))
+    print(f"  {no_map} items with no fitting name mapping, {ambiguous} draws whose "
+          f"verdict depends on an automorphism - both left out.\n")
     return pd.DataFrame(rows)
+
+
+def check_replay(C: pd.DataFrame) -> None:
+    """Every replayed prompt must be one the model was actually sent."""
+    if not any(CACHE_DIR.glob("*.json")):
+        print("  replay check SKIPPED: cache/ is empty (it is not in the repository).")
+        return
+    hit = C.replay_in_cache.mean()
+    print(f"  replay check: {int(C.replay_in_cache.sum())}/{len(C)} rebuilt prompts "
+          f"are keys in the API cache ({100 * hit:.1f}%).")
+    if hit < 1:
+        bad = C[~C.replay_in_cache].groupby(["lexicon", "cond"]).size()
+        raise SystemExit(f"  REPLAY DOES NOT MATCH WHAT WAS SENT:\n{bad}")
 
 
 def benjamini_hochberg(p: np.ndarray, alpha: float = 0.05) -> np.ndarray:
@@ -274,17 +387,22 @@ def paired_causal(d: pd.DataFrame, cond: str) -> pd.Series:
 
 def main() -> int:
     C = classify()
+    check_replay(C)
+    # DR and ED draws are the same under both lexicons; FE draws are not (see
+    # classify). Composition is reported on KEEP, the splits use each lexicon's own.
+    K = C[C.lexicon == "KEEP"]
 
     print("=" * 78)
     print("1. SHARE OF THE DRAWN PERTURBATIONS THAT LEAVE THE ATE ESTIMAND UNCHANGED")
     print("=" * 78 + "\n")
-    share = C.pivot_table(index="arm", columns="k", values="estimand_unchanged",
+    share = K.pivot_table(index="arm", columns="k", values="estimand_unchanged",
                           aggfunc=lambda s: round(100 * float(np.mean(s)), 1))
-    n = C.pivot_table(index="arm", columns="k", values="estimand_unchanged", aggfunc="size")
+    n = K.pivot_table(index="arm", columns="k", values="estimand_unchanged", aggfunc="size")
     print("  percent harmless:"); print(share.to_string())
     print("\n  items per cell:"); print(n.to_string())
-    print("""
-  The reversal arm goes 20.6 -> 0.0 -> 0.0. That collapse, not the dose, is what
+    dr = " -> ".join(f"{v:.1f}" for v in share.loc["DR"].dropna())
+    print(f"""
+  The reversal arm goes {dr}. That collapse, not the dose, is what
   separates the k=1 cell from the k=2 and k=3 cells.""")
 
     # ------------------------------------------------------------------
@@ -299,8 +417,9 @@ def main() -> int:
     print("1b. HARMLESS SHARE BY QUERY TYPE - where the criterion is exact, and where not")
     print("=" * 78 + "\n")
     C["strict_unchanged"] = C.estimand_unchanged & ~C.touches_causal_path
+    K = C[C.lexicon == "KEEP"]
     qrows = []
-    for (arm, k), g in C.groupby(["arm", "k"]):
+    for (arm, k), g in K.groupby(["arm", "k"]):
         for label, s in [("all query types", g), ("ate only (exact)", g[g.query_type == "ate"])] + \
                         [(q, g[g.query_type == q]) for q in sorted(g.query_type.unique())]:
             if not len(s):
@@ -313,7 +432,11 @@ def main() -> int:
     Q.to_csv(ROOT / "results" / "perturbation_classes_by_query.csv", index=False)
     show = Q[(Q.arm == "DR")]
     print(show.to_string(index=False))
-    print("""
+    nat = K[(K.arm == "DR") & K.query_type.isin(["nde", "nie"]) & K.estimand_unchanged]
+    print(f"""
+  nde/nie reversals the backdoor test calls harmless: {len(nat)}, of which
+  {int(nat.touches_causal_path.sum())} touch a directed X -> Y path.
+
   harmless_pct is the backdoor test; harmless_strict_pct additionally requires
   that no edge on a directed X -> Y path was touched. Which one is RIGHT
   depends on the query type:
@@ -345,7 +468,7 @@ def main() -> int:
         print(f"  {'cond':8s} {'all':>22s} {'estimand UNCHANGED':>24s} {'estimand CHANGED':>24s}")
         for cond in ("DR_k1", "DR_k2", "DR_k3", "ED_k1", "ED_k2", "FE_k1"):
             v = paired_causal(d, cond)
-            flag = C[C.cond == cond].set_index("item").estimand_unchanged.reindex(v.index)
+            flag = C[(C.cond == cond) & (C.lexicon == lex)].set_index("item").estimand_unchanged.reindex(v.index)
             line, cells = f"  {cond:8s}", {}
             for label, mask in (("all", None), ("unchanged", flag == True), ("changed", flag == False)):
                 x = v.values if mask is None else v[mask.fillna(False)].values
@@ -362,35 +485,30 @@ def main() -> int:
             print(line)
         print()
 
-    print("""  HOW TO READ THIS.
+    out = pd.DataFrame(rows)
+    k1 = {a: share.loc[a, 1] for a in ("DR", "ED", "FE")}
+    chg = out[(out.lexicon == "KEEP") & (out.subset == "changed")].set_index("cond").delta_pp
+    print(f"""  HOW TO READ THIS.
 
   The dose axis does not measure wrongness. It measures how often the draw was
   harmless, and that share falls to zero by k=2. Conditioning on the perturbation
-  actually changing the answer removes most of the apparent gradient.
+  actually changing the answer removes the apparent gradient.
 
   Consequences for the write-up, all of them subtractions:
   - Do not call the curve monotone in the dose.
   - Do not quote a pp-per-edge slope without this table beside it.
   - Do not present reversal against omission as a qualitative dissociation: the
-    harmless share differs too (DR 20.6%, ED 31.8%, FE 55.1% at k=1), so part of
-    the ordering is composition rather than error type.
+    harmless share differs too (DR {k1["DR"]:.1f}%, ED {k1["ED"]:.1f}%, FE {k1["FE"]:.1f}% at
+    k=1), so part of the ordering is composition rather than error type.
 
-  What survives the correction in the split table is narrow: KEEP DR_k2 and
-  KEEP DR_k3 on the answer-changing side, -7.36 and -6.90. The k=1 answer-
-  changing cell is -6.36 and does NOT survive, so the split does not by itself
-  establish damage at one edge; the unsplit causal-group table in vs_raw.csv
-  does that, at 2 of 3 samples.
+  The KEEP answer-changing column across k: {chg["DR_k1"]:+.2f}, {chg["DR_k2"]:+.2f}, {chg["DR_k3"]:+.2f}.
+  Once the harmless draws are held out, adding reversed edges does not add
+  damage.
 
-  The third surviving cell, PSEUDO ED_k2 unchanged at -20.37, rests on n=18 and
-  should be read as noise that the correction was too weak to remove rather than
-  as a finding. It is printed rather than hidden for exactly that reason.
-
-  Note also what the answer-changing column shows across k: -6.36, -7.36, -6.90.
-  That is FLAT. Once the harmless draws are held out, adding reversed edges does
-  not add damage - which is the cleanest statement of why the dose reading was an
-  artefact.""")
-
-    out = pd.DataFrame(rows)
+  Until 2026-09-24 this table was built on a replay that named the wrong draw
+  for about half the items (see classify). Two cells it reported do not survive
+  the correction: PSEUDO ED_k2 unchanged at -20.37 and KEEP FE_k1 unchanged at
+  -7.50. Both were artefacts of mislabelled items.""")
     # This table splits six arms two ways across two lexicons, so it needs the
     # same correction the rest of the project applies. Without it the n=18 cells
     # read as findings.
@@ -420,7 +538,7 @@ def main() -> int:
         d = d[d.parsed == 1]
         for cond in ("DR_k1", "DR_k2", "DR_k3"):
             v = paired_causal(d, cond)
-            flag = C[C.cond == cond].set_index("item").unchanged_qt.reindex(v.index)
+            flag = C[(C.cond == cond) & (C.lexicon == lex)].set_index("item").unchanged_qt.reindex(v.index)
             for label, mask in (("unchanged (qt)", flag == True), ("changed (qt)", flag == False)):
                 x = v[mask.fillna(False)].values
                 if len(x) < 5:
@@ -432,13 +550,115 @@ def main() -> int:
                 qt_rows.append(dict(lexicon=lex, cond=cond, subset=label,
                                     delta_pp=round(e, 2), ci_lo=round(lo, 2),
                                     ci_hi=round(hi, 2), p_boot=round(p, 4), n_items=len(x)))
+        # The check on the classification itself: split ORACLE by the DR_k1
+        # flag. Where the reversal leaves the estimand alone, DR_k1 should do
+        # about as well as the correct graph; where it changes it, worse.
+        v = paired_causal(d, "ORACLE")
+        flag = C[(C.cond == "DR_k1") & (C.lexicon == lex)].set_index("item").unchanged_qt.reindex(v.index)
+        for label, mask in (("unchanged (qt)", flag == True), ("changed (qt)", flag == False)):
+            x = v[mask.fillna(False)].values
+            e, lo, hi, p = boot(x)
+            print(f"  {lex:7s} ORACLE on the DR_k1 split, {label:15s} {e:+7.2f} "
+                  f"[{lo:+7.2f} ; {hi:+7.2f}]  p={p:.4f}  n={len(x)}")
+            qt_rows.append(dict(lexicon=lex, cond="ORACLE, items split by DR_k1", subset=label,
+                                delta_pp=round(e, 2), ci_lo=round(lo, 2),
+                                ci_hi=round(hi, 2), p_boot=round(p, 4), n_items=len(x)))
     pd.DataFrame(qt_rows).to_csv(ROOT / "results" / "perturbation_split_qt.csv", index=False)
 
-    C.to_csv(ROOT / "results" / "perturbation_classes.csv", index=False)
+    n600_dose()
+
+    # replay_in_cache proves the replay here but is not written: the cache is
+    # not in the repository, so a fresh clone would write False everywhere and
+    # the file would stop reproducing byte for byte.
+    C.drop(columns="replay_in_cache").to_csv(ROOT / "results" / "perturbation_classes.csv",
+                                            index=False)
     out.to_csv(ROOT / "results" / "perturbation_split.csv", index=False)
     print(f"\n  wrote results/perturbation_classes.csv ({len(C)} rows), "
           f"perturbation_split.csv ({len(out)} rows)")
     return 0
+
+
+def n600_dose() -> None:
+    """Section 3: the dose line on all ten families (runs of 2026-09-24).
+
+    price400 was drawn with k up to 3, which the three 2-edge families cannot
+    support, so its dose line covers seven families. n600 covers all ten, and
+    scripts/run_n600_extensions.sh added DR_k2, DR_k3 and SCRAMBLE to it without
+    changing the sample. Same replay, same cache proof, same split.
+
+    Two restrictions are reported side by side, because they answer different
+    questions: all ten families (k=3 exists on seven only), and the seven
+    families where every k exists, which holds the items fixed across k.
+    """
+    print("\n" + "=" * 78)
+    print("3. n600: THE DOSE LINE ON ALL TEN FAMILIES, SPLIT THE SAME WAY")
+    print("=" * 78 + "\n")
+    arms_files = [ROOT / "results" / f"pilot_raw_n600arms{lex}.csv" for lex in ("KEEP", "PSEUDO")]
+    if not all(f.exists() for f in arms_files):
+        print("  SKIPPED: run scripts/run_n600_extensions.sh first.")
+        return
+    N = classify(600, 1, 3, arms=("DR",), scramble=True)
+    check_replay(N)
+    strict_types = {"nde", "nie", "det-counterfactual"}
+    strict = N.estimand_unchanged & ~N.touches_causal_path
+    N["unchanged_qt"] = np.where(N.query_type.isin(strict_types), strict, N.estimand_unchanged)
+    K = N[N.lexicon == "KEEP"]
+    shares = K.groupby("cond").agg(n=("unchanged_qt", "size"),
+                                   harmless_backdoor_pct=("estimand_unchanged", "mean"),
+                                   harmless_qt_pct=("unchanged_qt", "mean"))
+    shares[["harmless_backdoor_pct", "harmless_qt_pct"]] *= 100
+    print("  harmless share, KEEP (DR and SCRAMBLE draws do not depend on the lexicon):")
+    print(shares.round(1).to_string())
+
+    seven = {"IV", "arrowhead", "confounding", "diamond", "diamondcut", "frontdoor", "mediation"}
+    rows = []
+    for lex in ("KEEP", "PSEUDO"):
+        base = pd.read_csv(ROOT / "results" / f"pilot_raw_n600{lex}.csv")
+        extra = pd.read_csv(ROOT / "results" / f"pilot_raw_n600arms{lex}.csv")
+        d = pd.concat([base, extra], ignore_index=True)
+        d = d[d.parsed == 1]
+        print(f"\n  --- {lex} ---")
+        for fams, label in ((None, "all 10"), (seven, "7 with k=3")):
+            dd = d if fams is None else d[d.graph_id.isin(fams)]
+            per_k = {}
+            for cond in ("DR_k1", "DR_k2", "DR_k3", "SCRAMBLE"):
+                v = paired_causal(dd, cond)
+                if len(v) < 5:
+                    continue
+                per_k[cond] = v
+                flag = N[(N.cond == cond) & (N.lexicon == lex)].set_index("item").unchanged_qt.reindex(v.index)
+                for sub_, mask in (("all", None), ("unchanged (qt)", flag == True),
+                                   ("changed (qt)", flag == False)):
+                    x = v.values if mask is None else v[mask.fillna(False)].values
+                    if len(x) < 5:
+                        rows.append(dict(lexicon=lex, families=label, cond=cond,
+                                         subset=sub_, n_items=len(x)))
+                        continue
+                    e, lo, hi, p = boot(x)
+                    print(f"  {label:10s} {cond:8s} {sub_:15s} {e:+7.2f} [{lo:+7.2f} ; {hi:+7.2f}]"
+                          f"  p={p:.4f}  n={len(x)}")
+                    rows.append(dict(lexicon=lex, families=label, cond=cond, subset=sub_,
+                                     delta_pp=round(e, 2), ci_lo=round(lo, 2),
+                                     ci_hi=round(hi, 2), p_boot=round(p, 4), n_items=len(x)))
+            if label == "7 with k=3" and all(c in per_k for c in ("DR_k1", "DR_k2", "DR_k3")):
+                # One slope per item across its own three k, as in analyze_vs_raw.
+                M = pd.concat({k: per_k[f"DR_k{k}"] for k in (1, 2, 3)}, axis=1).dropna()
+                kc = np.array([-1.0, 0.0, 1.0])
+                slope = (M.values * kc).sum(axis=1) / (kc ** 2).sum()
+                e, lo, hi, p = boot(slope)
+                print(f"  {label:10s} slope per extra reversed edge {e:+.2f} [{lo:+.2f} ; {hi:+.2f}]"
+                      f"  p={p:.4f}  n={len(slope)}")
+                rows.append(dict(lexicon=lex, families=label, cond="DR slope",
+                                 subset="all", delta_pp=round(e, 2), ci_lo=round(lo, 2),
+                                 ci_hi=round(hi, 2), p_boot=round(p, 4), n_items=len(slope)))
+    out = pd.DataFrame(rows)
+    out.to_csv(ROOT / "results" / "perturbation_split_n600.csv", index=False)
+    N.drop(columns="replay_in_cache").to_csv(
+        ROOT / "results" / "perturbation_classes_n600.csv", index=False)
+    shares.round(1).reset_index().to_csv(ROOT / "results" / "perturbation_shares_n600.csv",
+                                         index=False)
+    print("\n  wrote results/perturbation_split_n600.csv, perturbation_classes_n600.csv,"
+          " perturbation_shares_n600.csv")
 
 
 if __name__ == "__main__":

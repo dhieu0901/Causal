@@ -24,19 +24,109 @@ def load_env(path=None):
                 os.environ.setdefault(k.strip(), v.strip())
 
 
-def _key(model, temp, prompt):
+def _key(model, temp, prompt, cache=None):
     h = hashlib.sha256(f"{model}|{temp}|{prompt}".encode()).hexdigest()[:24]
-    return CACHE / f"{h}.json"
+    return (cache or CACHE) / f"{h}.json"
 
 
-def call(client, model, prompt, temperature=0.0, max_tokens=700, retries=4):
-    """One completion, cached. Returns dict with text and usage."""
-    f = _key(model, temperature, prompt)
-    if f.exists():
-        try:
-            return json.loads(f.read_text(encoding="utf-8")) | {"cached": True}
-        except json.JSONDecodeError:
-            pass
+# USD per 1M tokens (input, output), OpenAI standard tier list prices for the
+# GPT-4.1 family. Used ONLY by estimate_cost, to put a number in front of the
+# person paying before a run starts. Check the provider's price page before a
+# large run; a model missing here gets no estimate rather than a guessed one.
+PRICES_PER_M = {"gpt-4.1-nano": (0.10, 0.40),
+                "gpt-4.1-mini": (0.40, 1.60),
+                "gpt-4.1": (2.00, 8.00)}
+
+
+def read_cached(model, temperature, prompt, cache=None):
+    """The cached record, or None when there is none or it does not parse.
+
+    call() pays again for a file that does not parse, so an estimate that
+    counted such a file as cached would come in low.
+    """
+    f = _key(model, temperature, prompt, cache)
+    if not f.exists():
+        return None
+    try:
+        return json.loads(f.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+
+
+# CLadder prompts run 4.0-4.2 characters per GPT-4.1 token (measured on cached
+# calls); 3.9 errs high. Used only when the run has no cached call to measure.
+CHARS_PER_TOKEN = 3.9
+
+
+def estimate_cost(jobs, model, temperature=0.0, ref_out=None):
+    """What running `jobs` on `model` would cost. Nothing is sent.
+
+    Counted as run_batch pays: once per DISTINCT prompt, 0 when cached.
+
+    Output tokens are what decides the bill, and they vary far more by query
+    type than by condition - backadj answers run about half the length of the
+    causal types - so a plain mean over whatever happens to be cached can be
+    badly skewed. In order of preference:
+      1. `ref_out`, a Series item -> out_tok: the SAME item's real output under
+         the closest condition already paid for (pilot.py --cost-ref)
+      2. cached calls of this run with the same condition AND query type
+      3. the same query type, then the same condition, then all cached calls
+    With none of these the estimate is None rather than a guess.
+    """
+    seen, cached, fresh = set(), [], []
+    for j in jobs:
+        if j["prompt"] in seen:
+            continue
+        seen.add(j["prompt"])
+        r = read_cached(model, temperature, j["prompt"])
+        (fresh if r is None else cached).append((j, r))
+    base = {"model": model, "calls": len(jobs), "distinct": len(seen),
+            "cached": len(cached), "new": len(fresh)}
+    if model not in PRICES_PER_M:
+        return base | {"usd": None}
+
+    tpc = (sum(r["in_tok"] for _, r in cached) / sum(len(j["prompt"]) for j, _ in cached)
+           if cached else 1 / CHARS_PER_TOKEN)
+    pools = {}
+    for j, r in cached:
+        for k in ((j["cond"], j.get("query_type")), ("qt", j.get("query_type")),
+                  ("cond", j["cond"]), ("all",)):
+            pools.setdefault(k, []).append(r["out_tok"])
+
+    def out_for(j):
+        if ref_out is not None and j["item"] in ref_out.index:
+            return float(ref_out[j["item"]])
+        for k in ((j["cond"], j.get("query_type")), ("qt", j.get("query_type")),
+                  ("cond", j["cond"]), ("all",)):
+            if pools.get(k):
+                return sum(pools[k]) / len(pools[k])
+        return None
+
+    outs = [out_for(j) for j, _ in fresh]
+    if any(o is None for o in outs):
+        return base | {"usd": None}
+    pi, po = PRICES_PER_M[model]
+    tin = sum(tpc * len(j["prompt"]) for j, _ in fresh)
+    tout = sum(outs)
+    new_by = {}
+    for j, _ in fresh:
+        new_by[j["cond"]] = new_by.get(j["cond"], 0) + 1
+    return base | {"new_by_cond": new_by, "in_tok": round(tin),
+                   "out_tok": round(tout),
+                   "usd": round((tin * pi + tout * po) / 1e6, 2)}
+
+
+def call(client, model, prompt, temperature=0.0, max_tokens=700, retries=4,
+         cache=None):
+    """One completion, cached. Returns dict with text and usage.
+
+    `cache` is another directory to cache in. scripts/check_drift.py uses one so
+    that it can ask a question the main cache has already answered.
+    """
+    f = _key(model, temperature, prompt, cache)
+    hit = read_cached(model, temperature, prompt, cache)
+    if hit is not None:
+        return hit | {"cached": True}
 
     last = None
     for attempt in range(retries):
@@ -69,27 +159,36 @@ def call(client, model, prompt, temperature=0.0, max_tokens=700, retries=4):
             "cached": False, "ok": False, "error": str(last)[:200]}
 
 
-def run_batch(jobs, model, temperature=0.0, workers=16, max_tokens=700, on_tick=None):
-    """jobs: list of dicts each carrying a 'prompt'. Returns them with 'result'."""
+def run_batch(jobs, model, temperature=0.0, workers=16, max_tokens=700, on_tick=None,
+              cache=None):
+    """jobs: list of dicts each carrying a 'prompt'. Returns them with 'result'.
+
+    Each DISTINCT prompt is sent once. Two jobs can carry the same prompt - on
+    the complete 3-node families SCRAMBLE is the full reversal, which is DR_k3 -
+    and with 16 threads both would miss the cache at the same moment and both
+    be paid for.
+    """
     from openai import OpenAI
     load_env()
     client = OpenAI()
+    prompts = list(dict.fromkeys(j["prompt"] for j in jobs))
     done = [0]
 
-    def one(j):
-        r = call(client, model, j["prompt"], temperature, max_tokens)
+    def one(p):
+        r = call(client, model, p, temperature, max_tokens, cache=cache)
         with _lock:
             done[0] += 1
             if on_tick and done[0] % 25 == 0:
-                on_tick(done[0], len(jobs))
-        return j | {"result": r}
+                on_tick(done[0], len(prompts))
+        return p, r
 
-    out = []
+    res = {}
     with ThreadPoolExecutor(max_workers=workers) as ex:
-        futs = [ex.submit(one, j) for j in jobs]
+        futs = [ex.submit(one, p) for p in prompts]
         for f in as_completed(futs):
-            out.append(f.result())
-    return out
+            p, r = f.result()
+            res[p] = r
+    return [j | {"result": res[j["prompt"]]} for j in jobs]
 
 
 def is_ok(result):

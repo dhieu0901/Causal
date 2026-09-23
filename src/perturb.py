@@ -80,6 +80,28 @@ def enumerate_fe(edges, nodes, k):
     return out
 
 
+def enumerate_scramble(edges, nodes):
+    """Every DAG on the same nodes, with the same number of edges, that keeps
+    NOT ONE of the true directed edges.
+
+    The matched control between NAMES_ONLY and DR_k: the block carries the same
+    names and the same number of arrows as ORACLE, but the arrows are random.
+    A true edge may come back reversed, since a reversal is not the true edge;
+    forbidding reversals as well is impossible on the 3-node families, whose
+    complement graph has too few pairs left.
+
+    Consequence, stated rather than hidden: on the complete 3-node families
+    (confounding, mediation) the only such DAG is the full reversal, so there
+    SCRAMBLE is DR_k3 and carries no randomness. No node is ever left isolated -
+    the edge counts rule it out on every family - so the block names exactly the
+    nodes ORACLE names.
+    """
+    true = set(edges)
+    pool = [(a, b) for a in nodes for b in nodes if a != b and (a, b) not in true]
+    return [sorted(pick) for pick in combinations(pool, len(edges))
+            if is_dag(pick, nodes)]
+
+
 ENUMERATORS = {"ED": enumerate_ed, "FE": enumerate_fe, "DR": enumerate_dr}
 
 
