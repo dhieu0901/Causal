@@ -1,0 +1,33 @@
+section,sample,lexicon,quantity,estimate_pp,ci_lo,ci_hi,p_boot,n_items
+3a headline DiD,pooled,PSEUDO,RAW (the published headline),5.98,1.67,10.19,0.0055,490
+3a headline DiD,pooled,PSEUDO,RAW_CLEAN,6.65,2.17,11.13,0.004,491
+3a headline DiD,pooled,PSEUDO,"RAW, drop det-counterfactual",5.07,0.17,9.9,0.046,375
+3a headline DiD,pooled,PSEUDO,"RAW_CLEAN, drop det-counterfactual",5.37,0.09,10.3,0.0445,376
+3b latent sentence,pooled,KEEP,"RAW_CLEAN minus RAW, RAW as first answered",-0.16,-3.3,3.03,0.9715,155
+3b latent sentence,pooled,KEEP,"RAW_CLEAN minus RAW, RAW asked again today",2.16,-1.46,5.79,0.2535,155
+3b latent sentence,pooled,PSEUDO,"RAW_CLEAN minus RAW, RAW as first answered",-1.44,-4.49,1.5,0.373,156
+3b latent sentence,pooled,PSEUDO,"RAW_CLEAN minus RAW, RAW asked again today",1.77,-1.32,5.08,0.2995,156
+3c direct contrast,lex,KEEP,ORACLE minus RAW,-5.04,-12.4,2.33,0.1825,86
+3c direct contrast,lex,KEEP,ORACLE minus RAW_CLEAN,-4.84,-11.63,2.13,0.1775,86
+3c direct contrast,lex,KEEP,DR_k1 minus RAW,-8.72,-15.5,-2.13,0.0085,86
+3c direct contrast,lex,KEEP,DR_k1 minus RAW_CLEAN,-9.3,-16.09,-2.52,0.0075,86
+3c direct contrast,lex,PSEUDO,ORACLE minus RAW,7.75,-0.39,16.09,0.0645,86
+3c direct contrast,lex,PSEUDO,ORACLE minus RAW_CLEAN,9.11,0.19,18.02,0.046,86
+3c direct contrast,lex,PSEUDO,DR_k1 minus RAW,-0.58,-8.14,7.17,0.873,86
+3c direct contrast,lex,PSEUDO,DR_k1 minus RAW_CLEAN,0.39,-6.98,7.95,0.9245,86
+3c direct contrast,n600,KEEP,ORACLE minus RAW,-0.17,-3.79,3.33,0.906,290
+3c direct contrast,n600,KEEP,ORACLE minus RAW_CLEAN,-0.34,-3.89,3.15,0.856,291
+3c direct contrast,n600,KEEP,DR_k1 minus RAW,-6.11,-9.92,-2.42,0.002,289
+3c direct contrast,n600,KEEP,DR_k1 minus RAW_CLEAN,-5.63,-9.31,-1.95,0.001,290
+3c direct contrast,n600,PSEUDO,ORACLE minus RAW,6.3,1.95,10.77,0.0055,291
+3c direct contrast,n600,PSEUDO,ORACLE minus RAW_CLEAN,6.68,2.05,11.07,0.0015,292
+3c direct contrast,n600,PSEUDO,DR_k1 minus RAW,-1.26,-5.42,2.8,0.553,292
+3c direct contrast,n600,PSEUDO,DR_k1 minus RAW_CLEAN,-0.86,-5.02,3.37,0.6875,292
+3c direct contrast,price400,KEEP,ORACLE minus RAW,-0.08,-4.63,4.55,0.9645,198
+3c direct contrast,price400,KEEP,ORACLE minus RAW_CLEAN,0.08,-4.55,4.88,0.979,198
+3c direct contrast,price400,KEEP,DR_k1 minus RAW,-5.16,-9.9,-0.17,0.0435,197
+3c direct contrast,price400,KEEP,DR_k1 minus RAW_CLEAN,-6.01,-10.74,-1.02,0.0185,197
+3c direct contrast,price400,PSEUDO,ORACLE minus RAW,1.01,-4.55,6.48,0.703,198
+3c direct contrast,price400,PSEUDO,ORACLE minus RAW_CLEAN,2.18,-3.43,7.71,0.438,199
+3c direct contrast,price400,PSEUDO,DR_k1 minus RAW,-0.5,-5.86,5.11,0.865,199
+3c direct contrast,price400,PSEUDO,DR_k1 minus RAW_CLEAN,0.34,-5.11,5.61,0.936,199

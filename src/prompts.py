@@ -29,6 +29,20 @@ def strip_structure(prompt: str) -> tuple[str, list[str]]:
     return f"{head}{PREAMBLE} {cleaned}", [s.strip() for s in removed]
 
 
+# "Gender is unobserved." strip_structure() leaves this sentence in every item
+# of the IV, arrowhead and frontdoor families (scripts/measure_raw_leak.py): it
+# names no edge, but it tells the model a latent confounder exists, which is
+# structure. RAW_CLEAN removes it. It is a separate condition rather than a
+# change to strip_structure(), because every condition is built on the stripped
+# body: widening the strip itself would change ~19,500 cached prompts across all
+# arms, where RAW_CLEAN adds one prompt per affected item.
+#
+# The other survivor, "X causes Y" in det-counterfactual items, is NOT removed
+# and cannot be: those sentences are the item's structural equations, and a
+# det-counterfactual prompt carries no probabilities, so without them the
+# question has no answer. That leak is handled by excluding the query type.
+LATENT_SENT = re.compile(r"\s*[^.:?]*\bis unobserved\.", re.IGNORECASE)
+
 PARENT_CHILDREN = re.compile(
     r"^(.*?)\s+has a direct effect on\s+(.*?)\.\s*$", re.IGNORECASE | re.DOTALL)
 
@@ -94,7 +108,7 @@ def list_nodes(edges, var_names: dict[str, str] | None = None) -> str:
 
 
 def build(prompt: str, condition: str, edges=None, var_names=None) -> str:
-    """condition: RAW | RAW_INSTR | NAMES_ONLY | ORACLE | PERTURB (edges) | PROSE.
+    """condition: RAW | RAW_CLEAN | RAW_INSTR | NAMES_ONLY | ORACLE | PERTURB (edges) | PROSE.
 
     NAMES_ONLY is the matched control for ORACLE. ORACLE adds FOUR things at
     once: a block of text in a fixed position, the variable names restated, THE
@@ -143,6 +157,10 @@ def build(prompt: str, condition: str, edges=None, var_names=None) -> str:
     stripped, _ = strip_structure(prompt)
     if condition == "RAW":
         return stripped + ANSWER_RULE
+    if condition == "RAW_CLEAN":
+        # Identical to RAW wherever there is no latent sentence, so those items
+        # hit RAW's cache entry and cost nothing.
+        return LATENT_SENT.sub("", stripped) + ANSWER_RULE
     if condition == "RAW_INSTR":
         return (stripped + "\n\nReason about the causal structure of this world "
                 "when answering." + ANSWER_RULE)

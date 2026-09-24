@@ -1,0 +1,48 @@
+    [lexicon PSEUDO] 88 items carry residue outside variable_mapping - KEPT (reported only)
+    [lexicon PSEUDO] residue biases this condition TOWARDS KEEP; see REPORT.md section 7.2
+172 prompts per model (['RAW'] x ['KEEP', 'PSEUDO'], causal group), all verified as sent in the old run.
+  gpt-4.1-nano   new calls=  153  usd=0.02
+  gpt-4.1-mini   new calls=  153  usd=0.06
+  gpt-4.1        new calls=  153  usd=0.28
+  TOTAL 0.36 USD at the old run's token counts
+
+>>> gpt-4.1-nano
+    25/172
+    50/172
+    75/172
+    100/172
+    125/172
+    150/172
+
+>>> gpt-4.1-mini
+    25/172
+    50/172
+    75/172
+    100/172
+    125/172
+    150/172
+
+>>> gpt-4.1
+    25/172
+    50/172
+    75/172
+    100/172
+    125/172
+    150/172
+
+lexicon cond        model  n_cells  acc_old  acc_new  drift_pp  ci_lo  ci_hi  p_boot  flip_pct
+   KEEP  RAW gpt-4.1-nano       86    79.07    72.09     -6.98 -16.28   1.16  0.1380      18.6
+   KEEP  RAW gpt-4.1-mini       86    83.72    84.88      1.16  -4.65   6.98  0.8390       9.3
+   KEEP  RAW      gpt-4.1       86    75.58    77.91      2.33  -3.49   8.14  0.5900      11.6
+   KEEP  RAW       pooled      258    79.46    78.29     -1.16  -5.81   3.10  0.6195      13.2
+ PSEUDO  RAW gpt-4.1-nano       86    63.95    63.95      0.00  -8.14   8.14  1.0000      15.1
+ PSEUDO  RAW gpt-4.1-mini       86    65.12    65.12      0.00  -5.81   6.98  1.0000       9.3
+ PSEUDO  RAW      gpt-4.1       86    61.63    61.63      0.00  -6.98   6.98  1.0000      10.5
+ PSEUDO  RAW       pooled      258    63.57    63.57     -0.00  -3.88   3.88  1.0000      11.6
+    all  all gpt-4.1-nano      172    71.51    68.02     -3.49  -9.30   1.74  0.2510      16.9
+    all  all gpt-4.1-mini      172    74.42    75.00      0.58  -3.49   4.65  0.9110       9.3
+    all  all      gpt-4.1      172    68.60    69.77      1.16  -3.49   5.81  0.7195      11.0
+    all  all       pooled      516    71.51    70.93     -0.58  -3.68   2.33  0.7135      12.4
+
+  drift_pp = accuracy now minus accuracy then, same prompt, same item.
+  flip_pct counts answers that changed in either direction.

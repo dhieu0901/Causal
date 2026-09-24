@@ -1,0 +1,68 @@
+items=174  jobs/model=174  lexicon=KEEP  paired_to=None  families=['IV', 'arrowhead', 'chain', 'collision', 'confounding', 'diamond', 'diamondcut', 'fork', 'frontdoor', 'mediation']
+
+>>> gpt-4.1-nano: 174 calls
+    25/171
+    50/171
+    75/171
+    100/171
+    125/171
+    150/171
+    done: {'calls': 174, 'cached': 120, 'errors': 0, 'err_rate': 0.0, 'in_tok': 21477, 'out_tok': 43356}
+
+>>> gpt-4.1-mini: 174 calls
+    25/171
+    50/171
+    75/171
+    100/171
+    125/171
+    150/171
+    done: {'calls': 174, 'cached': 120, 'errors': 0, 'err_rate': 0.0, 'in_tok': 21477, 'out_tok': 36671}
+
+>>> gpt-4.1: 174 calls
+    25/171
+    50/171
+    75/171
+    100/171
+    125/171
+    150/171
+    done: {'calls': 174, 'cached': 120, 'errors': 0, 'err_rate': 0.0, 'in_tok': 21477, 'out_tok': 31849}
+
+saved D:\code\Noisy Causal\results\pilot_raw_cleanrawlexKEEP.csv  (522 rows)
+
+======================================================================
+PILOT: DO CHINH XAC THEO DIEU KIEN
+======================================================================
+
+--- gpt-4.1-nano ---
+               n    acc  parse
+cond                          
+PROSE        NaN    NaN    NaN
+RAW          NaN    NaN    NaN
+ORACLE       NaN    NaN    NaN
+RAW_CLEAN  174.0  78.16   98.9
+  Delta_struct = ORACLE - RAW = +nan pp
+  Cost of stripping prose (PROSE - RAW) = +nan pp
+
+--- gpt-4.1-mini ---
+               n    acc  parse
+cond                          
+PROSE        NaN    NaN    NaN
+RAW          NaN    NaN    NaN
+ORACLE       NaN    NaN    NaN
+RAW_CLEAN  174.0  78.74   98.3
+  Delta_struct = ORACLE - RAW = +nan pp
+  Cost of stripping prose (PROSE - RAW) = +nan pp
+
+--- gpt-4.1 ---
+               n    acc  parse
+cond                          
+PROSE        NaN    NaN    NaN
+RAW          NaN    NaN    NaN
+ORACLE       NaN    NaN    NaN
+RAW_CLEAN  174.0  77.59   99.4
+  Delta_struct = ORACLE - RAW = +nan pp
+  Cost of stripping prose (PROSE - RAW) = +nan pp
+
+======================================================================
+McNEMAR EXACT (paired, on the same items)
+======================================================================

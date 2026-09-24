@@ -57,22 +57,29 @@ ARITH = {"marginal", "correlation"}
 IDENT = {"backadj"}
 DRIFT_CACHE = ROOT / "cache_drift"
 
+# How each sample was drawn (pool_samples.SAMPLES) and which file holds its old
+# answers. The n600 check came first and keeps its unsuffixed output names.
+SAMPLE_ARGS = {"n600": (600, 1, ("DR",)), "price400": (400, 3, ("DR", "ED", "FE")),
+               "lex": (200, 1, ("DR",))}
 
-def jobs_for(lexicon, conds):
+
+def jobs_for(sample, lexicon, conds):
     """The old run's own jobs, rebuilt exactly, causal query group only."""
-    items = make_items(600, SEED, 1, "full_v1.5_default.csv", None, True)
-    jobs = build_jobs(items, 1, SEED, ("DR",), lexicon)
+    n, kmax, types = SAMPLE_ARGS[sample]
+    items = make_items(n, SEED, kmax, "full_v1.5_default.csv", None, True)
+    jobs = build_jobs(items, kmax, SEED, types, lexicon)
     return [j | {"lexicon": lexicon} for j in jobs
             if j["cond"] in conds and j["query_type"] not in ARITH | IDENT]
 
 
-def old_rows(lexicon):
-    d = pd.read_csv(ROOT / "results" / f"pilot_raw_n600{lexicon}.csv")
+def old_rows(sample, lexicon):
+    d = pd.read_csv(ROOT / "results" / f"pilot_raw_{sample}{lexicon}.csv")
     return d.set_index(["model", "cond", "item"])
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
+    ap.add_argument("--sample", default="n600", choices=sorted(SAMPLE_ARGS))
     ap.add_argument("--conds", default="RAW,ORACLE,DR_k1")
     ap.add_argument("--lexicons", default="KEEP,PSEUDO")
     ap.add_argument("--models", default=",".join(TIER))
@@ -82,8 +89,9 @@ def main() -> int:
     lexes = [x.strip() for x in a.lexicons.split(",")]
     models = [m.strip() for m in a.models.split(",")]
 
-    jobs = [j for lx in lexes for j in jobs_for(lx, conds)]
-    old = {lx: old_rows(lx) for lx in lexes}
+    jobs = [j for lx in lexes for j in jobs_for(a.sample, lx, conds)]
+    old = {lx: old_rows(a.sample, lx) for lx in lexes}
+    sfx = "" if a.sample == "n600" else f"_{a.sample}"
     # Every job must be one the old run really sent: it is in the main cache.
     miss = sum(read_cached(models[0], 0.0, j["prompt"]) is None for j in jobs)
     if miss:
@@ -126,7 +134,7 @@ def main() -> int:
                              old_correct=int(o.correct),
                              new_correct=int(pred == r["gold"]) if pred else 0))
     R = pd.DataFrame(rows)
-    R.to_csv(ROOT / "results" / "drift_check_raw.csv", index=False)
+    R.to_csv(ROOT / "results" / f"drift_check_raw{sfx}.csv", index=False)
 
     out = []
     groups = [(lx, c) for lx in lexes for c in sorted(conds)] + [("all", "all")]
@@ -148,7 +156,7 @@ def main() -> int:
                             ci_hi=round(100 * hi, 2), p_boot=round(p, 4),
                             flip_pct=round(100 * flips, 1)))
     D = pd.DataFrame(out)
-    D.to_csv(ROOT / "results" / "drift_check.csv", index=False)
+    D.to_csv(ROOT / "results" / f"drift_check{sfx}.csv", index=False)
     print("\n" + D.to_string(index=False))
     print("\n  drift_pp = accuracy now minus accuracy then, same prompt, same item.")
     print("  flip_pct counts answers that changed in either direction.")

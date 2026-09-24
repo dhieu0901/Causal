@@ -1,0 +1,116 @@
+items=580  jobs/model=580  lexicon=KEEP  paired_to=None  families=['IV', 'arrowhead', 'chain', 'collision', 'confounding', 'diamond', 'diamondcut', 'fork', 'frontdoor', 'mediation']
+
+>>> gpt-4.1-nano: 580 calls
+    25/554
+    50/554
+    75/554
+    100/554
+    125/554
+    150/554
+    175/554
+    200/554
+    225/554
+    250/554
+    275/554
+    300/554
+    325/554
+    350/554
+    375/554
+    400/554
+    425/554
+    450/554
+    475/554
+    500/554
+    525/554
+    550/554
+    done: {'calls': 580, 'cached': 413, 'errors': 0, 'err_rate': 0.0, 'in_tok': 71555, 'out_tok': 149796}
+
+>>> gpt-4.1-mini: 580 calls
+    25/554
+    50/554
+    75/554
+    100/554
+    125/554
+    150/554
+    175/554
+    200/554
+    225/554
+    250/554
+    275/554
+    300/554
+    325/554
+    350/554
+    375/554
+    400/554
+    425/554
+    450/554
+    475/554
+    500/554
+    525/554
+    550/554
+    done: {'calls': 580, 'cached': 413, 'errors': 0, 'err_rate': 0.0, 'in_tok': 71555, 'out_tok': 121854}
+
+>>> gpt-4.1: 580 calls
+    25/554
+    50/554
+    75/554
+    100/554
+    125/554
+    150/554
+    175/554
+    200/554
+    225/554
+    250/554
+    275/554
+    300/554
+    325/554
+    350/554
+    375/554
+    400/554
+    425/554
+    450/554
+    475/554
+    500/554
+    525/554
+    550/554
+    done: {'calls': 580, 'cached': 412, 'errors': 0, 'err_rate': 0.0, 'in_tok': 71555, 'out_tok': 110608}
+
+saved D:\code\Noisy Causal\results\pilot_raw_cleanrawn600KEEP.csv  (1740 rows)
+
+======================================================================
+PILOT: DO CHINH XAC THEO DIEU KIEN
+======================================================================
+
+--- gpt-4.1-nano ---
+               n    acc  parse
+cond                          
+PROSE        NaN    NaN    NaN
+RAW          NaN    NaN    NaN
+ORACLE       NaN    NaN    NaN
+RAW_CLEAN  580.0  74.48   97.8
+  Delta_struct = ORACLE - RAW = +nan pp
+  Cost of stripping prose (PROSE - RAW) = +nan pp
+
+--- gpt-4.1-mini ---
+               n    acc  parse
+cond                          
+PROSE        NaN    NaN    NaN
+RAW          NaN    NaN    NaN
+ORACLE       NaN    NaN    NaN
+RAW_CLEAN  580.0  78.28   98.6
+  Delta_struct = ORACLE - RAW = +nan pp
+  Cost of stripping prose (PROSE - RAW) = +nan pp
+
+--- gpt-4.1 ---
+               n    acc  parse
+cond                          
+PROSE        NaN    NaN    NaN
+RAW          NaN    NaN    NaN
+ORACLE       NaN    NaN    NaN
+RAW_CLEAN  580.0  78.97   99.7
+  Delta_struct = ORACLE - RAW = +nan pp
+  Cost of stripping prose (PROSE - RAW) = +nan pp
+
+======================================================================
+McNEMAR EXACT (paired, on the same items)
+======================================================================

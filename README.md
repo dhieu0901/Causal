@@ -21,7 +21,7 @@ Phần thực nghiệm bên dưới chạy trên **một họ model** và n = 17
 
 Tỷ lệ phép đảo vô hại tụt từ **24,8%** (`price400`) và **22,1%** (`n600`, cùng 7 họ) ở k=1 **xuống 0** ở k=2 và k=3, chỉ vì càng hỏng nhiều cạnh thì càng khó hỏng mà không chạm vào đại lượng. Liều lượng vì thế **lẫn với thành phần mẫu** - phần này không phụ thuộc model và tái lập trên hai mẫu. Chạy `scripts/classify_perturbations.py`; số ở `results/perturbation_split_qt.csv` và `results/perturbation_split_n600.csv`, cờ theo loại truy vấn.
 
-**Điều kiện hoá trên estimand đổi thì tác hại có phẳng không: không, câu "phẳng" bị rút.** Trên `price400` thì phẳng; trên `n600` thì tăng theo k. `DR_k1` của `n600` được trả lời khoảng 16/09, `DR_k2` và `DR_k3` vào 24/09, nhưng `scripts/check_drift.py` đã gửi lại các prompt của đợt cũ (24/09/2026, 5,54 USD) và **không thấy độ trôi**: độ chính xác mới trừ cũ là -0,38 [-1,33 ; +0,55] trên 5.256 ô, và không điều kiện hay model nào tách khỏi 0 (`results/drift_check.csv`). Vậy hai mẫu vênh nhau thật. Giữ cố định các item mà cả ba lượt bốc đều đổi estimand, rồi gộp hai mẫu theo id CLadder (`results/perturbation_conditional_slope.csv`): tác hại tăng **-1,82 [-3,86 ; +0,17]** điểm mỗi cạnh với `KEEP` và **-1,81 [-3,67 ; +0,04]** với `PSEUDO`, cả hai chưa đạt 0,05 (p = 0,0755 và 0,0605). Riêng price400: +0,46 (`KEEP`); riêng n600: -3,28 (`KEEP`). Kết luận thận trọng: có thể còn một liều nhỏ cỡ 2 điểm mỗi cạnh sau khi điều kiện hoá, chưa xác lập; phần thành phần mẫu thì đứng.
+**Điều kiện hoá trên estimand đổi thì tác hại có phẳng không: không, câu "phẳng" bị rút.** Trên `price400` thì phẳng; trên `n600` thì tăng theo k. `DR_k1` của `n600` được trả lời khoảng 16/09, `DR_k2` và `DR_k3` vào 24/09, nhưng `scripts/check_drift.py` đã gửi lại các prompt của đợt cũ (24/09/2026, 5,54 USD) và **không thấy độ trôi**: độ chính xác mới trừ cũ là -0,38 [-1,33 ; +0,55] trên 5.256 ô, và không điều kiện hay model nào tách khỏi 0 (`results/drift_check.csv`). Vậy hai mẫu vênh nhau thật. Giữ cố định các item mà cả ba lượt bốc đều đổi estimand, rồi gộp hai mẫu theo id CLadder (`results/perturbation_conditional_slope.csv`): tác hại tăng **-1,82 [-3,86 ; +0,17]** điểm mỗi cạnh với `KEEP` và **-1,81 [-3,67 ; +0,04]** với `PSEUDO`, cả hai sát ngưỡng: p = 0,0680-0,0805 và 0,0495-0,0605 qua năm seed bootstrap (`results/seed_stability.csv`), tức chưa xác lập. Riêng price400: +0,46 (`KEEP`); riêng n600: -3,28 (`KEEP`). Kết luận thận trọng: có thể còn một liều nhỏ cỡ 2 điểm mỗi cạnh sau khi điều kiện hoá, chưa xác lập; phần thành phần mẫu thì đứng.
 
 *Sửa 24/09/2026: bản trước ghi 45/197, -6,36 và -7,79 / -7,36 / -6,90. Các số ấy tính trên một bản phát lại sai phép bốc nhiễu: `classify_perturbations.py` bốc lại trên đồ thị ký hiệu có cạnh đã sắp xếp, còn `pilot.py` bốc trên đồ thị tên biến theo thứ tự câu văn. Cùng seed, cùng chỉ số, nhưng hai danh sách xếp khác nhau, nên gần một nửa số item bị gán phán quyết của một đồ thị khác với đồ thị model đã thấy. Bản sửa phát lại đúng cách `pilot.py` bốc, và chứng minh bằng cache: 5.814/5.814 prompt dựng lại đều đúng là prompt đã gửi.*
 
@@ -32,6 +32,8 @@ Tỷ lệ phép đảo vô hại tụt từ **24,8%** (`price400`) và **22,1%**
 **Cấp một khối cấu trúc làm giảm tác hại của việc ẩn danh tên biến, trên nhóm câu hỏi thực sự cần suy luận nhân quả.**
 
 **+5,98 pp, CI 95% [+1,67 ; +10,19], p = 0,0055, n = 490 item** (gộp ba mẫu, bỏ trùng theo id gốc). Khớp `results/structure_arms.csv`.
+
+`RAW` vẫn rò cấu trúc ở hai chỗ: phương trình của `det-counterfactual` (không bóc được, vì đó là nội dung câu hỏi) và câu "X is unobserved." ở ba họ có biến ẩn. Với nền `RAW_CLEAN` bỏ câu thứ hai và bỏ luôn các item `det-counterfactual`, con số là **+5,37 [+0,09 ; +10,30], n = 376**, p = 0,0345-0,0500 tuỳ seed bootstrap (`results/raw_clean.csv`, chạy 24/09/2026). Con số tiêu đề sống qua cả hai chỗ rò, nhưng sát ngưỡng.
 
 Ba điều phải đọc kèm. Cả ba tính trên **cùng mẫu gộp n=490** của con số tiêu đề:
 
@@ -61,7 +63,7 @@ Trên `n600` (chạy 24/09/2026, `results/ladder5_steps_n600.csv`), bị gán pr
 
 **Mọi nhãn dự án chấm điểm đều đã tính lại độc lập.** Ba loại truy vấn từng bỏ trống - `det-counterfactual`, `collider_bias`, `exp_away`, cộng 1.812 câu và 28 trong 86 item của nhóm nhân quả - nay đã kiểm: **1.812/1.812 nhãn tái lập chính xác**. Chạy `scripts/verify_counterfactual.py`.
 
-n = 490 item ghép cặp qua ba mẫu, 3 model của **một họ** (giới hạn duy nhất đủ nghiêm trọng để chặn công bố), **91.545** lượt chấm điểm (đếm từ `results/*_raw*.csv`, đã trừ dữ liệu cách ly).
+n = 490 item ghép cặp qua ba mẫu, 3 model của **một họ** (giới hạn duy nhất đủ nghiêm trọng để chặn công bố), **98.463** lượt chấm điểm (đếm từ `results/*_raw*.csv`, đã trừ dữ liệu cách ly).
 
 ## Thiết kế
 
@@ -186,10 +188,13 @@ src/       lexical.py (đổi từ vựng, 5 bộ), perturb.py (làm hỏng DAG)
            noise.py, runner.py (có guard lỗi API), stats.py
 scripts/   pilot.py, induction.py, check_drift.py (ba script gọi API, tốn tiền;
            cả ba có --dry-run hoặc cache), 18 script analyze_*,
-           6 script kiểm chứng nhãn và dữ liệu (verify_*, audit_*), 3 cổng
-           (check_numbers, check_pipeline_order, verify_determinism), và 7 script
-           phụ trợ - tổng 37, mọi script trừ ba cái đầu chạy 0 USD.
+           6 script kiểm chứng nhãn và dữ liệu (verify_*, audit_*), 4 cổng
+           (check_consistency, check_numbers, check_pipeline_order,
+           verify_determinism), audit_cache_agreement.py (so mọi dòng CSV với
+           cache; cần cache nên chạy tay), và 7 script phụ trợ - tổng 39, mọi
+           script trừ ba cái đầu chạy 0 USD.
            run_analysis.sh chạy lại toàn bộ phần phân tích, không gọi API;
-           run_n600_extensions.sh là đợt tốn credit ngày 24/09/2026
+           run_n600_extensions.sh và run_clean_raw.sh là hai đợt tốn credit
+           ngày 24/09/2026
 results/   các bảng CSV kết quả và log chạy thật
 ```

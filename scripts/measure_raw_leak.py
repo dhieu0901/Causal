@@ -51,13 +51,17 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 import pandas as pd
 
-from pool_samples import POOL_LEXICON, boot, did_sample
+from pool_samples import POOL_LEXICON, boot, cell, did_sample, load
 from prompts import strip_structure
+from analyze_querygroup import ARITH, IDENT, TIER
+from analyze_vs_raw import boot as vs_boot
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 SAMPLES = ["lex", "n600", "price400"]
+# The families whose items carry "X is unobserved." (section 1 measures it).
+LATENT_FAMILIES = {"IV", "arrowhead", "frontdoor"}
 EDGE = re.compile(r"\bcauses\b", re.IGNORECASE)
 LATENT = re.compile(r"is unobserved", re.IGNORECASE)
 
@@ -141,6 +145,8 @@ def main() -> int:
         pd.DataFrame(sens).to_csv(ROOT / "results" / "raw_leak_sensitivity.csv",
                                   index=False)
 
+    clean_baseline(edge_ids, latent_ids)
+
     print("\n" + "=" * 78)
     print("HOW TO READ THIS")
     print("=" * 78)
@@ -159,6 +165,149 @@ def main() -> int:
     print("  'is unobserved' khong kiem duoc gi - no trung khit voi ba ho do thi.")
     print("\n  ghi ra results/raw_structure_leak.csv")
     return 0
+
+
+def with_clean(tag, lex, imap):
+    """A sample's answers plus its RAW_CLEAN run (scripts/run_clean_raw.sh)."""
+    d = load(tag, lex, imap)
+    f = ROOT / "results" / f"pilot_raw_cleanraw{tag}{lex}.csv"
+    if not f.exists():
+        return None
+    e = pd.read_csv(f).merge(imap, on="item", how="left")
+    if e.id.isna().any():
+        raise SystemExit(f"cleanraw{tag}{lex}: some items could not be mapped to an id")
+    # Off the latent families RAW_CLEAN IS RAW, prompt for prompt, and its answer
+    # was read back from the cache. For some n600 cells the cache holds a SECOND
+    # answer to that prompt, not the one this sample's RAW row carries: the prompt
+    # was sent twice during the 2026-09-16 run and the later answer overwrote the
+    # earlier in the cache (scripts/check_consistency.py, section 3). Taking RAW's
+    # own row there keeps RAW_CLEAN minus RAW exactly zero wherever the prompts
+    # are identical, so the contrast measures the latent sentence and nothing else.
+    off = ~e.graph_id.isin(LATENT_FAMILIES)
+    r = d[d.cond == "RAW"].set_index(["model", "item"])
+    k = pd.MultiIndex.from_arrays([e.model[off], e.item[off]])
+    for col in ("pred", "correct", "parsed"):
+        e.loc[off, col] = r[col].reindex(k).values
+    return pd.concat([d, e], ignore_index=True)
+
+
+def did_base(tag, imap, base):
+    """did_sample() with the no-graph baseline as a parameter."""
+    K, L = with_clean(tag, "KEEP", imap), with_clean(tag, POOL_LEXICON, imap)
+    qs = set(K.query_type.unique()) - ARITH - IDENT
+    cols = []
+    for m in TIER:
+        kr, lr = cell(K, m, base, qs), cell(L, m, base, qs)
+        ka, la = cell(K, m, "ORACLE", qs), cell(L, m, "ORACLE", qs)
+        i = kr.index.intersection(lr.index).intersection(ka.index).intersection(la.index)
+        if len(i) < 10:
+            continue
+        cols.append(pd.Series(((kr[i] - lr[i]) - (ka[i] - la[i])).values, index=i,
+                              name=f"{tag}|{m}|{POOL_LEXICON}"))
+    return pd.concat(cols, axis=1).groupby(level=0).mean()
+
+
+def clean_baseline(edge_ids, latent_ids):
+    """Section 3: the headline and the direct contrasts on a latent-free RAW.
+
+    RAW_CLEAN is RAW without "X is unobserved." (src/prompts.py); on the seven
+    families with no latent it IS RAW, prompt for prompt. The one leak left is
+    det-counterfactual's structural equations, which cannot be stripped, so the
+    fully clean headline also drops that query type. Every table's first row
+    uses RAW and must reproduce the number already published from RAW; if it
+    does not, the rows beneath it are not comparable, and the script stops.
+    """
+    print("\n" + "=" * 78)
+    print("3. A LATENT-FREE BASELINE: RAW_CLEAN")
+    print("=" * 78)
+    imaps = {t: pd.read_csv(ROOT / "results" / f"_itemmap_{t}.csv") for t in SAMPLES}
+    if not all((ROOT / "results" / f"pilot_raw_cleanraw{t}KEEP.csv").exists()
+               for t in SAMPLES):
+        print("  SKIPPED: run scripts/run_clean_raw.sh first.")
+        return
+    rows = []
+
+    def add(section, sample, lexicon, quantity, est, lo, hi, p, n):
+        rows.append(dict(section=section, sample=sample, lexicon=lexicon,
+                         quantity=quantity, estimate_pp=round(est, 2),
+                         ci_lo=round(lo, 2), ci_hi=round(hi, 2), p_boot=round(p, 4),
+                         n_items=n))
+        print(f"  {sample:9s} {lexicon:7s} {quantity:44s} {est:+6.2f} "
+              f"[{lo:+6.2f} ; {hi:+6.2f}]  p={p:.4f}  n={n}")
+
+    # 3a. The headline DiD, pooled over the three samples by CLadder id.
+    print("\n  3a. Headline DiD, causal group, pooled n=490 convention\n")
+    per = {b: pd.concat([did_base(t, imaps[t], b) for t in SAMPLES], axis=1)
+           for b in ("RAW", "RAW_CLEAN")}
+    ref = pd.read_csv(ROOT / "results" / "raw_leak_sensitivity.csv").set_index("subset")
+    for b, label, drop in (("RAW", "RAW (the published headline)", set()),
+                           ("RAW_CLEAN", "RAW_CLEAN", set()),
+                           ("RAW", "RAW, drop det-counterfactual", edge_ids),
+                           ("RAW_CLEAN", "RAW_CLEAN, drop det-counterfactual", edge_ids)):
+        M = per[b].loc[[i for i in per[b].index if i not in drop]]
+        est, lo, hi, p = boot(M)
+        if label.startswith("RAW (the"):
+            want = ref.loc["all items (headline)", "did_pp"]
+            if round(est, 2) != want:
+                raise SystemExit(f"RAW row gives {est:.2f}, headline is {want}: not comparable")
+        add("3a headline DiD", "pooled", POOL_LEXICON, label, est, lo, hi, p, len(M))
+
+    # 3b. What the latent sentence itself was worth, on the items that had it.
+    print("\n  3b. RAW_CLEAN minus RAW on the latent families, causal group\n")
+    for lex in ("KEEP", POOL_LEXICON):
+        old, now = [], []
+        for t in SAMPLES:
+            D = with_clean(t, lex, imaps[t])
+            qs = set(D.query_type.unique()) - ARITH - IDENT
+            sfx = "" if t == "n600" else f"_{t}"
+            f = ROOT / "results" / f"drift_check_raw{sfx}.csv"
+            R = pd.read_csv(f) if f.exists() else None
+            for m in TIER:
+                c, r = cell(D, m, "RAW_CLEAN", qs), cell(D, m, "RAW", qs)
+                i = [x for x in c.index.intersection(r.index) if x in latent_ids]
+                old.append(pd.Series((c[i] - r[i]).values, index=i, name=f"{t}|{m}"))
+                if R is not None:
+                    q = R[(R.model == m) & (R.lexicon == lex) & (R.cond == "RAW")
+                          & R.new_pred.notna()]
+                    q = q.merge(imaps[t], on="item").set_index("id").new_correct
+                    j = [x for x in c.index.intersection(q.index) if x in latent_ids]
+                    now.append(pd.Series((c[j] - q[j]).values, index=j, name=f"{t}|{m}"))
+        for label, cols in (("RAW_CLEAN minus RAW, RAW as first answered", old),
+                            ("RAW_CLEAN minus RAW, RAW asked again today", now)):
+            if not cols:
+                continue
+            W = pd.concat(cols, axis=1).groupby(level=0).mean()
+            est, lo, hi, p = boot(W)
+            add("3b latent sentence", "pooled", lex, label, est, lo, hi, p, len(W))
+
+    # 3c. The direct contrasts of analyze_vs_raw.py, per sample, on either baseline.
+    print("\n  3c. Direct contrasts, causal group, per sample (analyze_vs_raw convention)\n")
+    vs = pd.read_csv(ROOT / "results" / "vs_raw.csv")
+    for t in SAMPLES:
+        for lex in ("KEEP", POOL_LEXICON):
+            D = with_clean(t, lex, imaps[t])
+            D = D[(D.parsed == 1) & ~D.query_type.isin(ARITH | IDENT)]
+            for arm in ("ORACLE", "DR_k1"):
+                for b in ("RAW", "RAW_CLEAN"):
+                    cols = []
+                    for m in sorted(D.model.unique()):
+                        r = D[(D.model == m) & (D.cond == b)].set_index("item").correct
+                        c = D[(D.model == m) & (D.cond == arm)].set_index("item").correct
+                        i = r.index.intersection(c.index)
+                        if len(i) >= 5:
+                            cols.append(pd.Series((c[i] - r[i]).values, index=i))
+                    v = pd.concat(cols, axis=1).mean(axis=1).dropna()
+                    est, lo, hi, p = vs_boot(v)
+                    if b == "RAW":
+                        want = vs[(vs.query_group == "causal") & (vs["sample"] == t)
+                                  & (vs.lexicon == lex) & (vs.cond == arm)].delta_pp.iloc[0]
+                        if round(est, 2) != want:
+                            raise SystemExit(f"{t} {lex} {arm} minus RAW gives {est:.2f}, "
+                                             f"vs_raw.csv has {want}: not comparable")
+                    add("3c direct contrast", t, lex, f"{arm} minus {b}", est, lo, hi, p, len(v))
+
+    pd.DataFrame(rows).to_csv(ROOT / "results" / "raw_clean.csv", index=False)
+    print("\n  wrote results/raw_clean.csv")
 
 
 if __name__ == "__main__":

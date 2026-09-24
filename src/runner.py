@@ -141,8 +141,22 @@ def call(client, model, prompt, temperature=0.0, max_tokens=700, retries=4,
                    "in_tok": r.usage.prompt_tokens,
                    "out_tok": r.usage.completion_tokens,
                    "model": model, "cached": False, "ok": True}
+            # First writer wins, and every caller returns what the cache holds.
+            # Temperature 0 is not deterministic (15% of answers flip on
+            # re-asking), so two processes sending one prompt at once get two
+            # answers. The old plain overwrite kept the later one in the cache
+            # while the earlier caller wrote the other into its CSV: 494 cells,
+            # mostly the n600 run of 2026-09-16, now disagree with the cache
+            # (scripts/audit_cache_agreement.py). Exclusive create is atomic
+            # across processes, so the loser reads the winner's answer back.
             with _lock:
-                f.write_text(json.dumps(rec), encoding="utf-8")
+                try:
+                    with open(f, "x", encoding="utf-8") as fh:
+                        fh.write(json.dumps(rec))
+                except FileExistsError:
+                    hit = read_cached(model, temperature, prompt, cache)
+                    if hit is not None:
+                        return hit | {"cached": True}
             return rec
         except Exception as e:                       # rate limits, transient 5xx
             last = e

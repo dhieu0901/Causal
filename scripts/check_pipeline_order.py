@@ -56,6 +56,7 @@ ORDER = [
     "compare_price_lexicon", "analyze_price_paired",
     "feasibility", "make_figures",
     "measure_raw_leak",
+    "check_consistency",
     "check_numbers", "check_pipeline_order", "verify_determinism",
 ]
 
@@ -140,9 +141,11 @@ def main() -> int:
             return 1
 
     pos = {s: i for i, s in enumerate(ORDER)}
-    # The scripts that spend API credit sit outside the analysis order: they
-    # produce the pilot_raw_* inputs rather than consume analysis outputs.
-    missing = [s for s in flows if s not in pos and s not in ("pilot", "check_drift")]
+    # Outside the analysis order: the scripts that spend API credit (they
+    # produce the pilot_raw_* inputs), and the cache audit, which needs the API
+    # cache that is not in the repository and writes nothing.
+    missing = [s for s in flows if s not in pos
+               and s not in ("pilot", "check_drift", "audit_cache_agreement")]
 
     print("=" * 78)
     print("PIPELINE ORDER - doc truoc khi ghi?")

@@ -94,7 +94,7 @@ def make_items(n, seed, kmax=3, data="full_v1.5_default.csv", pair_to=None,
 
 def build_jobs(items, kmax=3, seed=0, types=("DR",), lexicon="KEEP",
                drop_residue=False, with_instr=False, with_names=False,
-               with_scramble=False):
+               with_scramble=False, with_clean_raw=False):
     """Every graph is built over the story's own variable names.
 
     Using the symbol DAG (X -> V2 -> Y) beside a body about husbands and wives
@@ -150,6 +150,10 @@ def build_jobs(items, kmax=3, seed=0, types=("DR",), lexicon="KEEP",
                     question_property=r.get("question_property", ""))
         jobs.append(dict(cond="PROSE", prompt=build(prompt, "PROSE"), **meta))
         jobs.append(dict(cond="RAW", prompt=build(prompt, "RAW"), **meta))
+        if with_clean_raw:
+            # RAW without the latent-confounder sentence (src/prompts.py). Equal
+            # to RAW, and so free, on every family that has no latent.
+            jobs.append(dict(cond="RAW_CLEAN", prompt=build(prompt, "RAW_CLEAN"), **meta))
         jobs.append(dict(cond="ORACLE", prompt=build(prompt, "ORACLE", edges), **meta))
         if with_instr:
             # Opt-in: it adds a paid call per item and no existing analysis
@@ -221,6 +225,9 @@ def main():
                     help="drop items that still carry real nouns outside "
                          "variable_mapping. This CHANGES the sample, so results are "
                          "NOT directly comparable with earlier runs")
+    ap.add_argument("--clean-raw", action="store_true", dest="with_clean_raw",
+                    help="add RAW_CLEAN: RAW without the 'X is unobserved.' sentence "
+                         "that strip_structure leaves in the three latent families")
     ap.add_argument("--scramble", action="store_true", dest="with_scramble",
                     help="add the SCRAMBLE condition: a random DAG on the same names "
                          "with as many edges as ORACLE and none of the true ones")
@@ -249,7 +256,8 @@ def main():
     jobs = build_jobs(items, a.kmax, a.seed,
                       tuple(t.strip() for t in a.types.split(",")), a.lexicon,
                       drop_residue=a.drop_residue, with_instr=a.with_instr,
-                      with_names=a.with_names, with_scramble=a.with_scramble)
+                      with_names=a.with_names, with_scramble=a.with_scramble,
+                      with_clean_raw=a.with_clean_raw)
     if a.conds:
         keep = {c.strip() for c in a.conds.split(",") if c.strip()}
         unknown = keep - {j["cond"] for j in jobs}
