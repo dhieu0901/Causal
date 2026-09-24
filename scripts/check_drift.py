@@ -24,6 +24,13 @@ Temperature 0 is not deterministic on this API, so some answers flip with no
 drift at all. Flips in both directions cancel in the accuracy difference; the
 flip rate is reported beside it so the two are not confused.
 
+Result, 2026-09-24 (5.54 USD). No drift: accuracy now minus then is -0.38 pp
+[-1.33, +0.55] over all 5,256 cells, and no single condition or model separates
+from zero. But 15.0% of answers flipped on re-asking (22.4% nano, 12.6% mini,
+10.1% gpt-4.1): temperature 0 is far from deterministic on this API, so a
+single run's per-item correctness carries noise that paired designs average
+out and that no cache can reveal.
+
 Writes: results/drift_check.csv, results/drift_check_raw.csv
 """
 from __future__ import annotations

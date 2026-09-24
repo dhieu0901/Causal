@@ -130,8 +130,9 @@ def report(label, W, rows):
 
 # Conditions by the run that produced them on n600. A contrast between two
 # conditions of one run compares answers given at the same time; a contrast
-# across runs also carries any change in the served model between 2026-09-16
-# and 2026-09-24, which nothing in this file can see.
+# across runs would also carry any change in the served model between
+# 2026-09-16 and 2026-09-24. Nothing in this file can see one; the test is
+# scripts/check_drift.py, which found none (results/drift_check.csv).
 N600_OLD = {"RAW", "PROSE", "ORACLE", "DR_k1"}
 N600_NEW = {"NAMES_ONLY", "SCRAMBLE", "DR_k2", "DR_k3"}
 

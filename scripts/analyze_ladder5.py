@@ -67,7 +67,8 @@ STEPS = [
 
 # n600 carries KEEP and PSEUDO from its 2026-09-16 run and the other three rungs
 # from scripts/run_n600_extensions.sh (2026-09-24, RAW only). A step between the
-# two runs also carries any drift in the served model; one inside a run does not.
+# two runs would also carry any drift in the served model; one inside a run does
+# not. scripts/check_drift.py tested for drift and found none.
 N600_NEW = {"PERMUTE", "IRRELEVANT", "SYMBOL"}
 
 

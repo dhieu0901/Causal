@@ -15,9 +15,13 @@ The answer matters because the share of harmless draws is not constant across k:
 So the "dose-response curve" in results/vs_raw_trend.csv is confounded with
 sample composition. Going from k=1 to k=2 does not only add a reversal, it also
 removes every harmless draw from the cell. Whether the harm grows with k once
-the estimand changes is a separate, model-dependent question: on price400 it
-does not; on n600 it does, but there k=1 and k>=2 were answered a week apart
-(section 3 and scripts/check_drift.py).
+the estimand changes is a separate, model-dependent question. On price400 it
+does not; on n600 it does. The n600 doses were answered a week apart, but
+scripts/check_drift.py re-asked the earlier prompts and found no drift
+(results/drift_check.csv). Holding the items fixed and pooling both samples
+(section 4), the harm grows by about 1.8 pp per reversed edge under both
+lexicons, short of 0.05 in both. The flat reading once stated here is
+withdrawn.
 
 How the drawn perturbation is recovered. pilot.py picks it with
 `random.Random(f"{seed}:{i}:{t}:{k}").choice(opts)`, where `i` is the FRAME INDEX
@@ -565,7 +569,9 @@ def main() -> int:
                                 ci_hi=round(hi, 2), p_boot=round(p, 4), n_items=len(x)))
     pd.DataFrame(qt_rows).to_csv(ROOT / "results" / "perturbation_split_qt.csv", index=False)
 
-    n600_dose()
+    N = n600_dose()
+    if N is not None:
+        conditional_slope(C, N)
 
     # replay_in_cache proves the replay here but is not written: the cache is
     # not in the repository, so a fresh clone would write False everywhere and
@@ -578,7 +584,7 @@ def main() -> int:
     return 0
 
 
-def n600_dose() -> None:
+def n600_dose() -> pd.DataFrame | None:
     """Section 3: the dose line on all ten families (runs of 2026-09-24).
 
     price400 was drawn with k up to 3, which the three 2-edge families cannot
@@ -596,7 +602,7 @@ def n600_dose() -> None:
     arms_files = [ROOT / "results" / f"pilot_raw_n600arms{lex}.csv" for lex in ("KEEP", "PSEUDO")]
     if not all(f.exists() for f in arms_files):
         print("  SKIPPED: run scripts/run_n600_extensions.sh first.")
-        return
+        return None
     N = classify(600, 1, 3, arms=("DR",), scramble=True)
     check_replay(N)
     strict_types = {"nde", "nie", "det-counterfactual"}
@@ -659,6 +665,78 @@ def n600_dose() -> None:
                                          index=False)
     print("\n  wrote results/perturbation_split_n600.csv, perturbation_classes_n600.csv,"
           " perturbation_shares_n600.csv")
+    return N
+
+
+SEVEN = {"IV", "arrowhead", "confounding", "diamond", "diamondcut", "frontdoor", "mediation"}
+
+
+def conditional_slope(C: pd.DataFrame, N: pd.DataFrame) -> None:
+    """Section 4: does harm grow with k on items whose every draw changes the estimand?
+
+    The split tables compare k=1, 2, 3 cells that hold DIFFERENT item sets on
+    the changed side (at k=1 the harmless items drop out, at k=2 and 3 none
+    do). This holds the items fixed instead: keep an item only if its k=1 draw
+    already changes the estimand - then its k=2 and k=3 draws do too - and fit
+    one slope per item across its own three k. That is the test "flat once
+    conditioned" actually needs.
+
+    Per sample, then pooled over price400 and n600 by CLadder id (an id drawn
+    in both contributes the mean of its two slopes; the two samples drew
+    different corruptions for it). On n600, k=1 was answered on a different day
+    from k=2 and k=3, so the n600 slope, and with it the pooled one, would carry
+    any drift between the runs; scripts/check_drift.py found none. The k=2 to
+    k=3 step is within one run and is reported beside it. The difference between the two samples is bootstrapped
+    with the samples treated as independent, which ignores the 139 shared ids.
+    """
+    print("\n" + "=" * 78)
+    print("4. CONDITIONAL SLOPE - items fixed, every draw changes the estimand")
+    print("=" * 78 + "\n")
+    maps = {t: pd.read_csv(ROOT / "results" / f"_itemmap_{t}.csv").set_index("item").id
+            for t in ("price400", "n600")}
+    rows = []
+    for lex in ("KEEP", "PSEUDO"):
+        per_sample = {}
+        for tag, cls, files in (
+                ("price400", C, [f"pilot_raw_price400{lex}.csv"]),
+                ("n600", N, [f"pilot_raw_n600{lex}.csv", f"pilot_raw_n600arms{lex}.csv"])):
+            d = pd.concat([pd.read_csv(ROOT / "results" / f) for f in files], ignore_index=True)
+            d = d[(d.parsed == 1) & d.graph_id.isin(SEVEN)]
+            M = pd.concat({k: paired_causal(d, f"DR_k{k}") for k in (1, 2, 3)}, axis=1).dropna()
+            flag = cls[(cls.cond == "DR_k1") & (cls.lexicon == lex)].set_index("item").unchanged_qt
+            M = M[flag.reindex(M.index).eq(False).values]
+            slope = pd.Series(((M[3] - M[1]) / 2).values, index=maps[tag].reindex(M.index).values)
+            step = (M[3] - M[2]).values
+            per_sample[tag] = slope
+            for what, x in (("slope per reversed edge", slope.values), ("k=2 to k=3 step", step)):
+                e, lo, hi, p = boot(x)
+                print(f"  {lex:7s} {tag:9s} {what:24s} {e:+7.2f} [{lo:+7.2f} ; {hi:+7.2f}]"
+                      f"  p={p:.4f}  n={len(x)}")
+                rows.append(dict(lexicon=lex, sample=tag, quantity=what, delta_pp=round(e, 2),
+                                 ci_lo=round(lo, 2), ci_hi=round(hi, 2), p_boot=round(p, 4),
+                                 n_items=len(x)))
+        pooled = pd.concat(per_sample.values()).groupby(level=0).mean()
+        e, lo, hi, p = boot(pooled.values)
+        print(f"  {lex:7s} {'pooled':9s} {'slope per reversed edge':24s} {e:+7.2f} "
+              f"[{lo:+7.2f} ; {hi:+7.2f}]  p={p:.4f}  n={len(pooled)}")
+        rows.append(dict(lexicon=lex, sample="pooled", quantity="slope per reversed edge",
+                         delta_pp=round(e, 2), ci_lo=round(lo, 2), ci_hi=round(hi, 2),
+                         p_boot=round(p, 4), n_items=len(pooled)))
+        a_, b_ = per_sample["n600"].values, per_sample["price400"].values
+        ba = cluster_boot(len(a_), lambda i: a_[i].mean(), SEED, NBOOT)
+        bb = cluster_boot(len(b_), lambda i: b_[i].mean(), SEED + 1, NBOOT)
+        diff = ba - bb
+        e = a_.mean() - b_.mean()
+        lo, hi = np.percentile(diff, [2.5, 97.5])
+        p = boot_p(diff, NBOOT)
+        print(f"  {lex:7s} {'n600 - price400':24s}           {100 * e:+7.2f} "
+              f"[{100 * lo:+7.2f} ; {100 * hi:+7.2f}]  p={p:.4f}\n")
+        rows.append(dict(lexicon=lex, sample="n600 minus price400",
+                         quantity="slope per reversed edge", delta_pp=round(100 * e, 2),
+                         ci_lo=round(100 * lo, 2), ci_hi=round(100 * hi, 2),
+                         p_boot=round(p, 4), n_items=len(a_) + len(b_)))
+    pd.DataFrame(rows).to_csv(ROOT / "results" / "perturbation_conditional_slope.csv", index=False)
+    print("  wrote results/perturbation_conditional_slope.csv")
 
 
 if __name__ == "__main__":
