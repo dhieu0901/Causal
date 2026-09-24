@@ -48,7 +48,7 @@ import pandas as pd
 from pilot import make_items, build_jobs
 from prompts import parse_answer
 from runner import run_batch, guard_errors, is_ok, PRICES_PER_M, read_cached
-from stats import boot_interval, cluster_boot
+from stats import boot_items
 
 SEED = 20260907
 NBOOT = 4000
@@ -130,6 +130,7 @@ def main() -> int:
             o = old[r["lexicon"]].loc[(m, r["cond"], r["item"])]
             pred = parse_answer(r["result"]["text"])
             rows.append(dict(model=m, lexicon=r["lexicon"], cond=r["cond"], item=r["item"],
+                             id=r["id"],
                              old_pred=o.pred, new_pred=pred,
                              old_correct=int(o.correct),
                              new_correct=int(pred == r["gold"]) if pred else 0))
@@ -145,15 +146,14 @@ def main() -> int:
             # one value per item (mean over its cells), bootstrap over items
             v = (t.new_correct - t.old_correct).groupby(t.item).mean()
             x = v.values
-            b = cluster_boot(len(x), lambda i: x[i].mean(), SEED, NBOOT)
-            est, lo, hi, p = boot_interval(x.mean(), b, NBOOT)
+            est, lo, hi, p = boot_items(x, SEED, NBOOT)      # convention A, src/stats.py
             flips = (t.old_pred.fillna("").astype(str)
                      != t.new_pred.fillna("").astype(str)).mean()
             out.append(dict(lexicon=lx, cond=c, model=m, n_cells=len(t),
                             acc_old=round(100 * t.old_correct.mean(), 2),
                             acc_new=round(100 * t.new_correct.mean(), 2),
-                            drift_pp=round(100 * est, 2), ci_lo=round(100 * lo, 2),
-                            ci_hi=round(100 * hi, 2), p_boot=round(p, 4),
+                            drift_pp=round(est, 2), ci_lo=round(lo, 2),
+                            ci_hi=round(hi, 2), p_boot=round(p, 4),
                             flip_pct=round(100 * flips, 1)))
     D = pd.DataFrame(out)
     D.to_csv(ROOT / "results" / f"drift_check{sfx}.csv", index=False)

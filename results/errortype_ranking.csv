@@ -1,9 +1,9 @@
 lexicon,n_compared,delta_pp,ci_lo,ci_hi,established
-KEEP,DR dat hon ED,2.46,-3.29,8.5,no
-KEEP,DR dat hon FE,-1.04,-8.54,5.85,no
-PERMUTE,DR dat hon ED,0.81,-6.17,7.97,no
-PERMUTE,DR dat hon FE,3.66,-4.04,10.82,no
-SYMBOL,DR dat hon ED,8.47,2.01,14.98,yes
-SYMBOL,DR dat hon FE,12.76,4.06,21.57,yes
-PSEUDO,DR dat hon ED,4.53,-2.04,11.07,no
-PSEUDO,DR dat hon FE,1.55,-6.19,9.42,no
+KEEP,DR dat hon ED,2.46,-3.38,8.57,no
+KEEP,DR dat hon FE,-1.04,-8.33,6.15,no
+PERMUTE,DR dat hon ED,0.81,-6.07,8.06,no
+PERMUTE,DR dat hon FE,3.66,-3.72,11.05,no
+SYMBOL,DR dat hon ED,8.47,2.02,14.98,yes
+SYMBOL,DR dat hon FE,12.76,3.61,21.72,yes
+PSEUDO,DR dat hon ED,4.53,-2.05,11.11,no
+PSEUDO,DR dat hon FE,1.55,-6.19,9.38,no

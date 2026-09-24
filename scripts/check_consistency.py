@@ -43,7 +43,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import numpy as np
 import pandas as pd
 
-from stats import boot_p, cluster_boot
+from stats import boot_items, boot_p, boot_two_sample, cluster_boot
 
 RES = ROOT / "results"
 TIER = ["gpt-4.1-nano", "gpt-4.1-mini", "gpt-4.1"]
@@ -190,6 +190,7 @@ SAMPLE_FILES = {
     "price400": ["price400KEEP", "price400PSEUDO", "cleanrawprice400KEEP", "cleanrawprice400PSEUDO"],
 }
 META = ["graph_id", "gold", "query_type", "story_id"]
+FULL = pd.read_csv(ROOT / "data" / "full_v1.5_default.csv", low_memory=False).set_index("id")
 
 
 def pred(d):
@@ -257,6 +258,18 @@ def integrity():
             check(f"{t}: no duplicate rows, no API errors, items agree with {tags[0]}",
                   dup == 0 and err == 0 and same and len(i) == len(meta),
                   f"dup={dup} err={err} items={len(meta)}")
+            # The record's own CLadder id (scripts/backfill_ids.py) must agree with
+            # the verified item map AND with CLadder's row for that id.
+            if "id" in d.columns:
+                ok_map = bool((d.id == d.item.map(itemmap(s))).all())
+                row = FULL.loc[d.id]
+                ok_rows = all((d[a].astype(str).values == row[b].astype(str).values).all()
+                              for a, b in (("graph_id", "graph_id"), ("gold", "label"),
+                                           ("query_type", "query_type"), ("story_id", "story_id")))
+                check(f"{t}: id column agrees with the item map and with CLadder",
+                      ok_map and ok_rows, f"map={ok_map} rows={ok_rows}")
+            else:
+                check(f"{t}: carries the CLadder id column", False)
 
     print()
     for s in ("lex", "n600", "price400"):
@@ -309,10 +322,6 @@ def integrity():
 
 
 # ------------------------------------------------------------------- 4. seeds
-def interval(x, seed):
-    b = cluster_boot(len(x), lambda i: x[i].mean(), seed, NBOOT)
-    lo, hi = np.percentile(b, [2.5, 97.5])
-    return 100 * lo, 100 * hi, boot_p(b, NBOOT)
 
 
 def seeds():
@@ -375,7 +384,11 @@ def seeds():
             M = M[f.reindex(M.index).eq(False).values]
             parts.append(pd.Series(((M[3] - M[1]) / 2).values, index=M.index.map(itemmap(tag))))
         x = pd.concat(parts).groupby(level=0).mean().values
-        q[f"conditional slope, pooled, {lex}"] = lambda s, x=x: (100 * x.mean(), *interval(x, s))
+        q[f"conditional slope, pooled, {lex}"] = lambda s, x=x: boot_items(x, s, NBOOT)
+        # parts[0] is price400, parts[1] n600: the two-sample difference of section 4
+        a_, b_ = parts[1].values, parts[0].values
+        q[f"conditional slope, n600 minus price400, {lex}"] = (
+            lambda s, a_=a_, b_=b_: boot_two_sample(a_, b_, s, NBOOT))
 
     rows = []
     for label, fn in q.items():

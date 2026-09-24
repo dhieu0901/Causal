@@ -1,13 +1,13 @@
 lexicon,error_type,meaning,cost_pp,ci_lo,ci_hi,established,equivalence_bound
 KEEP,DR,reversed edge,2.48,-2.9,7.95,no,7.95
-KEEP,ED,one spurious edge,1.24,-4.86,6.96,no,6.96
-KEEP,FE,one missing edge,2.12,-4.23,8.76,no,8.76
-PERMUTE,DR,reversed edge,5.39,-1.63,12.34,no,12.34
-PERMUTE,ED,one spurious edge,4.96,-0.82,10.61,no,10.61
-PERMUTE,FE,one missing edge,0.0,-5.95,6.15,no,6.15
-SYMBOL,DR,reversed edge,11.84,5.42,18.6,yes,18.6
-SYMBOL,ED,one spurious edge,3.67,-2.89,10.7,no,10.7
-SYMBOL,FE,one missing edge,1.55,-5.24,8.81,no,8.81
-PSEUDO,DR,reversed edge,7.38,0.41,14.23,yes,14.23
-PSEUDO,ED,one spurious edge,3.64,-2.38,9.76,no,9.76
-PSEUDO,FE,one missing edge,6.7,-0.52,14.07,no,14.07
+KEEP,ED,one spurious edge,1.24,-4.49,7.05,no,7.05
+KEEP,FE,one missing edge,2.12,-4.28,9.04,no,9.04
+PERMUTE,DR,reversed edge,5.39,-1.28,12.7,no,12.7
+PERMUTE,ED,one spurious edge,4.96,-0.8,10.74,no,10.74
+PERMUTE,FE,one missing edge,0.0,-5.88,5.82,no,5.88
+SYMBOL,DR,reversed edge,11.84,5.33,18.29,yes,18.29
+SYMBOL,ED,one spurious edge,3.67,-2.81,10.84,no,10.84
+SYMBOL,FE,one missing edge,1.55,-5.32,8.76,no,8.76
+PSEUDO,DR,reversed edge,7.38,0.79,14.11,yes,14.11
+PSEUDO,ED,one spurious edge,3.64,-2.06,9.72,no,9.72
+PSEUDO,FE,one missing edge,6.7,0.0,14.36,no,14.36

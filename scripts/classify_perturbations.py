@@ -76,7 +76,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from stats import boot_interval, boot_p, cluster_boot
+from stats import boot_interval, boot_items, boot_p, boot_two_sample, cluster_boot
 
 from perturb import to_edges, enumerate_scramble  # noqa: E402
 from pilot import make_items, ENUMERATORS         # noqa: E402
@@ -372,9 +372,7 @@ def benjamini_hochberg(p: np.ndarray, alpha: float = 0.05) -> np.ndarray:
 def boot(x: np.ndarray):
     if len(x) < 5:
         return (np.nan,) * 4
-    b = cluster_boot(len(x), lambda i: x[i].mean(), SEED, NBOOT)
-    est, lo, hi, p = boot_interval(x.mean(), b, NBOOT)
-    return 100 * est, 100 * lo, 100 * hi, p
+    return boot_items(x, SEED, NBOOT)               # convention A, src/stats.py
 
 
 def paired_causal(d: pd.DataFrame, cond: str) -> pd.Series:
@@ -723,17 +721,13 @@ def conditional_slope(C: pd.DataFrame, N: pd.DataFrame) -> None:
                          delta_pp=round(e, 2), ci_lo=round(lo, 2), ci_hi=round(hi, 2),
                          p_boot=round(p, 4), n_items=len(pooled)))
         a_, b_ = per_sample["n600"].values, per_sample["price400"].values
-        ba = cluster_boot(len(a_), lambda i: a_[i].mean(), SEED, NBOOT)
-        bb = cluster_boot(len(b_), lambda i: b_[i].mean(), SEED + 1, NBOOT)
-        diff = ba - bb
-        e = a_.mean() - b_.mean()
-        lo, hi = np.percentile(diff, [2.5, 97.5])
-        p = boot_p(diff, NBOOT)
-        print(f"  {lex:7s} {'n600 - price400':24s}           {100 * e:+7.2f} "
-              f"[{100 * lo:+7.2f} ; {100 * hi:+7.2f}]  p={p:.4f}\n")
+        # The same two-sample bootstrap as analyze_prior_strength (src/stats.py).
+        e, lo, hi, p = boot_two_sample(a_, b_, SEED, NBOOT)
+        print(f"  {lex:7s} {'n600 - price400':24s}           {e:+7.2f} "
+              f"[{lo:+7.2f} ; {hi:+7.2f}]  p={p:.4f}\n")
         rows.append(dict(lexicon=lex, sample="n600 minus price400",
-                         quantity="slope per reversed edge", delta_pp=round(100 * e, 2),
-                         ci_lo=round(100 * lo, 2), ci_hi=round(100 * hi, 2),
+                         quantity="slope per reversed edge", delta_pp=round(e, 2),
+                         ci_lo=round(lo, 2), ci_hi=round(hi, 2),
                          p_boot=round(p, 4), n_items=len(a_) + len(b_)))
     pd.DataFrame(rows).to_csv(ROOT / "results" / "perturbation_conditional_slope.csv", index=False)
     print("  wrote results/perturbation_conditional_slope.csv")

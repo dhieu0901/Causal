@@ -1,0 +1,65 @@
+graph_id,query_type,rung,n_items,n_real_word,gold,rule
+IV,ate,2,158,115,preserved,4 latent X-Y common cause already in the graph
+IV,backadj,2,158,128,undetermined,3 no adjustment set in either method blocks X <- U -> Y
+IV,correlation,1,158,125,preserved,1 rung 1: stated probabilities
+IV,det-counterfactual,3,158,115,undetermined,2 structural equations no longer determine Y
+IV,marginal,1,158,126,preserved,1 rung 1: stated probabilities
+arrowhead,ate,2,158,129,undetermined,6 formula assumes no X-Y confounding; X -> Y direct: not identified
+arrowhead,backadj,2,158,115,undetermined,3 no adjustment set in either method blocks X <- U -> Y
+arrowhead,correlation,1,158,114,preserved,1 rung 1: stated probabilities
+arrowhead,det-counterfactual,3,158,108,undetermined,2 structural equations no longer determine Y
+arrowhead,ett,3,158,132,undetermined,6 formula assumes no X-Y confounding; X -> Y direct: not identified
+arrowhead,marginal,1,158,120,preserved,1 rung 1: stated probabilities
+arrowhead,nde,3,158,124,undetermined,6 formula assumes no X-Y confounding; X -> Y direct: not identified
+arrowhead,nie,3,158,122,undetermined,6 formula assumes no X-Y confounding; X -> Y direct: not identified
+chain,ate,2,158,94,undetermined,"6 formula assumes no X-Y confounding; frontdoor needs P(mediator | X), not stated"
+chain,backadj,2,158,101,undetermined,3 no adjustment set in either method blocks X <- U -> Y
+chain,correlation,1,158,99,preserved,1 rung 1: stated probabilities
+chain,det-counterfactual,3,158,59,undetermined,2 structural equations no longer determine Y
+chain,ett,3,158,103,undetermined,"6 formula assumes no X-Y confounding; frontdoor needs P(mediator | X), not stated"
+chain,marginal,1,158,101,preserved,1 rung 1: stated probabilities
+chain,nie,3,158,93,undetermined,"6 formula assumes no X-Y confounding; frontdoor needs P(mediator | X), not stated"
+collision,backadj,2,158,106,undetermined,3 no adjustment set in either method blocks X <- U -> Y
+collision,collider_bias,2,158,112,preserved,5 no directed X -> Y path to add
+collision,exp_away,1,158,115,preserved,1 rung 1: stated probabilities
+collision,marginal,1,158,102,preserved,1 rung 1: stated probabilities
+confounding,ate,2,158,113,undetermined,6 formula assumes no X-Y confounding; X -> Y direct: not identified
+confounding,backadj,2,158,114,undetermined,3 no adjustment set in either method blocks X <- U -> Y
+confounding,correlation,1,158,114,preserved,1 rung 1: stated probabilities
+confounding,det-counterfactual,3,158,95,undetermined,2 structural equations no longer determine Y
+confounding,ett,3,158,106,undetermined,6 formula assumes no X-Y confounding; X -> Y direct: not identified
+confounding,marginal,1,158,107,preserved,1 rung 1: stated probabilities
+diamond,ate,2,158,97,undetermined,"6 formula assumes no X-Y confounding; frontdoor needs P(mediator | X), not stated"
+diamond,backadj,2,158,104,undetermined,3 no adjustment set in either method blocks X <- U -> Y
+diamond,correlation,1,158,102,preserved,1 rung 1: stated probabilities
+diamond,det-counterfactual,3,158,69,undetermined,2 structural equations no longer determine Y
+diamond,ett,3,158,103,undetermined,"6 formula assumes no X-Y confounding; frontdoor needs P(mediator | X), not stated"
+diamond,marginal,1,158,99,preserved,1 rung 1: stated probabilities
+diamond,nie,3,158,98,undetermined,"6 formula assumes no X-Y confounding; frontdoor needs P(mediator | X), not stated"
+diamondcut,ate,2,158,58,undetermined,6 formula assumes no X-Y confounding; X -> Y direct: not identified
+diamondcut,backadj,2,158,55,undetermined,3 no adjustment set in either method blocks X <- U -> Y
+diamondcut,correlation,1,158,53,preserved,1 rung 1: stated probabilities
+diamondcut,det-counterfactual,3,158,50,undetermined,2 structural equations no longer determine Y
+diamondcut,ett,3,158,56,undetermined,6 formula assumes no X-Y confounding; X -> Y direct: not identified
+diamondcut,marginal,1,158,57,preserved,1 rung 1: stated probabilities
+fork,ate,2,158,109,undetermined,6 formula assumes no X-Y confounding; X -> Y direct: not identified
+fork,backadj,2,158,114,undetermined,3 no adjustment set in either method blocks X <- U -> Y
+fork,correlation,1,158,113,preserved,1 rung 1: stated probabilities
+fork,det-counterfactual,3,158,68,undetermined,2 structural equations no longer determine Y
+fork,ett,3,158,108,undetermined,6 formula assumes no X-Y confounding; X -> Y direct: not identified
+fork,marginal,1,158,108,preserved,1 rung 1: stated probabilities
+frontdoor,ate,2,158,64,preserved,4 latent X-Y common cause already in the graph
+frontdoor,backadj,2,158,54,undetermined,3 no adjustment set in either method blocks X <- U -> Y
+frontdoor,correlation,1,158,53,preserved,1 rung 1: stated probabilities
+frontdoor,det-counterfactual,3,158,45,undetermined,2 structural equations no longer determine Y
+frontdoor,ett,3,158,62,preserved,4 latent X-Y common cause already in the graph
+frontdoor,marginal,1,158,60,preserved,1 rung 1: stated probabilities
+frontdoor,nie,3,158,57,preserved,4 latent X-Y common cause already in the graph
+mediation,ate,2,158,127,undetermined,6 formula assumes no X-Y confounding; X -> Y direct: not identified
+mediation,backadj,2,158,120,undetermined,3 no adjustment set in either method blocks X <- U -> Y
+mediation,correlation,1,158,118,preserved,1 rung 1: stated probabilities
+mediation,det-counterfactual,3,158,87,undetermined,2 structural equations no longer determine Y
+mediation,ett,3,158,120,undetermined,6 formula assumes no X-Y confounding; X -> Y direct: not identified
+mediation,marginal,1,158,125,preserved,1 rung 1: stated probabilities
+mediation,nde,3,158,119,undetermined,6 formula assumes no X-Y confounding; X -> Y direct: not identified
+mediation,nie,3,158,131,undetermined,6 formula assumes no X-Y confounding; X -> Y direct: not identified

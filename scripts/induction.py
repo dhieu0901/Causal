@@ -62,7 +62,7 @@ def main():
             continue
         nodes = sorted({n for e in edges for n in e})
         body, _ = strip_structure(prompt)
-        recs.append({"item": i, "gold": r.label, "graph_id": r.graph_id,
+        recs.append({"item": i, "id": r.id, "gold": r.label, "graph_id": r.graph_id,
                      "rung": r.rung, "true_edges": edges, "nodes": nodes,
                      "body": body, "prompt": prompt})
     print(f"items={len(recs)}  families={sorted({x['graph_id'] for x in recs})}")
@@ -111,7 +111,8 @@ def main():
             e = induced.get(r["item"], [])
             sc = edge_f1(e, r["true_edges"])
             pred = parse_answer(answers[r["item"]])
-            rows.append({"model": model, "item": r["item"], "graph_id": r["graph_id"],
+            rows.append({"model": model, "item": r["item"], "id": r["id"],
+                         "graph_id": r["graph_id"],
                          "rung": r["rung"], "gold": r["gold"], "pred": pred,
                          "correct": int(pred == r["gold"]) if pred else 0,
                          "parsed_answer": int(pred is not None),

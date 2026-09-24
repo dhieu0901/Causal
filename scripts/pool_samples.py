@@ -61,7 +61,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import numpy as np
 import pandas as pd
 
-from stats import boot_interval, boot_p, cluster_boot
+from stats import boot_cells, boot_interval, boot_p, cluster_boot
 
 from analyze_querygroup import ARITH, IDENT, TIER
 
@@ -127,12 +127,27 @@ def verify_item_map(tag, n, kmax, drop, full, pilot):
     return out
 
 
+def attach_id(d, imap, label):
+    """Each row's CLadder id, checked against the verified item map.
+
+    pilot.py, induction.py and check_drift.py record the id themselves since
+    2026-09-24, and scripts/backfill_ids.py added it to the older records. Where
+    the record carries it, it must agree with the map built here; where it does
+    not (a record from an older writer), the map supplies it.
+    """
+    m = d.item.map(imap.set_index("item").id)
+    if m.isna().any():
+        raise SystemExit(f"{label}: some items could not be mapped to an id")
+    if "id" in d.columns:
+        if not (d.id == m).all():
+            raise SystemExit(f"{label}: the record's id column disagrees with the item map")
+        return d
+    return d.assign(id=m.astype(int))
+
+
 def load(tag, lex, imap):
     d = pd.read_csv(ROOT / "results" / f"pilot_raw_{tag}{lex}.csv")
-    d = d.merge(imap, on="item", how="left")
-    if d.id.isna().any():
-        raise SystemExit(f"{tag}/{lex}: some items could not be mapped to an id")
-    return d
+    return attach_id(d, imap, f"{tag}/{lex}")
 
 
 def cell(d, model, cond, qs):
@@ -169,14 +184,9 @@ def boot(W, seed=SEED, n=NBOOT):
     because not every item has all three cells. The convention here reproduces
     REPORT section 4.0 exactly, which is evidence it is the one REPORT used.
     """
-    rng = np.random.default_rng(seed)
-    idx = W.index.values
-    out = cluster_boot(len(idx),
-                       lambda i: 100 * np.nanmean(W.loc[idx[i]].values), seed, n)
-    est = 100 * np.nanmean(W.values)
-    # This is the helper analyze_by_family.py uses, and it is where the
-    # p = 1.0255 in family_breakdown.csv came from.
-    return est, np.percentile(out, 2.5), np.percentile(out, 97.5), boot_p(out, n)
+    # Convention B, src/stats.py. This is the helper analyze_by_family.py uses,
+    # and it is where the p = 1.0255 in family_breakdown.csv came from.
+    return boot_cells(W, seed, n)
 
 
 def main():

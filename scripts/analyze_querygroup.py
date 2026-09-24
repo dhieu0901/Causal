@@ -60,7 +60,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import numpy as np
 import pandas as pd
 from scipy import stats
-from stats import boot_interval, boot_p, cluster_boot, mcnemar_exact_p
+from stats import boot_cell_means, boot_interval, boot_p, cluster_boot, mcnemar_exact_p
 
 LEXICONS = ["KEEP", "PERMUTE", "SYMBOL", "PSEUDO"]
 ANON = ["PERMUTE", "SYMBOL", "PSEUDO"]
@@ -145,15 +145,10 @@ def did_cells(d, qs):
 
 def boot_mean(W, seed, n=4000):
     """Cluster bootstrap over items for the mean across cells."""
-    items = W.index.unique()
-    out = cluster_boot(
-        len(items), lambda i: 100 * np.nanmean(W.loc[items[i]].mean(axis=0).values),
-        seed, n)
-    est = 100 * np.nanmean(W.mean(axis=0).values)
-    lo, hi = np.percentile(out, [2.5, 97.5])
-    # This floored at 1/n while every other bootstrap here floored at 2/n, so
-    # the same situation printed 0.00025 in this file and 0.0005 elsewhere.
-    return est, lo, hi, boot_p(out, n)
+    # Convention C, src/stats.py. This floored at 1/n while every other
+    # bootstrap here floored at 2/n, so the same situation printed 0.00025 in
+    # this file and 0.0005 elsewhere; boot_p now floors every one at 2/n.
+    return boot_cell_means(W, seed, n)
 
 
 def main():

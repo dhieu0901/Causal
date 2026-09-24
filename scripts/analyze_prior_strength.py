@@ -33,7 +33,8 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import numpy as np
 import pandas as pd
 from pilot import make_items
-from stats import boot_interval, boot_p, cluster_boot, mcnemar_exact_p
+from stats import (boot_interval, boot_items, boot_p, cluster_boot, mcnemar_exact_p,
+                   boot_two_sample as stats_two_sample)
 
 LEXICONS = ["KEEP", "PERMUTE", "SYMBOL", "PSEUDO"]
 TIER = ["gpt-4.1-nano", "gpt-4.1-mini", "gpt-4.1"]
@@ -107,9 +108,7 @@ def boot(v, seed=SEED, n=NBOOT):
     x = v.values
     if len(x) < 5:
         return (np.nan,) * 4
-    out = cluster_boot(len(x), lambda i: x[i].mean(), seed, n)
-    est, lo, hi, p = boot_interval(x.mean(), out, n)
-    return 100 * est, 100 * lo, 100 * hi, p
+    return boot_items(x, seed, n)                   # convention A, src/stats.py
 
 
 def boot_two_sample(a, b, seed=SEED, n=NBOOT):
@@ -117,13 +116,7 @@ def boot_two_sample(a, b, seed=SEED, n=NBOOT):
     xa, xb = a.values, b.values
     if len(xa) < 5 or len(xb) < 5:
         return (np.nan,) * 4
-    rng = np.random.default_rng(seed)
-    out = np.empty(n)
-    for i in range(n):
-        out[i] = (xa[rng.integers(0, len(xa), len(xa))].mean()
-                  - xb[rng.integers(0, len(xb), len(xb))].mean())
-    return (100 * (xa.mean() - xb.mean()), 100 * np.percentile(out, 2.5),
-            100 * np.percentile(out, 97.5), boot_p(out, n))
+    return stats_two_sample(xa, xb, seed, n)        # src/stats.py
 
 
 def main():

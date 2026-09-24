@@ -45,6 +45,7 @@ SCRIPTS = ROOT / "scripts"
 ORDER = [
     "verify_data_provenance", "verify_groundtruth", "verify_labels",
     "verify_counterfactual", "audit_cladder_arithmetic", "verify_explanations",
+    "ci_active_gold",
     "pool_samples",
     "induction", "induction_baselines",
     "analyze_lexical", "analyze_types",

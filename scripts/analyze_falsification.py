@@ -44,7 +44,7 @@ import numpy as np
 import pandas as pd
 
 from analyze_querygroup import ARITH, IDENT, TIER, did_cells, load
-from stats import boot_interval, boot_p, cluster_boot
+from stats import boot_cell_means, boot_interval, boot_p, cluster_boot
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -60,13 +60,8 @@ def causal_qs(d):
 
 
 def boot_ci(W, seed=SEED, n=NBOOT):
-    items = W.index.unique()
-    out = cluster_boot(
-        len(items), lambda i: 100 * np.nanmean(W.loc[items[i]].mean(axis=0).values),
-        seed, n)
-    est = 100 * np.nanmean(W.mean(axis=0).values)
-    lo, hi = np.percentile(out, [2.5, 97.5])
-    return est, lo, hi, boot_p(out, n), len(items)
+    est, lo, hi, p = boot_cell_means(W, seed, n)    # convention C, src/stats.py
+    return est, lo, hi, p, len(W.index.unique())
 
 
 def test_prompt_length(d, rows):

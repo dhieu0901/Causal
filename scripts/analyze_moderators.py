@@ -35,7 +35,7 @@ import pandas as pd
 
 from perturb import FAMILY_STRUCTURE, to_edges
 from pool_samples import NBOOT, SEED, did_sample
-from stats import boot_interval, boot_p, cluster_boot
+from stats import boot_interval, boot_items, boot_p, cluster_boot
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -56,9 +56,8 @@ def boot_rows(v: pd.Series, seed=SEED, n=NBOOT):
     x = v.dropna().values
     if len(x) < MIN_ITEMS:
         return None
-    out = cluster_boot(len(x), lambda i: x[i].mean(), seed, n)
-    est, lo, hi, p = boot_interval(x.mean(), out, n)
-    return 100 * est, 100 * lo, 100 * hi, p, len(x)
+    est, lo, hi, p = boot_items(x, seed, n)          # convention A, src/stats.py
+    return est, lo, hi, p, len(x)
 
 
 def main() -> int:

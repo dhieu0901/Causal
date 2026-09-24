@@ -43,7 +43,7 @@ sys.path.insert(0, str(ROOT / "src"))
 import numpy as np
 import pandas as pd
 
-from stats import boot_p
+from stats import boot_p, cluster_boot
 
 TIER = ["gpt-4.1", "gpt-4.1-mini", "gpt-4.1-nano"]
 
@@ -77,7 +77,6 @@ def main():
                     help="tien to file du lieu: price400 (n=400) hoac n600")
     a = ap.parse_args()
     K, P = load("KEEP", a.prefix), load("PSEUDO", a.prefix)
-    rng = np.random.default_rng(a.seed)
     W = 92
 
     print("=" * W)
@@ -109,8 +108,11 @@ def main():
         bp = budget_series(P, m, common)
         idx = sorted(common)
         diff_i = pd.Series((bp[idx].values - bk[idx].values), index=idx)
-        boot = np.array([100 * diff_i.loc[rng.choice(idx, len(idx), replace=True)].mean()
-                         for _ in range(a.boot)])
+        # Seeded per call, like every other bootstrap here. Until 2026-09-24 one
+        # Generator from main() ran through every model and both sections, so a
+        # row's interval depended on the rows before it (REVIEW 17.17).
+        x = diff_i.values
+        boot = cluster_boot(len(x), lambda i: 100 * x[i].mean(), a.seed, a.boot)
         est = 100 * diff_i.mean()
         lo, hi = np.percentile(boot, [2.5, 97.5])
         se = boot.std(ddof=1)
@@ -175,8 +177,8 @@ def main():
             allv = pd.concat(parts)
             allv = allv[~allv.index.duplicated()]
             ids = list(allv.index)
-            boot = np.array([100 * allv.loc[rng.choice(ids, len(ids), replace=True)].mean()
-                             for _ in range(a.boot)])
+            x = allv.values
+            boot = cluster_boot(len(x), lambda i: 100 * x[i].mean(), a.seed, a.boot)
             est = 100 * allv.mean()
             lo, hi = np.percentile(boot, [2.5, 97.5])
             pooled_rows.append({"model": m, "n_unique_ids": len(ids),

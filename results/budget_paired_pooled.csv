@@ -1,4 +1,4 @@
 model,n_unique_ids,delta_pp,ci_lo,ci_hi,p_boot,established
-gpt-4.1,813,4.67,0.98,8.36,0.0135,yes
-gpt-4.1-mini,800,4.38,0.62,8.0,0.021,yes
-gpt-4.1-nano,738,1.22,-3.25,5.56,0.6285,no
+gpt-4.1,813,4.67,0.98,8.24,0.0145,yes
+gpt-4.1-mini,800,4.38,0.75,7.88,0.018,yes
+gpt-4.1-nano,738,1.22,-3.39,5.69,0.633,no

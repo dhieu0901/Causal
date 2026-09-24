@@ -13,12 +13,14 @@ Scoring rule, stated explicitly because NoisyCausal left it ambiguous:
                              quantity, so the correct behaviour is to ignore it
                              and the gold label is unchanged.
 
-  answer_preserving = False  the injected text changes the queried quantity. The
-                             item then needs its own recomputed gold answer and
-                             is NOT scored against the clean label. These are
-                             emitted only by CI_ACTIVE, which is out of scope for
-                             the break-even study and reserved for the selective
-                             -use follow-up.
+  answer_preserving = False  the injected text may change the queried quantity.
+                             Emitted only by CI_ACTIVE. Its gold answer is
+                             recomputed on the extended graph by
+                             scripts/ci_active_gold.py and read back with
+                             ci_active_gold() below: the clean label where the
+                             item's own identification survives, None
+                             ("cannot be determined from the prompt") where it
+                             does not - 60.9% of CLadder v1.5.
 
 NoisyCausal scores confounder-injected items against the clean SCM while its own
 Table 6 says the injection "introduces a backdoor path". That rewards ignoring
@@ -102,9 +104,8 @@ def inject_ci_inert(prompt, seed=0, **_):
 def inject_ci_active(prompt, seed=0, **_):
     """Confounder Injection, ACTIVE: a genuine backdoor path.
 
-    NOT answer preserving. Emitted for the selective-use follow-up only; these
-    items require a recomputed gold answer and must never be scored against the
-    clean CLadder label.
+    NOT answer preserving. Score these with ci_active_gold(), never against
+    the clean CLadder label.
     """
     r = _rng(seed, "CIa")
     c = r.choice(CONFOUNDERS)
@@ -164,3 +165,25 @@ ANSWER_PRESERVING = [k for k in INJECTORS if k != "CI_ACTIVE"]
 def apply(prompt: str, kind: str, seed: int = 0):
     """Returns (noisy_prompt, answer_preserving)."""
     return INJECTORS[kind](prompt, seed=seed)
+
+
+_CI_ACTIVE = None
+
+
+def ci_active_gold(graph_id: str, query_type: str, label: str):
+    """The gold answer of an item after CI_ACTIVE: `label` if it survives, else None.
+
+    None means the stated numbers no longer settle the question, so the correct
+    response is that it cannot be determined. The table is written by
+    scripts/ci_active_gold.py, one row per graph family x query type, with the
+    rule that decided each row.
+    """
+    global _CI_ACTIVE
+    if _CI_ACTIVE is None:
+        import csv
+        from pathlib import Path
+        f = Path(__file__).resolve().parent.parent / "results" / "ci_active_gold.csv"
+        with f.open(encoding="utf-8") as fh:
+            _CI_ACTIVE = {(r["graph_id"], r["query_type"]): r["gold"] for r in csv.DictReader(fh)}
+    gold = _CI_ACTIVE[(graph_id, query_type)]
+    return label if gold == "preserved" else None

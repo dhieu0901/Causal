@@ -38,8 +38,8 @@ import numpy as np
 import pandas as pd
 
 from analyze_querygroup import ARITH, IDENT, TIER
-from pool_samples import (POOL_LEXICON, SAMPLES, SEED, boot, cell, did_sample,
-                          load, verify_item_map, _pilot)
+from pool_samples import (POOL_LEXICON, SAMPLES, SEED, attach_id, boot, cell,
+                          did_sample, load, verify_item_map, _pilot)
 
 ARMS = ["ORACLE", "PROSE", "DR_k1", "NAMES_ONLY"]
 
@@ -142,9 +142,7 @@ def load_n600(lex, imap):
     d = load("n600", lex, imap)
     extra = ROOT / "results" / f"pilot_raw_n600arms{lex}.csv"
     if extra.exists():
-        e = pd.read_csv(extra).merge(imap, on="item", how="left")
-        if e.id.isna().any():
-            raise SystemExit(f"n600arms{lex}: some items could not be mapped to an id")
+        e = attach_id(pd.read_csv(extra), imap, f"n600arms{lex}")
         d = pd.concat([d, e], ignore_index=True)
     return d
 

@@ -51,7 +51,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 import pandas as pd
 
-from pool_samples import POOL_LEXICON, boot, cell, did_sample, load
+from pool_samples import POOL_LEXICON, attach_id, boot, cell, did_sample, load
 from prompts import strip_structure
 from analyze_querygroup import ARITH, IDENT, TIER
 from analyze_vs_raw import boot as vs_boot
@@ -173,9 +173,7 @@ def with_clean(tag, lex, imap):
     f = ROOT / "results" / f"pilot_raw_cleanraw{tag}{lex}.csv"
     if not f.exists():
         return None
-    e = pd.read_csv(f).merge(imap, on="item", how="left")
-    if e.id.isna().any():
-        raise SystemExit(f"cleanraw{tag}{lex}: some items could not be mapped to an id")
+    e = attach_id(pd.read_csv(f), imap, f"cleanraw{tag}{lex}")
     # Off the latent families RAW_CLEAN IS RAW, prompt for prompt, and its answer
     # was read back from the cache. For some n600 cells the cache holds a SECOND
     # answer to that prompt, not the one this sample's RAW row carries: the prompt
@@ -269,7 +267,7 @@ def clean_baseline(edge_ids, latent_ids):
                 if R is not None:
                     q = R[(R.model == m) & (R.lexicon == lex) & (R.cond == "RAW")
                           & R.new_pred.notna()]
-                    q = q.merge(imaps[t], on="item").set_index("id").new_correct
+                    q = attach_id(q, imaps[t], f"drift {t}").set_index("id").new_correct
                     j = [x for x in c.index.intersection(q.index) if x in latent_ids]
                     now.append(pd.Series((c[j] - q[j]).values, index=j, name=f"{t}|{m}"))
         for label, cols in (("RAW_CLEAN minus RAW, RAW as first answered", old),

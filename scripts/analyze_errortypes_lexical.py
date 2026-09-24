@@ -41,7 +41,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from stats import boot_interval, cluster_boot
+from stats import boot_cells, boot_interval, cluster_boot
 
 import numpy as np
 import pandas as pd
@@ -79,31 +79,24 @@ def paired(d, model, a, b, causal=True):
     return pd.Series(w[a].values - w[b].values, index=w.index)
 
 
-def boot(by_model, rng, n=4000):
-    """NOT routed through stats.cluster_boot, and the reason is the signature.
+def boot(by_model, seed, n=4000):
+    """Convention B (src/stats.py), seeded per call.
 
-    Every other bootstrap here takes a SEED and builds its own Generator, so each
-    call starts from the same state and is independent of call order. This one
-    takes a Generator that the caller built once and passes to every call, so the
-    stream continues across calls and each result depends on how many bootstraps
-    ran before it. cluster_boot would restart the stream and change every number
-    in results/errortype_by_lexicon.csv.
-
-    That shared-generator design is a reproducibility smell - reordering the
-    calls silently reorders the draws - but fixing it is a change to published
-    numbers, not a refactor, so it is left alone and flagged here rather than
-    quietly rewritten under the heading of tidying up.
+    Until 2026-09-24 this took ONE Generator built in main() and shared by every
+    call, so each row's interval depended on how many bootstraps had run before
+    it, and reordering the loop reordered the draws. Every other bootstrap in the
+    repository seeds each call; this one now does too, which moved the intervals
+    of results/errortype_by_lexicon.csv by bootstrap noise and nothing else - the
+    point estimates are the same numbers. REVIEW 17.17 lists the moves.
     """
     items = sorted(set().union(*[set(s.index) for s in by_model.values()]))
     M = np.vstack([by_model[m].reindex(items).values for m in by_model])
-    out = np.empty(n)
-    for i in range(n):
-        out[i] = np.nanmean(M[:, rng.integers(0, len(items), len(items))])
-    return 100 * np.nanmean(M), 100 * out
+    est, out = boot_cells(M, seed, n, axis=1, return_draws=True)
+    return est, out
 
 
-def summarise(by_model, rng, boots):
-    est, bs = boot(by_model, rng, boots)
+def summarise(by_model, seed, boots):
+    est, bs = boot(by_model, seed, boots)
     lo, hi = np.percentile(bs, [2.5, 97.5])
     return est, lo, hi, ("yes" if lo > 0 or hi < 0 else "no")
 
@@ -117,7 +110,6 @@ def main():
     a = ap.parse_args()
     causal = not a.all_queries
     D = {lex: load(lex) for lex in LEXICONS}
-    rng = np.random.default_rng(a.seed)
     W = 88
 
     print("=" * W)
@@ -137,7 +129,7 @@ def main():
                     by[m] = s
             if not by:
                 continue
-            est, lo, hi, ok = summarise(by, rng, a.boot)
+            est, lo, hi, ok = summarise(by, a.seed, a.boot)
             rows.append({"lexicon": lex, "error_type": t, "meaning": LABEL[t],
                          "cost_pp": round(est, 2), "ci_lo": round(lo, 2),
                          "ci_hi": round(hi, 2), "established": ok,
@@ -162,7 +154,7 @@ def main():
                     by[m] = s
             if not by:
                 continue
-            est, lo, hi, ok = summarise(by, rng, a.boot)
+            est, lo, hi, ok = summarise(by, a.seed, a.boot)
             rows.append({"lexicon": lex, "n_compared": f"DR dat hon {other}",
                          "delta_pp": round(est, 2), "ci_lo": round(lo, 2),
                          "ci_hi": round(hi, 2), "established": ok})

@@ -36,7 +36,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from stats import boot_interval, cluster_boot
+from stats import boot_interval, boot_items, cluster_boot
 
 import numpy as np
 import pandas as pd
@@ -89,9 +89,8 @@ def boot(v, seed=SEED, n=NBOOT):
     x = v.dropna().values
     if len(x) < 5:
         return np.nan, np.nan, np.nan
-    out = cluster_boot(len(x), lambda i: x[i].mean(), seed, n)
-    est, lo, hi, _ = boot_interval(x.mean(), out, n)
-    return 100 * est, 100 * lo, 100 * hi
+    est, lo, hi, _ = boot_items(x, seed, n)          # convention A, src/stats.py
+    return est, lo, hi
 
 
 def main():

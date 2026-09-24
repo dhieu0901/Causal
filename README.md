@@ -191,8 +191,9 @@ scripts/   pilot.py, induction.py, check_drift.py (ba script gọi API, tốn ti
            6 script kiểm chứng nhãn và dữ liệu (verify_*, audit_*), 4 cổng
            (check_consistency, check_numbers, check_pipeline_order,
            verify_determinism), audit_cache_agreement.py (so mọi dòng CSV với
-           cache; cần cache nên chạy tay), và 7 script phụ trợ - tổng 39, mọi
-           script trừ ba cái đầu chạy 0 USD.
+           cache; cần cache nên chạy tay), backfill_ids.py (ghi và kiểm cột id
+           CLadder trong file thô), ci_active_gold.py (đáp án cho CI_ACTIVE), và
+           7 script phụ trợ - tổng 41, mọi script trừ ba cái đầu chạy 0 USD.
            run_analysis.sh chạy lại toàn bộ phần phân tích, không gọi API;
            run_n600_extensions.sh và run_clean_raw.sh là hai đợt tốn credit
            ngày 24/09/2026

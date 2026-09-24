@@ -55,7 +55,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import numpy as np
 import pandas as pd
 
-from stats import boot_interval, boot_p, cluster_boot
+from stats import boot_cells, boot_interval, boot_p, cluster_boot
 
 TIER = ["gpt-4.1-nano", "gpt-4.1-mini", "gpt-4.1"]
 ARITH = {"marginal", "correlation"}
@@ -100,11 +100,9 @@ def did(K, P, model, lo_cond, hi_cond, qs):
 def boot(series_by_model, seed, n=4000):
     """Cluster bootstrap over items, averaged across models."""
     items = sorted(set().union(*[set(s.index) for s in series_by_model.values()]))
-    rng = np.random.default_rng(seed)
     arr = {m: s.reindex(items) for m, s in series_by_model.items()}
     M = np.vstack([arr[m].values for m in arr])
-    out = cluster_boot(len(items), lambda i: 100 * np.nanmean(M[:, i]), seed, n)
-    return 100 * np.nanmean(M), out
+    return boot_cells(M, seed, n, axis=1, return_draws=True)   # convention B, src/stats.py
 
 
 def main():

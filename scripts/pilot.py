@@ -138,7 +138,8 @@ def build_jobs(items, kmax=3, seed=0, types=("DR",), lexicon="KEEP",
         if len(edges) != expected:          # parse disagreed with the known DAG
             dropped += 1
             continue
-        meta = dict(item=i, gold=r.label, graph_id=r.graph_id, rung=r.rung,
+        # `id` is CLadder's own key; `item` only indexes this draw of the sample.
+        meta = dict(item=i, id=r.id, gold=r.label, graph_id=r.graph_id, rung=r.rung,
                     query_type=r.get("query_type", ""),
                     story_id=r.get("story_id", ""),
                     # CLadder's own lexical label. --drop-nonsense keeps every
@@ -316,7 +317,8 @@ def main():
             if not is_ok(r["result"]):
                 continue
             pred = parse_answer(r["result"]["text"])
-            allrows.append({"model": model, "item": r["item"], "cond": r["cond"],
+            allrows.append({"model": model, "item": r["item"], "id": r["id"],
+                            "cond": r["cond"],
                             "graph_id": r["graph_id"], "rung": r["rung"],
                             # Carried through so the lexical analysis can split by
                             # query type without re-deriving the sample.

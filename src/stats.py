@@ -1,4 +1,4 @@
-"""Statistics for the break-even study: McNemar power, bootstrap CI for k*."""
+"""Statistics: McNemar, the bootstrap resampler, and the three averaging conventions."""
 from __future__ import annotations
 import numpy as np
 from scipy import stats
@@ -147,3 +147,98 @@ def boot_interval(point, draws, n_draws=None):
         return point, float("nan"), float("nan"), float("nan")
     lo, hi = np.percentile(d, [2.5, 97.5])
     return point, float(lo), float(hi), boot_p(d, n_draws or len(d))
+
+
+# ---------------------------------------------------------------------------
+# The three averaging conventions, named, and the two-sample difference.
+#
+# cluster_boot fixes HOW items are resampled and boot_p how p is read off the
+# draws. What is averaged is a separate choice, and the repository makes it in
+# three ways on purpose - each estimator answers a slightly different question
+# when not every item has every cell. Until 2026-09-24 each script carried its
+# own copy of whichever it used, eleven copies in all; they now call these, and
+# verify_determinism.py confirmed that every results file stayed byte for byte
+# the same.
+#
+#   A  boot_items       one value per item (the caller averages its models or
+#                       lexicons first), then the mean over items. Every item
+#                       weighs the same.
+#                       analyze_vs_raw (and through it measure_raw_leak),
+#                       classify_perturbations, analyze_dose, analyze_moderators,
+#                       analyze_prior_strength, check_drift, check_consistency.
+#                       analyze_budget_paired averages the same way but calls
+#                       cluster_boot itself, because it needs the draws for an SE.
+#   B  boot_cells       a matrix of items x cells (model, or model x lexicon,
+#                       or sample x model); the mean over EVERY non-missing
+#                       entry. An item with more cells weighs more. The headline
+#                       DiD uses this, and it is the only convention that
+#                       reproduces REPORT section 4.0.
+#                       pool_samples (and through it analyze_structure_arms,
+#                       analyze_by_family, measure_raw_leak, check_consistency),
+#                       analyze_ladder5, analyze_instruction, analyze_errortypes_lexical
+#   C  boot_cell_means  the same matrix, but each cell's mean over its items
+#                       first, then the mean of those cell means. Every CELL
+#                       weighs the same, whatever its item count.
+#                       analyze_querygroup, analyze_falsification
+#   2  boot_two_sample  two disjoint item sets, each resampled from one stream,
+#                       difference of means.
+#                       analyze_prior_strength, classify_perturbations (section 4)
+#
+# Outside these, on purpose: analyze_price_paired resamples ONE item set and
+# fits a slope on both branches of each draw (a paired difference of slopes);
+# analyze_types.bootstrap_fit and bootstrap_break_even above refit a curve per
+# draw; analyze_falsification's slice test is a permutation test, not a
+# bootstrap; feasibility.py simulates. None of them averages rows, so none of
+# the three conventions applies.
+# ---------------------------------------------------------------------------
+
+def boot_items(x, seed, n_draws):
+    """Convention A. x: one value per item. Returns (est, lo, hi, p) in pp."""
+    x = np.asarray(x, dtype=float)
+    out = cluster_boot(len(x), lambda i: x[i].mean(), seed, n_draws)
+    est, lo, hi, p = boot_interval(x.mean(), out, n_draws)
+    return 100 * est, 100 * lo, 100 * hi, p
+
+
+def boot_cells(A, seed, n_draws, axis=0, return_draws=False):
+    """Convention B. A: items along `axis`, cells along the other, NaN = missing.
+
+    Returns (est, lo, hi, p) in pp, or (est, draws) with return_draws. A
+    DataFrame must have a unique index: resampling positions then equals
+    resampling its rows, and the result is identical to indexing by label.
+    """
+    if hasattr(A, "index"):
+        if not A.index.is_unique:
+            raise ValueError("boot_cells needs one row per item")
+        A = A.values
+    A = np.asarray(A, dtype=float)
+    take = (lambda i: A[i]) if axis == 0 else (lambda i: A[:, i])
+    out = cluster_boot(A.shape[axis], lambda i: 100 * np.nanmean(take(i)), seed, n_draws)
+    est = 100 * np.nanmean(A)
+    if return_draws:
+        return est, out
+    return est, np.percentile(out, 2.5), np.percentile(out, 97.5), boot_p(out, n_draws)
+
+
+def boot_cell_means(W, seed, n_draws):
+    """Convention C. W: DataFrame, items on the index (repeats allowed: an item's
+    rows are resampled together), cells as columns. Returns (est, lo, hi, p) in pp."""
+    items = W.index.unique()
+    out = cluster_boot(
+        len(items), lambda i: 100 * np.nanmean(W.loc[items[i]].mean(axis=0).values),
+        seed, n_draws)
+    est = 100 * np.nanmean(W.mean(axis=0).values)
+    lo, hi = np.percentile(out, [2.5, 97.5])
+    return est, lo, hi, boot_p(out, n_draws)
+
+
+def boot_two_sample(a, b, seed, n_draws):
+    """mean(a) - mean(b) over two disjoint item sets. Returns (est, lo, hi, p) in pp."""
+    xa, xb = np.asarray(a, dtype=float), np.asarray(b, dtype=float)
+    rng = np.random.default_rng(seed)
+    out = np.empty(n_draws)
+    for i in range(n_draws):
+        out[i] = (xa[rng.integers(0, len(xa), len(xa))].mean()
+                  - xb[rng.integers(0, len(xb), len(xb))].mean())
+    return (100 * (xa.mean() - xb.mean()), 100 * np.percentile(out, 2.5),
+            100 * np.percentile(out, 97.5), boot_p(out, n_draws))
