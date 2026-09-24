@@ -1,0 +1,59 @@
+items=174  jobs/model=696  lexicon=KEEP  paired_to=None  families=['IV', 'arrowhead', 'chain', 'collision', 'confounding', 'diamond', 'diamondcut', 'fork', 'frontdoor', 'mediation']
+
+>>> meta-llama/llama-3.3-70b-instruct: 696 calls
+    25/687
+    50/687
+    75/687
+    100/687
+    125/687
+    150/687
+    175/687
+    200/687
+    225/687
+    250/687
+    275/687
+    300/687
+    325/687
+    350/687
+    375/687
+    400/687
+    425/687
+    450/687
+    475/687
+    500/687
+    525/687
+    550/687
+    575/687
+    600/687
+    625/687
+    650/687
+    675/687
+    done: {'calls': 696, 'cached': 696, 'errors': 0, 'err_rate': 0.0, 'in_tok': 111613, 'out_tok': 230724}
+
+>>> meta-llama/llama-3.3-70b-instruct: re-asking the 29 answers cut off at 700 tokens, with 1500
+    done: {'calls': 29, 'cached': 29, 'errors': 0, 'err_rate': 0.0, 'in_tok': 5690, 'out_tok': 24274}
+
+saved D:\code\Noisy Causal\results\pilot_raw_llama70bKEEP.csv  (696 rows)
+saved D:\code\Noisy Causal\results\pilot_raw_llama70bKEEP_recap1500.csv  (29 rows)
+
+======================================================================
+PILOT: DO CHINH XAC THEO DIEU KIEN
+======================================================================
+
+--- meta-llama/llama-3.3-70b-instruct ---
+          n    acc  parse
+cond                     
+PROSE   174  79.31   99.4
+RAW     174  72.41   97.1
+ORACLE  174  73.56   95.4
+DR_k1   174  75.29   97.7
+  Delta_struct = ORACLE - RAW = +1.15 pp
+  Cost of stripping prose (PROSE - RAW) = +6.90 pp
+  DR_k1: 75.29  (vs RAW +2.88 pp)
+
+======================================================================
+McNEMAR EXACT (paired, on the same items)
+======================================================================
+  meta-llama/llama-3.3-70b-instruct ORACLE   vs RAW       b= 18 c= 16  p=0.8642
+  meta-llama/llama-3.3-70b-instruct DR_k1    vs RAW       b= 22 c= 17  p=0.5224
+  meta-llama/llama-3.3-70b-instruct ORACLE   vs DR_k1     b= 11 c= 14  p=0.6900

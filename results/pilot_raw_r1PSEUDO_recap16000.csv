@@ -1,0 +1,13 @@
+model,item,id,cond,graph_id,rung,query_type,story_id,question_property,lexicon,gold,pred,correct,parsed,in_tok,out_tok,error,provider,finish,reason_tok,usd,answer_from,temperature,max_tokens
+deepseek/deepseek-r1,7,15133,ORACLE,IV,2,ate,water_cholera,anticommonsense,PSEUDO,no,no,1,1,202,3355,,Novita,stop,3003,0.0085289,reasoning,0.6,16000
+deepseek/deepseek-r1,10,4741,DR_k1,IV,2,ate,water_cholera,easy,PSEUDO,no,no,1,1,199,10064,,Novita,stop,7503,0.0252993,content,0.6,16000
+deepseek/deepseek-r1,31,19218,ORACLE,arrowhead,3,nde,smoke_birthWeight,anticommonsense,PSEUDO,no,no,1,1,306,4898,,Novita,stop,4210,0.0124592,reasoning,0.6,16000
+deepseek/deepseek-r1,59,2769,ORACLE,collision,1,exp_away,man_in_relationship,easy,PSEUDO,yes,yes,1,1,198,10906,,Novita,stop,7478,0.0274036,content,0.6,16000
+deepseek/deepseek-r1,130,5789,ORACLE,fork,2,ate,getting_tanned,hard,PSEUDO,no,no,1,1,134,11097,,Novita,stop,8305,0.0278363,content,0.6,16000
+deepseek/deepseek-r1,136,940,ORACLE,fork,3,ett,getting_tanned,easy,PSEUDO,no,no,1,1,154,4883,,Novita,stop,4276,0.0123153,reasoning,0.6,16000
+deepseek/deepseek-r1,136,940,DR_k1,fork,3,ett,getting_tanned,easy,PSEUDO,no,no,1,1,155,7837,,Novita,stop,5171,0.019701,reasoning,0.6,16000
+deepseek/deepseek-r1,146,14651,ORACLE,frontdoor,2,ate,smoking_frontdoor,anticommonsense,PSEUDO,yes,yes,1,1,231,7198,,Novita,stop,4951,0.0181567,reasoning,0.6,16000
+deepseek/deepseek-r1,148,19325,ORACLE,frontdoor,2,ate,smoking_frontdoor,anticommonsense,PSEUDO,yes,yes,1,1,224,6474,,Novita,stop,5240,0.0163418,content,0.6,16000
+deepseek/deepseek-r1,150,20623,DR_k1,frontdoor,3,det-counterfactual,smoking_frontdoor,anticommonsense,PSEUDO,yes,yes,1,1,166,8131,,Novita,stop,7625,0.0204437,reasoning,0.6,16000
+deepseek/deepseek-r1,153,19421,ORACLE,frontdoor,3,ett,smoking_frontdoor,anticommonsense,PSEUDO,no,no,1,1,243,10479,,Novita,stop,10008,0.0263676,content,0.6,16000
+deepseek/deepseek-r1,155,4167,DR_k1,frontdoor,3,ett,smoking_frontdoor,easy,PSEUDO,no,no,1,1,226,6700,,Novita,stop,4994,0.0169082,reasoning,0.6,16000

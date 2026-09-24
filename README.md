@@ -9,7 +9,7 @@ Xây trên [CLadder](https://github.com/causalNLP/cladder) (Jin et al., NeurIPS 
 
 ## Hai kết quả không phụ thuộc cỡ mẫu
 
-Phần thực nghiệm bên dưới chạy trên **một họ model** và n = 174 tới 580 item, nên đọc là giả thuyết có số đỡ. Hai kết quả sau thì khác: chúng đúng hoặc sai, kiểm lại được bằng một lệnh, và không phụ thuộc vào cỡ mẫu, số họ model, hay việc ai đã công bố gì trước.
+Phần thực nghiệm bên dưới chạy trên ba model GPT-4.1, **lặp lại trên Llama 3.3 70B** và một phần trên DeepSeek-R1, với n = 86 tới 580 item, nên đọc là giả thuyết có số đỡ. Hai kết quả sau thì khác: chúng đúng hoặc sai, kiểm lại được bằng một lệnh, và không phụ thuộc vào cỡ mẫu, số họ model, hay việc ai đã công bố gì trước.
 
 **1. Một bậc thang liều lượng đo không đúng thứ nó tưởng.** Cách hiển nhiên để hỏi *đồ thị sai nhiều có hại hơn sai ít không* là làm hỏng k = 1, 2, 3 cạnh rồi so. Cách đó hỏng, và hỏng theo kiểu không lộ ra trong bảng nào. Đảo một cạnh có thể **không đổi gì** về mặt nhân quả - nếu tập hiệu chỉnh cửa sau và quan hệ d-separation giữa `X` với `Y` còn nguyên thì đại lượng cần ước lượng không đổi, đáp án đúng cũng không đổi.
 
@@ -93,7 +93,7 @@ Tiêu chí thành văn: một loại truy vấn thuộc nhóm nhận dạng nế
 
 ## Nếu bạn đang dựng pipeline tăng cường bằng đồ thị
 
-Năm câu, tất cả rút thẳng từ `results/vs_raw.csv`. Phạm vi: ba checkpoint `gpt-4.1`, CLadder v1.5, chưa có họ model thứ hai.
+Năm câu, tất cả rút thẳng từ `results/vs_raw.csv`. Phạm vi: ba checkpoint `gpt-4.1`, CLadder v1.5. Llama 3.3 70B lặp lại câu về cạnh đảo: với tên quen, đảo một cạnh làm nó mất -5,47 [-9,09 ; -1,84] (`results/second_family.csv`).
 
 | Tình huống | Làm gì | Số đỡ |
 |---|---|---|
@@ -171,13 +171,13 @@ Chạy `python scripts/verify_data_provenance.py` để đối chiếu từng by
 
 ## Việc chưa xong
 
-- **Một họ model thứ hai** - việc quan trọng nhất còn lại, và là thứ duy nhất chặn công bố mà không có cách lách.
+- ~~Một họ model thứ hai~~ - **đã chạy 24/09/2026 qua OpenRouter, 4,19 USD** (`scripts/run_llama70b.sh`, `scripts/run_r1.sh`, `scripts/analyze_second_family.py`). Llama 3.3 70B trên đúng các prompt GPT-4.1 đã nhận: DiD gộp **+7,24 [+1,49 ; +13,09]**, n=457, so với +5,98 của GPT-4.1; hiệu giữa hai họ, ghép cặp, +0,80 [-5,41 ; +6,95]. Bậc thang từ vựng tái lập, trừ bậc từ giả: Llama mất +7,72 [+3,51 ; +11,94] so với ký hiệu, GPT-4.1 chỉ +2,83. DeepSeek-R1 trên 86 item ẩn danh: đồ thị đúng hơn đồ thị đảo một cạnh **+23,26 [+12,79 ; +33,72]**, và hơn không đồ thị +15,12 [+4,65 ; +25,58] - hiệu sau dương ở mọi cách xử lý nhưng mất ý nghĩa khi chỉ giữ 37 item có đáp án về đúng chỗ. Chi tiết ở REPORT mục 4b.
 - ~~Kiểm độ trôi của model được phục vụ~~ - **đã chạy 24/09/2026, 5,54 USD, không thấy độ trôi** (`scripts/check_drift.py`, `results/drift_check.csv`). Phát hiện phụ của cùng phép kiểm: ở nhiệt độ 0, **15,0%** câu trả lời bị lật khi hỏi lại (nano 22,4%, mini 12,6%, gpt-4.1 10,1%) dù độ chính xác không đổi.
 - ~~`DR_k2` và `DR_k3` trên mẫu n600~~ - **đã chạy 24/09/2026**, xem Kết quả 1 ở trên.
 - ~~Bậc thang từ vựng trên mẫu n=580~~ - **đã chạy 24/09/2026** ở điều kiện `RAW`, xem bảng bậc thang.
 - ~~Điều kiện `NAMES_ONLY`~~ và ~~`SCRAMBLE`~~ - **đã chạy 24/09/2026 trên n600**, `analyze_structure_arms.py` mục 6. Cùng đợt chạy: cạnh ngẫu nhiên hại hơn không có cạnh nào, `SCRAMBLE` trừ `NAMES_ONLY` = -13,95 (`KEEP`) và -7,96 (`PSEUDO`); `SCRAMBLE` ngang `DR_k3`. Khác đợt: trên `PSEUDO`, `ORACLE` trừ `NAMES_ONLY` = +4,34 [+0,12 ; +8,58].
 - Toàn bộ đợt 24/09 tốn **15,62 USD** thật (ước tính trước khi chạy: 16,11), 0 lỗi API, lệnh ở `scripts/run_n600_extensions.sh`; kiểm độ trôi thêm **5,54 USD** (ước tính 5,58).
-- **Cả ba model đều thuộc dòng GPT-4.1.** Giới hạn duy nhất đủ nghiêm trọng để chặn công bố. Cần ít nhất một dòng khác họ, và một model có suy luận mở rộng kèm nhánh `ORACLE`.
+- **R1 mới chạy trên `PSEUDO`.** Chưa có DiD cho model suy luận; chạy thêm `KEEP` tốn khoảng 1,8 USD. R1 ở nhiệt độ 0,6 nên mỗi câu trả lời là một lần rút.
 - Điểm hoà vốn `k*` vẫn **chưa xác lập**: vế giá vững, vế ngân sách đạt ở 2/3 model trên mẫu gộp, nhưng `k*` cần cả hai và tử số của nó phần lớn là `backadj`.
 - `analyze_types.bootstrap_fit` **đã nâng 600 lên 10.000 vòng** (2026-09-22). Lý do cũ ghi ở đây - "hai ô đổi phán quyết theo seed" - **đã kiểm và KHÔNG tái lập được**: chín ô model x nhánh, năm seed, ở cả 600 lẫn 10.000 vòng đều cho cùng một bộ phán quyết. Việc nâng vẫn đáng làm vì sai số Monte Carlo ở 600 vòng cỡ 0,1 pp, ngang với các hiệu bảng này phải phân xử.
 

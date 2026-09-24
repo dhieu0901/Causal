@@ -1,0 +1,65 @@
+    [lexicon PSEUDO] 174 items carry residue outside variable_mapping - KEPT (reported only)
+    [lexicon PSEUDO] residue biases this condition TOWARDS KEEP; see REPORT.md section 7.2
+items=399  jobs/model=796  lexicon=PSEUDO  paired_to=None  families=['IV', 'arrowhead', 'confounding', 'diamond', 'diamondcut', 'frontdoor', 'mediation']
+
+>>> meta-llama/llama-3.3-70b-instruct: 796 calls
+    25/796
+    50/796
+    75/796
+    100/796
+    125/796
+    150/796
+    175/796
+    200/796
+    225/796
+    250/796
+    275/796
+    300/796
+    325/796
+    350/796
+    375/796
+    400/796
+    425/796
+    450/796
+    475/796
+    500/796
+    525/796
+    550/796
+    575/796
+    600/796
+    625/796
+    650/796
+    675/796
+    700/796
+    725/796
+    750/796
+    775/796
+    done: {'calls': 796, 'cached': 796, 'errors': 0, 'err_rate': 0.0, 'in_tok': 150443, 'out_tok': 281461}
+
+>>> meta-llama/llama-3.3-70b-instruct: re-asking the 33 answers cut off at 700 tokens, with 1500
+    done: {'calls': 33, 'cached': 33, 'errors': 0, 'err_rate': 0.0, 'in_tok': 7614, 'out_tok': 19965}
+
+saved D:\code\Noisy Causal\results\pilot_raw_llama70b_price400PSEUDO.csv  (796 rows)
+saved D:\code\Noisy Causal\results\pilot_raw_llama70b_price400PSEUDO_recap1500.csv  (33 rows)
+
+======================================================================
+PILOT: DO CHINH XAC THEO DIEU KIEN
+======================================================================
+
+--- meta-llama/llama-3.3-70b-instruct ---
+          n    acc  parse
+cond                     
+PROSE   199  63.32   98.5
+RAW     199  65.33   98.5
+ORACLE  199  59.80   96.0
+DR_k1   199  60.30   97.0
+  Delta_struct = ORACLE - RAW = -5.53 pp
+  Cost of stripping prose (PROSE - RAW) = -2.01 pp
+  DR_k1: 60.30  (vs RAW -5.03 pp)
+
+======================================================================
+McNEMAR EXACT (paired, on the same items)
+======================================================================
+  meta-llama/llama-3.3-70b-instruct ORACLE   vs RAW       b= 19 c= 30  p=0.1524
+  meta-llama/llama-3.3-70b-instruct DR_k1    vs RAW       b= 18 c= 28  p=0.1839
+  meta-llama/llama-3.3-70b-instruct ORACLE   vs DR_k1     b= 14 c= 15  p=1.0000

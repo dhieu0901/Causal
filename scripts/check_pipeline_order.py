@@ -57,6 +57,7 @@ ORDER = [
     "compare_price_lexicon", "analyze_price_paired",
     "feasibility", "make_figures",
     "measure_raw_leak",
+    "analyze_second_family",
     "check_consistency",
     "check_numbers", "check_pipeline_order", "verify_determinism",
 ]

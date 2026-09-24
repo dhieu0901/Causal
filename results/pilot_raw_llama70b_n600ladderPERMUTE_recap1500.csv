@@ -1,0 +1,8 @@
+model,item,id,cond,graph_id,rung,query_type,story_id,question_property,lexicon,gold,pred,correct,parsed,in_tok,out_tok,error,provider,finish,reason_tok,usd,answer_from,temperature,max_tokens
+meta-llama/llama-3.3-70b-instruct,105,9178,RAW,arrowhead,3,ett,smoking_gene_cancer,hard,PERMUTE,yes,no,0,1,127,496,,Novita,stop,0,0.000215545,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,113,4093,RAW,arrowhead,3,nde,smoke_birthWeight,easy,PERMUTE,no,no,1,1,269,535,,Novita,stop,0,0.000250315,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,186,16715,RAW,collision,1,exp_away,celebrity,anticommonsense,PERMUTE,no,no,1,1,168,675,,Novita,stop,0,0.00029268,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,241,8349,RAW,confounding,2,ate,simpson_drug,hard,PERMUTE,yes,yes,1,1,157,761,,Novita,stop,0,0.000325595,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,279,20508,RAW,confounding,3,det-counterfactual,simpson_hospital,anticommonsense,PERMUTE,no,no,1,1,109,466,,Novita,stop,0,0.000201115,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,387,278,RAW,diamondcut,3,ett,firing_employee,easy,PERMUTE,yes,no,0,1,238,493,,Novita,stop,0,0.00022933,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,515,19332,RAW,frontdoor,3,ett,smoking_frontdoor,anticommonsense,PERMUTE,yes,no,0,1,177,467,,Novita,stop,0,0.000210695,content,0.0,1500

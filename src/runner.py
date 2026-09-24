@@ -1,8 +1,11 @@
-"""Model runner: concurrent OpenAI calls with an on-disk cache.
+"""Model runner: concurrent OpenAI and OpenRouter calls with an on-disk cache.
 
 The cache is keyed by (model, temperature, prompt), so a re-run costs nothing and
 an interrupted run resumes where it stopped. Every raw completion is kept, which
 is what lets the error typology be coded later without paying for the calls twice.
+
+A model pinned in OPENROUTER below ("meta-llama/llama-3.3-70b-instruct") goes
+to OpenRouter with OPENROUTER_API_KEY; every other name goes to OpenAI as before.
 """
 from __future__ import annotations
 import hashlib, json, os, threading, time
@@ -24,8 +27,28 @@ def load_env(path=None):
                 os.environ.setdefault(k.strip(), v.strip())
 
 
-def _key(model, temp, prompt, cache=None):
-    h = hashlib.sha256(f"{model}|{temp}|{prompt}".encode()).hexdigest()[:24]
+OPENROUTER_BASE = "https://openrouter.ai/api/v1"
+
+# Models served through OpenRouter, each pinned to ONE provider. OpenRouter
+# otherwise routes a request to whichever provider is up, and providers serve
+# different quantisations of one model (fp4, fp8 and bf16 for DeepSeek-R1 on
+# 2026-09-24), so an unpinned run could mix several models under one name.
+# Checked with GET /api/v1/models/<model>/endpoints on 2026-09-24.
+OPENROUTER = {"meta-llama/llama-3.3-70b-instruct": "Novita",   # bf16
+              "deepseek/deepseek-r1": "Novita"}                 # fp8, the only one
+OPENROUTER_SEED = 20260907
+
+
+def _key(model, temp, prompt, cache=None, max_tokens=700):
+    # An OpenRouter key also carries the provider and the token cap: re-pinning
+    # or raising the cap must not return answers produced under the old one (a
+    # reasoning model cut off at 2,000 tokens is a different measurement). The
+    # OpenAI key is left exactly as it was, or every cached call, including
+    # induction.py's at 1,400 tokens, would be paid for again.
+    name = f"{model}|{temp}"
+    if model in OPENROUTER:
+        name = f"{model}@{OPENROUTER[model]}|{temp}|max{max_tokens}"
+    h = hashlib.sha256(f"{name}|{prompt}".encode()).hexdigest()[:24]
     return (cache or CACHE) / f"{h}.json"
 
 
@@ -35,16 +58,20 @@ def _key(model, temp, prompt, cache=None):
 # large run; a model missing here gets no estimate rather than a guessed one.
 PRICES_PER_M = {"gpt-4.1-nano": (0.10, 0.40),
                 "gpt-4.1-mini": (0.40, 1.60),
-                "gpt-4.1": (2.00, 8.00)}
+                "gpt-4.1": (2.00, 8.00),
+                # OpenRouter, the pinned provider's price on 2026-09-24. For R1
+                # the output price also covers the reasoning tokens.
+                "meta-llama/llama-3.3-70b-instruct": (0.135, 0.40),
+                "deepseek/deepseek-r1": (0.70, 2.50)}
 
 
-def read_cached(model, temperature, prompt, cache=None):
+def read_cached(model, temperature, prompt, cache=None, max_tokens=700):
     """The cached record, or None when there is none or it does not parse.
 
     call() pays again for a file that does not parse, so an estimate that
     counted such a file as cached would come in low.
     """
-    f = _key(model, temperature, prompt, cache)
+    f = _key(model, temperature, prompt, cache, max_tokens)
     if not f.exists():
         return None
     try:
@@ -58,7 +85,7 @@ def read_cached(model, temperature, prompt, cache=None):
 CHARS_PER_TOKEN = 3.9
 
 
-def estimate_cost(jobs, model, temperature=0.0, ref_out=None):
+def estimate_cost(jobs, model, temperature=0.0, ref_out=None, max_tokens=700):
     """What running `jobs` on `model` would cost. Nothing is sent.
 
     Counted as run_batch pays: once per DISTINCT prompt, 0 when cached.
@@ -78,7 +105,7 @@ def estimate_cost(jobs, model, temperature=0.0, ref_out=None):
         if j["prompt"] in seen:
             continue
         seen.add(j["prompt"])
-        r = read_cached(model, temperature, j["prompt"])
+        r = read_cached(model, temperature, j["prompt"], max_tokens=max_tokens)
         (fresh if r is None else cached).append((j, r))
     base = {"model": model, "calls": len(jobs), "distinct": len(seen),
             "cached": len(cached), "new": len(fresh)}
@@ -116,6 +143,25 @@ def estimate_cost(jobs, model, temperature=0.0, ref_out=None):
                    "usd": round((tin * pi + tout * po) / 1e6, 2)}
 
 
+def _openrouter_fields(r):
+    """What OpenRouter adds to a completion, kept with the record.
+
+    `usd` is the provider's own charge for the call, so the spend of a run is
+    summed from the bill rather than estimated. `finish` = "length" means the
+    token cap cut the answer off; for a reasoning model that is a result to
+    report, not a failure to retry.
+    """
+    msg = r.choices[0].message
+    extra = getattr(msg, "model_extra", None) or {}
+    uextra = getattr(r.usage, "model_extra", None) or {}
+    det = getattr(r.usage, "completion_tokens_details", None)
+    return {"provider": (getattr(r, "model_extra", None) or {}).get("provider", ""),
+            "finish": r.choices[0].finish_reason or "",
+            "reason_tok": int(getattr(det, "reasoning_tokens", 0) or 0),
+            "usd": float(uextra.get("cost") or 0.0),
+            "reasoning": extra.get("reasoning") or ""}
+
+
 def call(client, model, prompt, temperature=0.0, max_tokens=700, retries=4,
          cache=None):
     """One completion, cached. Returns dict with text and usage.
@@ -123,17 +169,29 @@ def call(client, model, prompt, temperature=0.0, max_tokens=700, retries=4,
     `cache` is another directory to cache in. scripts/check_drift.py uses one so
     that it can ask a question the main cache has already answered.
     """
-    f = _key(model, temperature, prompt, cache)
-    hit = read_cached(model, temperature, prompt, cache)
+    f = _key(model, temperature, prompt, cache, max_tokens)
+    hit = read_cached(model, temperature, prompt, cache, max_tokens)
     if hit is not None:
         return hit | {"cached": True}
 
+    if model in OPENROUTER:
+        # An OpenRouter provider answers 429 "temporarily rate-limited upstream"
+        # under load (18 of 1,168 Llama calls on 2026-09-24, with R1 on the same
+        # provider at once); two more doublings wait out about 90 s in all.
+        retries = max(retries, 6)
     last = None
     for attempt in range(retries):
         try:
             kw = {"model": model,
                   "messages": [{"role": "user", "content": prompt}],
                   "max_completion_tokens": max_tokens}
+            if model in OPENROUTER:
+                kw = {"model": model,
+                      "messages": [{"role": "user", "content": prompt}],
+                      "max_tokens": max_tokens, "seed": OPENROUTER_SEED,
+                      "extra_body": {"provider": {"order": [OPENROUTER[model]],
+                                                  "allow_fallbacks": False},
+                                     "usage": {"include": True}}}
             if temperature != 1.0:
                 kw["temperature"] = temperature
             r = client.chat.completions.create(**kw)
@@ -141,6 +199,8 @@ def call(client, model, prompt, temperature=0.0, max_tokens=700, retries=4,
                    "in_tok": r.usage.prompt_tokens,
                    "out_tok": r.usage.completion_tokens,
                    "model": model, "cached": False, "ok": True}
+            if model in OPENROUTER:
+                rec |= _openrouter_fields(r) | {"max_tokens": max_tokens}
             # First writer wins, and every caller returns what the cache holds.
             # Temperature 0 is not deterministic (15% of answers flip on
             # re-asking), so two processes sending one prompt at once get two
@@ -173,25 +233,52 @@ def call(client, model, prompt, temperature=0.0, max_tokens=700, retries=4,
             "cached": False, "ok": False, "error": str(last)[:200]}
 
 
+def make_client(model):
+    """The API client for `model`: OpenRouter for a pinned model, else OpenAI."""
+    from openai import OpenAI
+    load_env()
+    if model in OPENROUTER:
+        key = os.environ.get("OPENROUTER_API_KEY", "")
+        if not key:
+            raise SystemExit("OPENROUTER_API_KEY is not set. Add it to .env from your own "
+                             "terminal; never paste a key into a chat.")
+        return OpenAI(base_url=OPENROUTER_BASE, api_key=key)
+    if "/" in model:
+        raise SystemExit(f"{model}: an OpenRouter model must be pinned to one provider "
+                         f"in runner.OPENROUTER before it is run")
+    return OpenAI()
+
+
 def run_batch(jobs, model, temperature=0.0, workers=16, max_tokens=700, on_tick=None,
-              cache=None):
+              cache=None, max_usd=None):
     """jobs: list of dicts each carrying a 'prompt'. Returns them with 'result'.
 
     Each DISTINCT prompt is sent once. Two jobs can carry the same prompt - on
     the complete 3-node families SCRAMBLE is the full reversal, which is DR_k3 -
     and with 16 threads both would miss the cache at the same moment and both
     be paid for.
+
+    `max_usd` stops sending once the calls of THIS batch have been billed that
+    much (OpenRouter reports each call's cost). The calls not sent come back as
+    failures, so guard_errors stops the run; everything paid for is cached and
+    a re-run resumes. Up to `workers` calls already in flight can still land,
+    so the overshoot is at most that many calls.
     """
-    from openai import OpenAI
-    load_env()
-    client = OpenAI()
+    client = make_client(model)
     prompts = list(dict.fromkeys(j["prompt"] for j in jobs))
-    done = [0]
+    done, spent = [0], [0.0]
 
     def one(p):
+        if max_usd is not None and spent[0] >= max_usd and \
+                read_cached(model, temperature, p, cache, max_tokens) is None:
+            return p, {"text": "", "in_tok": 0, "out_tok": 0, "model": model,
+                       "cached": False, "ok": False,
+                       "error": f"not sent: this batch reached its {max_usd} USD cap"}
         r = call(client, model, p, temperature, max_tokens, cache=cache)
         with _lock:
             done[0] += 1
+            if not r.get("cached"):
+                spent[0] += r.get("usd", 0.0)
             if on_tick and done[0] % 25 == 0:
                 on_tick(done[0], len(prompts))
         return p, r

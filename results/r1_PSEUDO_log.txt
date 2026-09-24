@@ -1,0 +1,44 @@
+    [lexicon PSEUDO] 88 items carry residue outside variable_mapping - KEPT (reported only)
+    [lexicon PSEUDO] residue biases this condition TOWARDS KEEP; see REPORT.md section 7.2
+items=174  jobs/model=258  lexicon=PSEUDO  paired_to=None  families=['IV', 'arrowhead', 'chain', 'collision', 'confounding', 'diamond', 'diamondcut', 'fork', 'frontdoor', 'mediation']
+
+>>> deepseek/deepseek-r1: 258 calls
+    25/258
+    50/258
+    75/258
+    100/258
+    125/258
+    150/258
+    175/258
+    200/258
+    225/258
+    250/258
+    done: {'calls': 258, 'cached': 258, 'errors': 0, 'err_rate': 0.0, 'in_tok': 42249, 'out_tok': 1134876}
+
+>>> deepseek/deepseek-r1: re-asking the 12 answers cut off at 8000 tokens, with 16000
+    done: {'calls': 12, 'cached': 0, 'errors': 0, 'err_rate': 0.0, 'in_tok': 2438, 'out_tok': 92022}
+
+saved D:\code\Noisy Causal\results\pilot_raw_r1PSEUDO.csv  (258 rows)
+saved D:\code\Noisy Causal\results\pilot_raw_r1PSEUDO_recap16000.csv  (12 rows)
+
+======================================================================
+PILOT: DO CHINH XAC THEO DIEU KIEN
+======================================================================
+
+--- deepseek/deepseek-r1 ---
+           n    acc  parse
+cond                      
+PROSE    NaN    NaN    NaN
+RAW     86.0  69.77  100.0
+ORACLE  86.0  75.58   90.7
+DR_k1   86.0  56.98   95.3
+  Delta_struct = ORACLE - RAW = +5.81 pp
+  Cost of stripping prose (PROSE - RAW) = +nan pp
+  DR_k1: 56.98  (vs RAW -12.79 pp)
+
+======================================================================
+McNEMAR EXACT (paired, on the same items)
+======================================================================
+  deepseek/deepseek-r1 ORACLE   vs RAW       b= 15 c= 10  p=0.4244
+  deepseek/deepseek-r1 DR_k1    vs RAW       b=  6 c= 17  p=0.0347
+  deepseek/deepseek-r1 ORACLE   vs DR_k1     b= 22 c=  6  p=0.0037

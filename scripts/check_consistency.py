@@ -406,8 +406,72 @@ def seeds():
         q[f"conditional slope, n600 minus price400, {lex}"] = (
             lambda s, a_=a_, b_=b_: boot_two_sample(a_, b_, s, NBOOT))
 
+    # The second model family and the reasoning model, rebuilt here from the
+    # records with the item map, not imported from analyze_second_family.py.
+    LL = {"lex": "llama70b", "n600": "llama70b_n600", "price400": "llama70b_price400"}
+    if all((RES / f"pilot_raw_{LL[t]}{x}.csv").exists() for t in LL for x in ("KEEP", "PSEUDO")):
+        cols = []
+        for t, pre in LL.items():
+            ck = causal_cells(raw(f"{pre}KEEP"), "RAW"), causal_cells(raw(f"{pre}KEEP"), "ORACLE")
+            cp = causal_cells(raw(f"{pre}PSEUDO"), "RAW"), causal_cells(raw(f"{pre}PSEUDO"), "ORACLE")
+            m = "meta-llama/llama-3.3-70b-instruct"
+            kr, ka, pr, pa = ck[0][m], ck[1][m], cp[0][m], cp[1][m]
+            i = kr.index.intersection(ka.index).intersection(pr.index).intersection(pa.index)
+            v = (kr[i] - pr[i]) - (ka[i] - pa[i])
+            cols.append(pd.Series(v.values, index=i.map(itemmap(t)), name=t).sort_index())
+        Wl = pd.concat(cols, axis=1)
+        q["Llama pooled DiD"] = lambda s, W=Wl: pool_boot(W, seed=s)
+        # its two halves, lift and drag: all cells sorted by id at once, as
+        # analyze_structure_arms.py builds them for GPT-4.1 (review round 12, M12-1)
+        for lex, half in (("PSEUDO", "lift"), ("KEEP", "drag")):
+            cols = []
+            for t, pre in LL.items():
+                cc = causal_cells(raw(f"{pre}{lex}"), "RAW"), causal_cells(raw(f"{pre}{lex}"), "ORACLE")
+                r_, o_ = cc[0]["meta-llama/llama-3.3-70b-instruct"], cc[1]["meta-llama/llama-3.3-70b-instruct"]
+                i = r_.index.intersection(o_.index)
+                cols.append(pd.Series((o_[i] - r_[i]).values, index=i.map(itemmap(t)), name=t))
+            Wh = pd.concat(cols, axis=1).groupby(level=0).mean()
+            q[f"Llama {half}, {lex} ORACLE minus RAW"] = lambda s, W=Wh: pool_boot(W, seed=s)
+    if (RES / "pilot_raw_r1PSEUDO.csv").exists():
+        R = raw("r1PSEUDO")
+        # the 12 answers cut off at 8,000 tokens replaced by their re-asks
+        rr = raw("r1PSEUDO_recap16000")
+        cut = set(zip(R.loc[R.finish == "length", "item"], R.loc[R.finish == "length", "cond"]))
+        Rr = pd.concat([R[[(i, c) not in cut for i, c in zip(R.item, R.cond)]], rr],
+                       ignore_index=True)
+        for tag, D in (("", R), (" re-asked", Rr)):
+            for a_, b_ in (("ORACLE", "RAW"), ("ORACLE", "DR_k1")):
+                x = causal_cells(D, a_)["deepseek/deepseek-r1"]
+                y = causal_cells(D, b_)["deepseek/deepseek-r1"]
+                i = x.index.intersection(y.index)
+                q[f"R1 PSEUDO{tag} {a_} minus {b_}"] = (
+                    lambda s, v=(x[i] - y[i]).values: boot_items(v, s, NBOOT))
+
     published = {
         "headline DiD (RAW)": ("pooled_headline.csv", "did_pp", {"pooling": "item level, de-duplicated"}),
+        "Llama pooled DiD": ("second_family.csv", "estimate_pp",
+                             {"section": "1 headline", "model": "Llama 3.3 70B",
+                              "sample": "pooled"}),
+        "Llama lift, PSEUDO ORACLE minus RAW": ("second_family.csv", "estimate_pp",
+                                                {"section": "2 arms", "model": "Llama 3.3 70B",
+                                                 "lexicon": "PSEUDO", "quantity": "ORACLE minus RAW"}),
+        "Llama drag, KEEP ORACLE minus RAW": ("second_family.csv", "estimate_pp",
+                                              {"section": "2 arms", "model": "Llama 3.3 70B",
+                                               "lexicon": "KEEP", "quantity": "ORACLE minus RAW"}),
+        "R1 PSEUDO ORACLE minus RAW": ("second_family.csv", "estimate_pp",
+                                       {"model": "deepseek/deepseek-r1", "lexicon": "PSEUDO",
+                                        "quantity": "ORACLE minus RAW"}),
+        "R1 PSEUDO ORACLE minus DR_k1": ("second_family.csv", "estimate_pp",
+                                         {"model": "deepseek/deepseek-r1", "lexicon": "PSEUDO",
+                                          "quantity": "ORACLE minus DR_k1"}),
+        "R1 PSEUDO re-asked ORACLE minus RAW": (
+            "second_family.csv", "estimate_pp",
+            {"model": "deepseek/deepseek-r1", "quantity": "ORACLE minus RAW",
+             "lexicon": "PSEUDO, cut-offs re-asked at 16000 tokens"}),
+        "R1 PSEUDO re-asked ORACLE minus DR_k1": (
+            "second_family.csv", "estimate_pp",
+            {"model": "deepseek/deepseek-r1", "quantity": "ORACLE minus DR_k1",
+             "lexicon": "PSEUDO, cut-offs re-asked at 16000 tokens"}),
         "headline DiD, RAW_CLEAN, no det-cf": ("raw_clean.csv", "estimate_pp",
                                                {"quantity": "RAW_CLEAN, drop det-counterfactual"}),
         "n600 PSEUDO ORACLE minus NAMES_ONLY": ("structure_arms.csv", "estimate_pp",

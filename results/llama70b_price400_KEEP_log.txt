@@ -1,0 +1,63 @@
+items=399  jobs/model=796  lexicon=KEEP  paired_to=None  families=['IV', 'arrowhead', 'confounding', 'diamond', 'diamondcut', 'frontdoor', 'mediation']
+
+>>> meta-llama/llama-3.3-70b-instruct: 796 calls
+    25/796
+    50/796
+    75/796
+    100/796
+    125/796
+    150/796
+    175/796
+    200/796
+    225/796
+    250/796
+    275/796
+    300/796
+    325/796
+    350/796
+    375/796
+    400/796
+    425/796
+    450/796
+    475/796
+    500/796
+    525/796
+    550/796
+    575/796
+    600/796
+    625/796
+    650/796
+    675/796
+    700/796
+    725/796
+    750/796
+    775/796
+    done: {'calls': 796, 'cached': 796, 'errors': 0, 'err_rate': 0.0, 'in_tok': 145381, 'out_tok': 280645}
+
+>>> meta-llama/llama-3.3-70b-instruct: re-asking the 52 answers cut off at 700 tokens, with 1500
+    done: {'calls': 52, 'cached': 52, 'errors': 0, 'err_rate': 0.0, 'in_tok': 12134, 'out_tok': 34196}
+
+saved D:\code\Noisy Causal\results\pilot_raw_llama70b_price400KEEP.csv  (796 rows)
+saved D:\code\Noisy Causal\results\pilot_raw_llama70b_price400KEEP_recap1500.csv  (52 rows)
+
+======================================================================
+PILOT: DO CHINH XAC THEO DIEU KIEN
+======================================================================
+
+--- meta-llama/llama-3.3-70b-instruct ---
+          n    acc  parse
+cond                     
+PROSE   199  77.89   97.5
+RAW     199  75.38   94.0
+ORACLE  199  72.86   97.0
+DR_k1   199  73.87   98.0
+  Delta_struct = ORACLE - RAW = -2.52 pp
+  Cost of stripping prose (PROSE - RAW) = +2.51 pp
+  DR_k1: 73.87  (vs RAW -1.51 pp)
+
+======================================================================
+McNEMAR EXACT (paired, on the same items)
+======================================================================
+  meta-llama/llama-3.3-70b-instruct ORACLE   vs RAW       b= 15 c= 20  p=0.4996
+  meta-llama/llama-3.3-70b-instruct DR_k1    vs RAW       b= 18 c= 21  p=0.7493
+  meta-llama/llama-3.3-70b-instruct ORACLE   vs DR_k1     b= 14 c= 16  p=0.8555

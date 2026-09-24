@@ -19,9 +19,9 @@ sys.path.insert(0, str(ROOT / "src"))
 import pandas as pd
 from perturb import (FAMILY_STRUCTURE, to_edges, max_k, ENUMERATORS,
                      enumerate_scramble)
-from prompts import build, parse_answer, strip_structure, parse_prose_graph
+from prompts import build, parse_answer, strip_structure, parse_prose_graph, ANSWER_RE
 from lexical import relabel_item, residue
-from runner import run_batch, usage_summary, guard_errors, is_ok
+from runner import run_batch, usage_summary, guard_errors, is_ok, OPENROUTER
 from stats import mcnemar_exact_p
 
 
@@ -250,6 +250,27 @@ def main():
                          "item's output tokens under COND in results/FILE, which must "
                          "be a run of this very sample, e.g. "
                          "pilot_raw_n600PSEUDO.csv:DR_k1")
+    ap.add_argument("--temperature", type=float, default=0.0,
+                    help="0 for every GPT-4.1 run. DeepSeek recommends 0.6 for R1, "
+                         "whose output degrades into repetition at 0")
+    ap.add_argument("--max-tokens", type=int, default=700, dest="max_tokens",
+                    help="output cap. For a reasoning model it also caps the "
+                         "reasoning, and an answer cut off is scored unparsed")
+    ap.add_argument("--causal-only", action="store_true", dest="causal_only",
+                    help="send only the causal group (every query type except "
+                         "marginal, correlation, backadj). Items are drawn and "
+                         "perturbed first, so no draw changes")
+    ap.add_argument("--recap", type=int, default=None,
+                    help="OpenRouter models: re-ask every answer the --max-tokens "
+                         "cap cut off, with this larger cap, and write those rows "
+                         "to pilot_raw{tag}_recap{N}.csv. A sensitivity check; the "
+                         "main file is unchanged")
+    ap.add_argument("--workers", type=int, default=16,
+                    help="concurrent calls. Lower it when two runs share one "
+                         "OpenRouter provider, which rate-limits (429) under load")
+    ap.add_argument("--max-usd", type=float, default=None, dest="max_usd",
+                    help="per model: stop sending once this run has been billed "
+                         "this much (OpenRouter models only; see runner.run_batch)")
     a = ap.parse_args()
 
     sample_kmax = a.kmax if a.sample_kmax is None else a.sample_kmax
@@ -266,6 +287,9 @@ def main():
             raise SystemExit(f"--conds names conditions this run does not build: "
                              f"{sorted(unknown)}")
         jobs = [j for j in jobs if j["cond"] in keep]
+    if a.causal_only:
+        jobs = [j for j in jobs
+                if j["query_type"] not in {"marginal", "correlation", "backadj"}]
     print(f"items={len(items)}  jobs/model={len(jobs)}  lexicon={a.lexicon}  "
           f"paired_to={a.pair_to}  families={sorted(items.graph_id.unique())}")
 
@@ -290,7 +314,8 @@ def main():
             model = model.strip()
             ro = (None if ref is None else
                   ref[ref.model == model].set_index("item").out_tok)
-            e = estimate_cost(jobs, model, ref_out=ro)
+            e = estimate_cost(jobs, model, a.temperature, ref_out=ro,
+                              max_tokens=a.max_tokens)
             print(f"  {e['model']:14s} calls={e['calls']:5d} distinct={e['distinct']:5d} "
                   f"cached={e['cached']:5d} new={e['new']:5d}  usd={e['usd']}  "
                   f"{e.get('new_by_cond', '')}")
@@ -302,21 +327,23 @@ def main():
               + ("" if known else "  (plus models with no price or no cache)"))
         return
 
-    allrows = []
-    for model in a.models.split(","):
-        model = model.strip()
-        print(f"\n>>> {model}: {len(jobs)} calls")
-        recs = run_batch(jobs, model, temperature=0.0, workers=16,
-                         on_tick=lambda d, t: print(f"    {d}/{t}", flush=True))
-        u = usage_summary(recs)
-        print(f"    done: {u}")
-        guard_errors(recs, label=model)
+    def rows_of(recs, model, cap):
+        allrows = []
         for r in recs:
             # A call that never reached the model is dropped, not scored. Scoring
             # it would enter an infrastructure failure as a wrong answer.
             if not is_ok(r["result"]):
                 continue
             pred = parse_answer(r["result"]["text"])
+            source = "content"
+            if model in OPENROUTER and not r["result"]["text"].strip():
+                # DeepSeek-R1 on OpenRouter sometimes returns an empty answer with
+                # the final "ANSWER: no" block at the end of the reasoning field
+                # instead (3 of 8 smoke-test calls, 2026-09-24). Only the strict
+                # format is taken, and only from the tail: the reasoning says a
+                # bare "yes" or "no" many times on its way to the answer.
+                m = ANSWER_RE.findall(r["result"].get("reasoning", "")[-400:])
+                pred, source = (m[-1].lower(), "reasoning") if m else (None, "")
             allrows.append({"model": model, "item": r["item"], "id": r["id"],
                             "cond": r["cond"],
                             "graph_id": r["graph_id"], "rung": r["rung"],
@@ -330,12 +357,53 @@ def main():
                             "parsed": int(pred is not None),
                             "in_tok": r["result"]["in_tok"],
                             "out_tok": r["result"]["out_tok"],
-                            "error": r["result"].get("error", "")})
+                            "error": r["result"].get("error", ""),
+                            # OpenRouter only, so the GPT-4.1 files keep their
+                            # columns: who served the call, whether the cap cut
+                            # it off, how much of it was reasoning, what it cost.
+                            **({k: r["result"].get(k, "") for k in
+                                ("provider", "finish", "reason_tok", "usd")}
+                               | {"answer_from": source,
+                                  "temperature": a.temperature,
+                                  "max_tokens": cap}
+                               if model in OPENROUTER else {})})
+        return allrows
+
+    allrows, recaprows = [], []
+    for model in a.models.split(","):
+        model = model.strip()
+        print(f"\n>>> {model}: {len(jobs)} calls")
+        recs = run_batch(jobs, model, temperature=a.temperature, workers=a.workers,
+                         max_tokens=a.max_tokens, max_usd=a.max_usd,
+                         on_tick=lambda d, t: print(f"    {d}/{t}", flush=True))
+        u = usage_summary(recs)
+        print(f"    done: {u}")
+        guard_errors(recs, label=model)
+        allrows += rows_of(recs, model, a.max_tokens)
+        if a.recap:
+            # An answer the cap cut off is unparsed and drops out of every paired
+            # contrast. When the cut-offs pile up in one condition (R1 with the
+            # graph reasons about 60% longer than without), that is a bias, so
+            # the same prompts are asked again with room to finish.
+            cut = [{k: v for k, v in r.items() if k != "result"} for r in recs
+                   if r["result"].get("finish") == "length"]
+            print(f"\n>>> {model}: re-asking the {len(cut)} answers cut off at "
+                  f"{a.max_tokens} tokens, with {a.recap}")
+            if cut:
+                rec2 = run_batch(cut, model, temperature=a.temperature, workers=a.workers,
+                                 max_tokens=a.recap, max_usd=a.max_usd)
+                print(f"    done: {usage_summary(rec2)}")
+                guard_errors(rec2, label=f"{model} recap")
+                recaprows += rows_of(rec2, model, a.recap)
 
     df = pd.DataFrame(allrows)
     out = ROOT / "results" / f"pilot_raw{a.tag}.csv"
     df.to_csv(out, index=False)
     print(f"\nsaved {out}  ({len(df)} rows)")
+    if a.recap:
+        out2 = ROOT / "results" / f"pilot_raw{a.tag}_recap{a.recap}.csv"
+        pd.DataFrame(recaprows).to_csv(out2, index=False)
+        print(f"saved {out2}  ({len(recaprows)} rows)")
 
     print("\n" + "=" * 70)
     print("PILOT: DO CHINH XAC THEO DIEU KIEN")

@@ -1,0 +1,38 @@
+items=580  jobs/model=292  lexicon=PERMUTE  paired_to=None  families=['IV', 'arrowhead', 'chain', 'collision', 'confounding', 'diamond', 'diamondcut', 'fork', 'frontdoor', 'mediation']
+
+>>> meta-llama/llama-3.3-70b-instruct: 292 calls
+    25/292
+    50/292
+    75/292
+    100/292
+    125/292
+    150/292
+    175/292
+    200/292
+    225/292
+    250/292
+    275/292
+    done: {'calls': 292, 'cached': 292, 'errors': 0, 'err_rate': 0.0, 'in_tok': 42328, 'out_tok': 82218}
+
+>>> meta-llama/llama-3.3-70b-instruct: re-asking the 7 answers cut off at 700 tokens, with 1500
+    done: {'calls': 7, 'cached': 7, 'errors': 0, 'err_rate': 0.0, 'in_tok': 1245, 'out_tok': 3893}
+
+saved D:\code\Noisy Causal\results\pilot_raw_llama70b_n600ladderPERMUTE.csv  (292 rows)
+saved D:\code\Noisy Causal\results\pilot_raw_llama70b_n600ladderPERMUTE_recap1500.csv  (7 rows)
+
+======================================================================
+PILOT: DO CHINH XAC THEO DIEU KIEN
+======================================================================
+
+--- meta-llama/llama-3.3-70b-instruct ---
+            n    acc  parse
+cond                       
+PROSE     NaN    NaN    NaN
+RAW     292.0  65.75   98.6
+ORACLE    NaN    NaN    NaN
+  Delta_struct = ORACLE - RAW = +nan pp
+  Cost of stripping prose (PROSE - RAW) = +nan pp
+
+======================================================================
+McNEMAR EXACT (paired, on the same items)
+======================================================================

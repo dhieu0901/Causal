@@ -1,0 +1,8 @@
+model,item,id,cond,graph_id,rung,query_type,story_id,question_property,lexicon,gold,pred,correct,parsed,in_tok,out_tok,error,provider,finish,reason_tok,usd,answer_from,temperature,max_tokens
+meta-llama/llama-3.3-70b-instruct,21,19806,RAW,IV,2,ate,tax_smoke_birthWeight,anticommonsense,SYMBOL,no,,0,0,130,700,,Novita,length,0,0.00029755,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,113,4093,RAW,arrowhead,3,nde,smoke_birthWeight,easy,SYMBOL,no,yes,0,1,224,713,,Novita,stop,0,0.00031544,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,263,8718,RAW,confounding,3,ett,simpson_vaccine,hard,SYMBOL,no,no,1,1,158,700,,Novita,length,0,0.00030133,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,382,10719,RAW,diamondcut,3,ett,firing_employee,anticommonsense,SYMBOL,yes,,0,0,206,700,,Novita,length,0,0.00030781,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,386,10718,RAW,diamondcut,3,ett,firing_employee,anticommonsense,SYMBOL,no,no,1,1,206,749,,Novita,stop,0,0.00032741,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,388,10764,RAW,diamondcut,3,ett,firing_employee,anticommonsense,SYMBOL,no,,0,0,206,700,,Novita,length,0,0.00030781,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,397,10742,RAW,diamondcut,3,ett,firing_employee,anticommonsense,SYMBOL,no,,0,0,206,700,,Novita,length,0,0.00030781,content,0.0,1500

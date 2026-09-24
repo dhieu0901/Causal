@@ -1,0 +1,140 @@
+section,model,sample,lexicon,quantity,estimate_pp,ci_lo,ci_hi,p_boot,n_items
+1 headline,GPT-4.1 family,lex,PSEUDO,DiD,12.71,2.57,22.98,0.018,85
+1 headline,GPT-4.1 family,n600,PSEUDO,DiD,6.78,1.65,12.08,0.009,287
+1 headline,GPT-4.1 family,price400,PSEUDO,DiD,1.72,-5.27,8.27,0.6395,195
+1 headline,GPT-4.1 family,pooled,PSEUDO,DiD,5.98,1.67,10.19,0.0055,490
+1 headline,gpt-4.1 alone,lex,PSEUDO,DiD,5.0,-8.75,18.75,0.5295,80
+1 headline,gpt-4.1 alone,n600,PSEUDO,DiD,5.82,-1.09,12.73,0.097,275
+1 headline,gpt-4.1 alone,price400,PSEUDO,DiD,6.01,-2.73,14.75,0.1765,183
+1 headline,gpt-4.1 alone,pooled,PSEUDO,DiD,5.76,0.18,11.37,0.0465,467
+1 headline,Llama 3.3 70B,lex,PSEUDO,DiD,12.82,-1.28,26.92,0.086,78
+1 headline,Llama 3.3 70B,n600,PSEUDO,DiD,10.41,3.35,17.47,0.004,269
+1 headline,Llama 3.3 70B,price400,PSEUDO,DiD,0.0,-8.43,8.43,1.0,178
+1 headline,Llama 3.3 70B,pooled,PSEUDO,DiD,7.24,1.49,13.09,0.015,457
+1 headline,"Llama, cut-offs re-asked",lex,PSEUDO,DiD,16.28,4.65,29.07,0.0115,86
+1 headline,"Llama, cut-offs re-asked",n600,PSEUDO,DiD,9.93,3.42,16.78,0.0025,292
+1 headline,"Llama, cut-offs re-asked",price400,PSEUDO,DiD,-0.5,-8.04,7.04,0.946,199
+1 headline,"Llama, cut-offs re-asked",pooled,PSEUDO,DiD,7.28,1.91,12.81,0.0095,497
+1 headline,Llama minus GPT-4.1 family,pooled,PSEUDO,"DiD difference, paired",0.8,-5.41,6.95,0.792,454
+2 arms,GPT-4.1 family,pooled,KEEP,ORACLE minus RAW,-0.5,-3.43,2.36,0.7395,495
+2 arms,gpt-4.1 alone,pooled,KEEP,ORACLE minus RAW,-0.18,-4.27,3.78,0.958,480
+2 arms,Llama 3.3 70B,pooled,KEEP,ORACLE minus RAW,-3.51,-7.06,0.0,0.058,470
+2 arms,GPT-4.1 family,pooled,KEEP,DR_k1 minus RAW,-6.09,-8.94,-3.26,0.0005,494
+2 arms,gpt-4.1 alone,pooled,KEEP,DR_k1 minus RAW,-6.21,-10.21,-2.32,0.0005,488
+2 arms,Llama 3.3 70B,pooled,KEEP,DR_k1 minus RAW,-5.47,-9.09,-1.84,0.0065,477
+2 arms,GPT-4.1 family,pooled,KEEP,PROSE minus RAW,0.06,-2.28,2.53,0.983,494
+2 arms,gpt-4.1 alone,pooled,KEEP,PROSE minus RAW,0.72,-2.7,4.18,0.7045,484
+2 arms,Llama 3.3 70B,pooled,KEEP,PROSE minus RAW,-0.18,-3.36,3.15,0.978,475
+2 arms,GPT-4.1 family,pooled,KEEP,ORACLE minus DR_k1,4.86,2.52,7.41,0.0005,494
+2 arms,gpt-4.1 alone,pooled,KEEP,ORACLE minus DR_k1,5.42,2.14,8.74,0.005,479
+2 arms,Llama 3.3 70B,pooled,KEEP,ORACLE minus DR_k1,2.18,-1.27,5.65,0.2355,480
+2 arms,GPT-4.1 family,pooled,PSEUDO,ORACLE minus RAW,5.12,1.55,8.65,0.0055,496
+2 arms,gpt-4.1 alone,pooled,PSEUDO,ORACLE minus RAW,6.29,1.62,10.71,0.0105,481
+2 arms,Llama 3.3 70B,pooled,PSEUDO,ORACLE minus RAW,3.99,-0.71,8.58,0.0885,477
+2 arms,GPT-4.1 family,pooled,PSEUDO,DR_k1 minus RAW,-0.55,-3.71,2.68,0.757,497
+2 arms,gpt-4.1 alone,pooled,PSEUDO,DR_k1 minus RAW,-0.9,-4.89,3.06,0.7065,482
+2 arms,Llama 3.3 70B,pooled,PSEUDO,DR_k1 minus RAW,0.72,-3.64,5.08,0.7715,475
+2 arms,GPT-4.1 family,pooled,PSEUDO,PROSE minus RAW,5.48,2.32,8.67,0.0005,497
+2 arms,gpt-4.1 alone,pooled,PSEUDO,PROSE minus RAW,4.96,0.71,9.45,0.0255,489
+2 arms,Llama 3.3 70B,pooled,PSEUDO,PROSE minus RAW,4.83,-0.18,9.89,0.0585,481
+2 arms,GPT-4.1 family,pooled,PSEUDO,ORACLE minus DR_k1,6.22,3.39,9.01,0.0005,497
+2 arms,gpt-4.1 alone,pooled,PSEUDO,ORACLE minus DR_k1,7.04,2.92,11.21,0.001,480
+2 arms,Llama 3.3 70B,pooled,PSEUDO,ORACLE minus DR_k1,3.66,0.35,7.13,0.0375,471
+3 reasoning model,deepseek/deepseek-r1,lex causal,PSEUDO,accuracy RAW,69.33,,,,75
+3 reasoning model,deepseek/deepseek-r1,lex causal,PSEUDO,accuracy ORACLE,82.67,,,,75
+3 reasoning model,deepseek/deepseek-r1,lex causal,PSEUDO,accuracy DR_k1,60.0,,,,75
+3 reasoning model,meta-llama/llama-3.3-70b-instruct,lex causal,PSEUDO,accuracy RAW,62.16,,,,75
+3 reasoning model,meta-llama/llama-3.3-70b-instruct,lex causal,PSEUDO,accuracy ORACLE,73.61,,,,75
+3 reasoning model,meta-llama/llama-3.3-70b-instruct,lex causal,PSEUDO,accuracy DR_k1,68.49,,,,75
+3 reasoning model,gpt-4.1,lex causal,PSEUDO,accuracy RAW,63.01,,,,75
+3 reasoning model,gpt-4.1,lex causal,PSEUDO,accuracy ORACLE,72.97,,,,75
+3 reasoning model,gpt-4.1,lex causal,PSEUDO,accuracy DR_k1,56.16,,,,75
+3 reasoning model,gpt-4.1-mini,lex causal,PSEUDO,accuracy RAW,64.0,,,,75
+3 reasoning model,gpt-4.1-mini,lex causal,PSEUDO,accuracy ORACLE,76.71,,,,75
+3 reasoning model,gpt-4.1-mini,lex causal,PSEUDO,accuracy DR_k1,60.87,,,,75
+3 reasoning model,gpt-4.1-nano,lex causal,PSEUDO,accuracy RAW,62.67,,,,75
+3 reasoning model,gpt-4.1-nano,lex causal,PSEUDO,accuracy ORACLE,65.28,,,,75
+3 reasoning model,gpt-4.1-nano,lex causal,PSEUDO,accuracy DR_k1,73.33,,,,75
+3 reasoning model,R1 minus meta-llama/llama-3.3-70b-instruct,lex causal,PSEUDO,accuracy at RAW,7.06,0.0,15.29,0.0965,85
+3 reasoning model,R1 minus gpt-4.1,lex causal,PSEUDO,accuracy at RAW,7.14,-1.19,15.51,0.1335,84
+3 reasoning model,R1 minus gpt-4.1-mini,lex causal,PSEUDO,accuracy at RAW,4.65,-2.33,11.63,0.281,86
+3 reasoning model,R1 minus gpt-4.1-nano,lex causal,PSEUDO,accuracy at RAW,5.81,-4.65,16.28,0.319,86
+3 reasoning model,deepseek/deepseek-r1,lex causal,PSEUDO,ORACLE minus RAW,12.82,1.28,23.08,0.0335,78
+3 reasoning model,meta-llama/llama-3.3-70b-instruct,lex causal,PSEUDO,ORACLE minus RAW,10.81,0.0,21.62,0.065,74
+3 reasoning model,gpt-4.1,lex causal,PSEUDO,ORACLE minus RAW,10.53,0.0,22.37,0.071,76
+3 reasoning model,gpt-4.1-mini,lex causal,PSEUDO,ORACLE minus RAW,11.84,-1.32,25.0,0.0845,76
+3 reasoning model,gpt-4.1-nano,lex causal,PSEUDO,ORACLE minus RAW,2.7,-9.46,14.86,0.7525,74
+3 reasoning model,R1 minus gpt-4.1,lex causal,PSEUDO,ORACLE minus RAW,2.63,-11.84,15.79,0.797,76
+3 reasoning model,"R1, unparsed scored as wrong",lex causal,PSEUDO,ORACLE minus RAW,5.81,-5.81,17.44,0.356,86
+3 reasoning model,"R1, answer-field answers only",lex causal,PSEUDO,ORACLE minus RAW,5.71,-8.57,22.86,0.6035,35
+3 reasoning model,deepseek/deepseek-r1,lex causal,PSEUDO,DR_k1 minus RAW,-8.54,-19.51,1.22,0.1395,82
+3 reasoning model,meta-llama/llama-3.3-70b-instruct,lex causal,PSEUDO,DR_k1 minus RAW,6.33,-5.06,17.72,0.324,79
+3 reasoning model,gpt-4.1,lex causal,PSEUDO,DR_k1 minus RAW,-6.33,-16.46,3.8,0.309,79
+3 reasoning model,gpt-4.1-mini,lex causal,PSEUDO,DR_k1 minus RAW,-2.63,-14.47,9.21,0.732,76
+3 reasoning model,gpt-4.1-nano,lex causal,PSEUDO,DR_k1 minus RAW,9.76,-1.22,20.73,0.1125,82
+3 reasoning model,R1 minus gpt-4.1,lex causal,PSEUDO,DR_k1 minus RAW,-2.53,-13.92,8.86,0.7225,79
+3 reasoning model,"R1, unparsed scored as wrong",lex causal,PSEUDO,DR_k1 minus RAW,-12.79,-23.26,-2.33,0.0215,86
+3 reasoning model,"R1, answer-field answers only",lex causal,PSEUDO,DR_k1 minus RAW,-20.0,-37.14,-5.71,0.0125,35
+3 reasoning model,deepseek/deepseek-r1,lex causal,PSEUDO,ORACLE minus DR_k1,22.67,12.0,33.33,0.0005,75
+3 reasoning model,meta-llama/llama-3.3-70b-instruct,lex causal,PSEUDO,ORACLE minus DR_k1,5.63,-2.82,14.08,0.256,71
+3 reasoning model,gpt-4.1,lex causal,PSEUDO,ORACLE minus DR_k1,17.81,6.85,28.77,0.002,73
+3 reasoning model,gpt-4.1-mini,lex causal,PSEUDO,ORACLE minus DR_k1,14.93,1.49,28.36,0.036,67
+3 reasoning model,gpt-4.1-nano,lex causal,PSEUDO,ORACLE minus DR_k1,-9.72,-20.83,0.0,0.0885,72
+3 reasoning model,R1 minus gpt-4.1,lex causal,PSEUDO,ORACLE minus DR_k1,5.48,-8.22,19.18,0.497,73
+3 reasoning model,"R1, unparsed scored as wrong",lex causal,PSEUDO,ORACLE minus DR_k1,18.6,6.98,30.23,0.0005,86
+3 reasoning model,"R1, answer-field answers only",lex causal,PSEUDO,ORACLE minus DR_k1,25.71,11.43,40.0,0.0005,35
+3 reasoning model,deepseek/deepseek-r1,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",accuracy RAW,69.77,,,,86
+3 reasoning model,deepseek/deepseek-r1,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",accuracy ORACLE,84.88,,,,86
+3 reasoning model,deepseek/deepseek-r1,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",accuracy DR_k1,61.63,,,,86
+3 reasoning model,meta-llama/llama-3.3-70b-instruct,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",accuracy RAW,61.63,,,,86
+3 reasoning model,meta-llama/llama-3.3-70b-instruct,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",accuracy ORACLE,73.26,,,,86
+3 reasoning model,meta-llama/llama-3.3-70b-instruct,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",accuracy DR_k1,67.44,,,,86
+3 reasoning model,gpt-4.1,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",accuracy RAW,63.1,,,,86
+3 reasoning model,gpt-4.1,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",accuracy ORACLE,72.94,,,,86
+3 reasoning model,gpt-4.1,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",accuracy DR_k1,57.14,,,,86
+3 reasoning model,gpt-4.1-mini,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",accuracy RAW,65.12,,,,86
+3 reasoning model,gpt-4.1-mini,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",accuracy ORACLE,77.38,,,,86
+3 reasoning model,gpt-4.1-mini,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",accuracy DR_k1,61.25,,,,86
+3 reasoning model,gpt-4.1-nano,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",accuracy RAW,63.95,,,,86
+3 reasoning model,gpt-4.1-nano,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",accuracy ORACLE,65.85,,,,86
+3 reasoning model,gpt-4.1-nano,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",accuracy DR_k1,74.12,,,,86
+3 reasoning model,R1 minus meta-llama/llama-3.3-70b-instruct,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",accuracy at RAW,8.14,0.0,16.28,0.0595,86
+3 reasoning model,R1 minus gpt-4.1,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",accuracy at RAW,7.14,-1.19,15.51,0.1335,84
+3 reasoning model,R1 minus gpt-4.1-mini,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",accuracy at RAW,4.65,-2.33,11.63,0.281,86
+3 reasoning model,R1 minus gpt-4.1-nano,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",accuracy at RAW,5.81,-4.65,16.28,0.319,86
+3 reasoning model,deepseek/deepseek-r1,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",ORACLE minus RAW,15.12,4.65,25.58,0.007,86
+3 reasoning model,meta-llama/llama-3.3-70b-instruct,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",ORACLE minus RAW,11.63,1.16,22.09,0.036,86
+3 reasoning model,gpt-4.1,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",ORACLE minus RAW,10.71,0.0,21.43,0.061,84
+3 reasoning model,gpt-4.1-mini,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",ORACLE minus RAW,11.9,0.0,23.81,0.0535,84
+3 reasoning model,gpt-4.1-nano,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",ORACLE minus RAW,1.22,-9.76,12.2,0.8935,82
+3 reasoning model,R1 minus gpt-4.1,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",ORACLE minus RAW,4.76,-8.33,17.86,0.5535,84
+3 reasoning model,"R1, unparsed scored as wrong",lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",ORACLE minus RAW,15.12,4.65,25.58,0.005,86
+3 reasoning model,"R1, answer-field answers only",lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",ORACLE minus RAW,8.11,-8.11,24.32,0.388,37
+3 reasoning model,deepseek/deepseek-r1,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",DR_k1 minus RAW,-8.14,-18.6,1.16,0.12,86
+3 reasoning model,meta-llama/llama-3.3-70b-instruct,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",DR_k1 minus RAW,5.81,-4.65,16.28,0.345,86
+3 reasoning model,gpt-4.1,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",DR_k1 minus RAW,-6.02,-15.66,3.61,0.2885,83
+3 reasoning model,gpt-4.1-mini,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",DR_k1 minus RAW,-5.0,-17.5,6.25,0.471,80
+3 reasoning model,gpt-4.1-nano,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",DR_k1 minus RAW,9.41,-1.18,21.18,0.119,85
+3 reasoning model,R1 minus gpt-4.1,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",DR_k1 minus RAW,-2.41,-13.25,8.43,0.7505,83
+3 reasoning model,"R1, unparsed scored as wrong",lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",DR_k1 minus RAW,-8.14,-17.44,1.16,0.107,86
+3 reasoning model,"R1, answer-field answers only",lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",DR_k1 minus RAW,-20.0,-37.14,-5.71,0.0125,35
+3 reasoning model,deepseek/deepseek-r1,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",ORACLE minus DR_k1,23.26,12.79,33.72,0.0005,86
+3 reasoning model,meta-llama/llama-3.3-70b-instruct,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",ORACLE minus DR_k1,5.81,-1.16,13.95,0.1405,86
+3 reasoning model,gpt-4.1,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",ORACLE minus DR_k1,16.67,7.14,26.19,0.0015,84
+3 reasoning model,gpt-4.1-mini,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",ORACLE minus DR_k1,15.38,3.85,28.21,0.0105,78
+3 reasoning model,gpt-4.1-nano,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",ORACLE minus DR_k1,-9.76,-19.51,0.0,0.059,82
+3 reasoning model,R1 minus gpt-4.1,lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",ORACLE minus DR_k1,7.14,-4.76,19.05,0.295,84
+3 reasoning model,"R1, unparsed scored as wrong",lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",ORACLE minus DR_k1,23.26,13.95,33.72,0.0005,86
+3 reasoning model,"R1, answer-field answers only",lex causal,"PSEUDO, cut-offs re-asked at 16000 tokens",ORACLE minus DR_k1,27.03,13.51,43.24,0.0005,37
+4 ladder,Llama 3.3 70B,n600 causal,RAW,KEEP -> IRRELEVANT,17.02,11.35,22.7,0.0005,282
+4 ladder,Llama 3.3 70B,n600 causal,RAW,IRRELEVANT -> PERMUTE,-0.7,-4.9,3.5,0.8145,286
+4 ladder,Llama 3.3 70B,n600 causal,RAW,IRRELEVANT -> SYMBOL,-4.93,-9.51,-0.35,0.036,284
+4 ladder,Llama 3.3 70B,n600 causal,RAW,SYMBOL -> PSEUDO,7.72,3.51,11.94,0.0005,285
+4 ladder,Llama 3.3 70B,n600 causal,RAW,KEEP -> SYMBOL,12.9,7.17,18.64,0.0005,279
+4 ladder,Llama 3.3 70B,n600 causal,RAW,KEEP -> PSEUDO,20.36,14.29,26.07,0.0005,280
+4 ladder,Llama 3.3 70B,n600 causal,"RAW, cut-offs re-asked at 1500 tokens",KEEP -> IRRELEVANT,16.21,10.69,21.72,0.0005,290
+4 ladder,Llama 3.3 70B,n600 causal,"RAW, cut-offs re-asked at 1500 tokens",IRRELEVANT -> PERMUTE,-0.69,-4.83,3.45,0.794,290
+4 ladder,Llama 3.3 70B,n600 causal,"RAW, cut-offs re-asked at 1500 tokens",IRRELEVANT -> SYMBOL,-4.55,-8.74,0.0,0.0555,286
+4 ladder,Llama 3.3 70B,n600 causal,"RAW, cut-offs re-asked at 1500 tokens",SYMBOL -> PSEUDO,7.64,3.12,12.15,0.0005,288
+4 ladder,Llama 3.3 70B,n600 causal,"RAW, cut-offs re-asked at 1500 tokens",KEEP -> SYMBOL,12.15,6.94,17.71,0.0005,288
+4 ladder,Llama 3.3 70B,n600 causal,"RAW, cut-offs re-asked at 1500 tokens",KEEP -> PSEUDO,19.86,14.04,25.68,0.0005,292
