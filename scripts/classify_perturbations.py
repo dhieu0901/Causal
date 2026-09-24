@@ -702,9 +702,25 @@ def conditional_slope(C: pd.DataFrame, N: pd.DataFrame) -> None:
             d = d[(d.parsed == 1) & d.graph_id.isin(SEVEN)]
             M = pd.concat({k: paired_causal(d, f"DR_k{k}") for k in (1, 2, 3)}, axis=1).dropna()
             flag = cls[(cls.cond == "DR_k1") & (cls.lexicon == lex)].set_index("item").unchanged_qt
+            # Before conditioning: every item with all three k, harmless or not.
+            # The difference from the conditional slope below is how much the
+            # composition confound actually moves a slope in these data
+            # (review round 11, M11-1).
+            uncond = ((M[3] - M[1]) / 2).values
             M = M[flag.reindex(M.index).eq(False).values]
             slope = pd.Series(((M[3] - M[1]) / 2).values, index=maps[tag].reindex(M.index).values)
             step = (M[3] - M[2]).values
+            eu = boot(uncond)
+            print(f"  {lex:7s} {tag:9s} {'unconditional slope':24s} {eu[0]:+7.2f} "
+                  f"[{eu[1]:+7.2f} ; {eu[2]:+7.2f}]  p={eu[3]:.4f}  n={len(uncond)}")
+            rows.append(dict(lexicon=lex, sample=tag, quantity="unconditional slope",
+                             delta_pp=round(eu[0], 2), ci_lo=round(eu[1], 2),
+                             ci_hi=round(eu[2], 2), p_boot=round(eu[3], 4),
+                             n_items=len(uncond)))
+            ec = boot(slope.values)
+            rows.append(dict(lexicon=lex, sample=tag,
+                             quantity="composition effect (conditional minus unconditional slope)",
+                             delta_pp=round(ec[0] - eu[0], 2), n_items=len(slope)))
             per_sample[tag] = slope
             for what, x in (("slope per reversed edge", slope.values), ("k=2 to k=3 step", step)):
                 e, lo, hi, p = boot(x)
@@ -720,7 +736,11 @@ def conditional_slope(C: pd.DataFrame, N: pd.DataFrame) -> None:
         rows.append(dict(lexicon=lex, sample="pooled", quantity="slope per reversed edge",
                          delta_pp=round(e, 2), ci_lo=round(lo, 2), ci_hi=round(hi, 2),
                          p_boot=round(p, 4), n_items=len(pooled)))
-        a_, b_ = per_sample["n600"].values, per_sample["price400"].values
+        # Sorted by CLadder id: the bootstrap resamples POSITIONS, so without a
+        # fixed order the same seed gives a different interval in every script
+        # that rebuilds these vectors (check_consistency.py caught one).
+        a_ = per_sample["n600"].sort_index().values
+        b_ = per_sample["price400"].sort_index().values
         # The same two-sample bootstrap as analyze_prior_strength (src/stats.py).
         e, lo, hi, p = boot_two_sample(a_, b_, SEED, NBOOT)
         print(f"  {lex:7s} {'n600 - price400':24s}           {e:+7.2f} "
@@ -731,6 +751,46 @@ def conditional_slope(C: pd.DataFrame, N: pd.DataFrame) -> None:
                          p_boot=round(p, 4), n_items=len(a_) + len(b_)))
     pd.DataFrame(rows).to_csv(ROOT / "results" / "perturbation_conditional_slope.csv", index=False)
     print("  wrote results/perturbation_conditional_slope.csv")
+    validate_against_models(C, N)
+
+
+def validate_against_models(C: pd.DataFrame, N: pd.DataFrame) -> None:
+    """Section 5: does the estimand classification predict what the models do?
+
+    If a reversal that leaves the estimand intact is truly harmless, the model
+    given it should do as well as the model given the correct graph, on the
+    same items; where the estimand changes, worse. Paired within item, both
+    samples, both lexicons, seven families with k=3. Review round 11 (M11-2)
+    found the manuscript claiming this on one sample only.
+    """
+    print("\n" + "=" * 78)
+    print("5. THE CLASSIFICATION AGAINST THE MODELS: DR_k1 minus ORACLE, paired")
+    print("=" * 78 + "\n")
+    rows = []
+    for tag, cls, files in (("price400", C, ["pilot_raw_price400{}.csv"]),
+                            ("n600", N, ["pilot_raw_n600{}.csv"])):
+        for lex in ("KEEP", "PSEUDO"):
+            d = pd.concat([pd.read_csv(ROOT / "results" / f.format(lex)) for f in files])
+            d = d[(d.parsed == 1) & d.graph_id.isin(SEVEN)]
+            o, r_ = paired_causal(d, "ORACLE"), paired_causal(d, "DR_k1")
+            flag = cls[(cls.cond == "DR_k1") & (cls.lexicon == lex)].set_index("item").unchanged_qt
+            i = o.index.intersection(r_.index)
+            f_ = flag.reindex(i)
+            for label, mask in (("estimand unchanged", f_.eq(True).values),
+                                ("estimand changed", f_.eq(False).values)):
+                idx = i[mask]
+                for what, x in (("DR_k1 minus RAW", r_[idx].values),
+                                ("ORACLE minus RAW", o[idx].values),
+                                ("DR_k1 minus ORACLE", (r_[idx] - o[idx]).values)):
+                    e, lo, hi, p = boot(x)
+                    if what == "DR_k1 minus ORACLE":
+                        print(f"  {tag:9s} {lex:7s} {label:19s} {what:19s} {e:+7.2f} "
+                              f"[{lo:+7.2f} ; {hi:+7.2f}]  p={p:.4f}  n={len(x)}")
+                    rows.append(dict(sample=tag, lexicon=lex, subset=label, quantity=what,
+                                     delta_pp=round(e, 2), ci_lo=round(lo, 2),
+                                     ci_hi=round(hi, 2), p_boot=round(p, 4), n_items=len(x)))
+    pd.DataFrame(rows).to_csv(ROOT / "results" / "perturbation_validation.csv", index=False)
+    print("\n  wrote results/perturbation_validation.csv")
 
 
 if __name__ == "__main__":

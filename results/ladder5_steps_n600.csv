@@ -4,3 +4,4 @@ IRRELEVANT -> PERMUTE,handed a WRONG prior,-0.83,-4.49,2.7,0.6935,no,4.49,same r
 IRRELEVANT -> SYMBOL,real words -> bare symbols,-3.76,-6.78,-0.82,0.0155,yes,6.78,same run
 SYMBOL -> PSEUDO,bare symbols -> pseudowords,2.83,0.0,5.63,0.051,no,5.63,crosses runs
 KEEP -> PERMUTE,"the old rung 1, changes THREE things at once",13.88,9.52,18.29,0.0005,yes,18.29,crosses runs
+KEEP -> SYMBOL,"loses the correct prior, against a neutral baseline",10.93,7.17,14.89,0.0005,yes,14.89,crosses runs

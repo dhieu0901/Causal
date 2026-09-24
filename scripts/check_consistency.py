@@ -26,9 +26,13 @@ throughout. This file is the missing layer.
   4. SEEDS         the key and the borderline quantities re-bootstrapped under
                    five seeds; a verdict (interval excludes zero) that flips with
                    the seed is reported as BORDERLINE, to be quoted with its p
-                   range and never as either side of 0.05
+                   range and never as either side of 0.05. The first seed is
+                   the project seed, and there the result must equal the
+                   published CSV row exactly: the bootstrap resamples positions,
+                   so a script that orders the same items differently gets a
+                   different interval from the same seed (found 2026-09-24)
 
-Exit 1 on any failure in 1-3. Borderline verdicts are listed, not failed.
+Exit 1 on any failed check. Borderline verdicts are listed, not failed.
 Writes: results/seed_stability.csv
 """
 from __future__ import annotations
@@ -117,6 +121,18 @@ def agreement():
                 b = triple(rc[(rc.section == "3c direct contrast") & (rc["sample"] == t) & (rc.lexicon == lex)
                               & (rc.quantity == f"{arm} minus RAW")].iloc[0], "estimate_pp")
                 check(f"{t} {lex} {arm} minus RAW: analyze_vs_raw = measure_raw_leak s3", a == b, f"{a} {b}")
+    tr = pd.read_csv(RES / "vs_raw_trend.csv")
+    cs = pd.read_csv(RES / "perturbation_conditional_slope.csv")
+    for lex in ("KEEP", "PSEUDO"):
+        a = triple(tr[(tr.arm == "DR") & (tr.lexicon == lex)].iloc[0], "estimate")
+        b = triple(cs[(cs.lexicon == lex) & (cs["sample"] == "price400")
+                      & (cs.quantity == "unconditional slope")].iloc[0], "delta_pp")
+        check(f"price400 {lex} unconditional DR slope: analyze_vs_raw = classify_perturbations s4",
+              a == b, f"{a} {b}")
+        a = triple(s600[(s600.lexicon == lex) & (s600.cond == "DR slope")].iloc[0], "delta_pp")
+        b = triple(cs[(cs.lexicon == lex) & (cs["sample"] == "n600")
+                      & (cs.quantity == "unconditional slope")].iloc[0], "delta_pp")
+        check(f"n600 {lex} unconditional DR slope: classify s3 = classify s4", a == b, f"{a} {b}")
     a = triple(row("structure_arms.csv", quantity="PSEUDO branch, ORACLE minus DR_k1 | n600"), "estimate_pp")
     b = triple(row("structure_arms.csv", quantity="PSEUDO | ORACLE minus DR_k1 | n600"), "estimate_pp")
     check("n600 PSEUDO ORACLE minus DR_k1: structure_arms s4b = s6", a == b, f"{a} {b}")
@@ -386,13 +402,42 @@ def seeds():
         x = pd.concat(parts).groupby(level=0).mean().values
         q[f"conditional slope, pooled, {lex}"] = lambda s, x=x: boot_items(x, s, NBOOT)
         # parts[0] is price400, parts[1] n600: the two-sample difference of section 4
-        a_, b_ = parts[1].values, parts[0].values
+        a_, b_ = parts[1].sort_index().values, parts[0].sort_index().values
         q[f"conditional slope, n600 minus price400, {lex}"] = (
             lambda s, a_=a_, b_=b_: boot_two_sample(a_, b_, s, NBOOT))
+
+    published = {
+        "headline DiD (RAW)": ("pooled_headline.csv", "did_pp", {"pooling": "item level, de-duplicated"}),
+        "headline DiD, RAW_CLEAN, no det-cf": ("raw_clean.csv", "estimate_pp",
+                                               {"quantity": "RAW_CLEAN, drop det-counterfactual"}),
+        "n600 PSEUDO ORACLE minus NAMES_ONLY": ("structure_arms.csv", "estimate_pp",
+                                                {"quantity": "PSEUDO | ORACLE minus NAMES_ONLY | n600"}),
+        "n600 PSEUDO NAMES_ONLY minus RAW": ("structure_arms.csv", "estimate_pp",
+                                             {"quantity": "PSEUDO | NAMES_ONLY minus RAW | n600"}),
+        "n600 KEEP SCRAMBLE minus NAMES_ONLY": ("structure_arms.csv", "estimate_pp",
+                                                {"quantity": "KEEP | SCRAMBLE minus NAMES_ONLY | n600"}),
+        "n600 KEEP DR_k3 minus DR_k2": ("structure_arms.csv", "estimate_pp",
+                                        {"quantity": "KEEP | DR_k3 minus DR_k2 | n600"}),
+    }
+    for lex in ("KEEP", "PSEUDO"):
+        published[f"conditional slope, pooled, {lex}"] = (
+            "perturbation_conditional_slope.csv", "delta_pp",
+            {"lexicon": lex, "sample": "pooled", "quantity": "slope per reversed edge"})
+        published[f"conditional slope, n600 minus price400, {lex}"] = (
+            "perturbation_conditional_slope.csv", "delta_pp",
+            {"lexicon": lex, "sample": "n600 minus price400"})
+    for hi_, lo_ in (("KEEP", "IRRELEVANT"), ("IRRELEVANT", "PERMUTE"), ("IRRELEVANT", "SYMBOL")):
+        published[f"n600 ladder {hi_} -> {lo_}"] = ("ladder5_steps_n600.csv", "delta_pp",
+                                                    {"step": f"{hi_} -> {lo_}"})
 
     rows = []
     for label, fn in q.items():
         res = [fn(s) for s in SEEDS]
+        if label in published:
+            f, col, sel = published[label]
+            got = (round(float(res[0][0]), 2), round(float(res[0][1]), 2), round(float(res[0][2]), 2))
+            check(f"{label}: at the project seed it equals {f}", got == triple(row(f, **sel), col),
+                  f"{got} {triple(row(f, **sel), col)}")
         est = {round(r[0], 2) for r in res}
         los, his, ps = [r[1] for r in res], [r[2] for r in res], [r[3] for r in res]
         excl = {(lo > 0 or hi < 0) for lo, hi in zip(los, his)}

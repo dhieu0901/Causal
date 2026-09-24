@@ -62,6 +62,11 @@ STEPS = [
     ("IRRELEVANT -> SYMBOL", "IRRELEVANT", "SYMBOL", "real words -> bare symbols"),
     ("SYMBOL -> PSEUDO", "SYMBOL", "PSEUDO", "bare symbols -> pseudowords"),
     ("KEEP -> PERMUTE", "KEEP", "PERMUTE", "the old rung 1, changes THREE things at once"),
+    # IRRELEVANT was meant to hold word realness fixed, and on n600 unrelated real
+    # words turned out to cost accuracy against bare symbols. So the correct
+    # prior's own worth is also measured against the neutral baseline: symbols.
+    # Review round 11, D11-1.
+    ("KEEP -> SYMBOL", "KEEP", "SYMBOL", "loses the correct prior, against a neutral baseline"),
 ]
 
 
@@ -218,7 +223,41 @@ def run(a, sample):
             print("  gone on both sides, whether the words are real no longer matters -")
             print("  which supports the claim that what was lost is KNOWLEDGE, not")
             print("  familiarity of surface form.")
+    if a.sample == "n600":
+        length_check(D, causal)
     print(f"\n  Wrote: results/ladder5_accuracy{sfx}.csv, results/ladder5_steps{sfx}.csv")
+
+
+def length_check(D, causal):
+    """Is the IRRELEVANT-against-SYMBOL gap a prompt-length effect?
+
+    Household nouns are longer than single letters, and longer prompts do worse
+    within cells (analyze_falsification.py). If length drove the gap, items
+    where IRRELEVANT adds more characters should lose more accuracy. Review
+    round 11 (D11-1) asked for this before the gap is read as a word effect.
+    """
+    from pilot import make_items, build_jobs
+    items = make_items(600, 20260907, 1, "full_v1.5_default.csv", None, True)
+    lens = {}
+    for lex in ("IRRELEVANT", "SYMBOL"):
+        jobs = [j for j in build_jobs(items, 1, 20260907, ("DR",), lex) if j["cond"] == "RAW"]
+        lens[lex] = pd.Series({j["item"]: len(j["prompt"]) for j in jobs})
+    gap_len = (lens["IRRELEVANT"] - lens["SYMBOL"]).dropna()
+    acc = {}
+    for lex in ("IRRELEVANT", "SYMBOL"):
+        x = D[lex]
+        x = x[(x.cond == "RAW") & (x.parsed == 1)]
+        if causal:
+            x = x[~x.query_type.isin(ARITH | IDENT)]
+        acc[lex] = x.groupby("item").correct.mean()
+    gap_acc = (acc["IRRELEVANT"] - acc["SYMBOL"]).dropna()
+    j = gap_acc.index.intersection(gap_len.index)
+    r = float(np.corrcoef(gap_len[j], gap_acc[j])[0, 1])
+    print(f"\n  Length: IRRELEVANT prompts are {gap_len[j].mean():.1f} characters longer on "
+          f"average; across {len(j)} items corr(length gap, accuracy gap) = {r:+.3f}")
+    pd.DataFrame([{"items": len(j), "mean_extra_chars": round(gap_len[j].mean(), 1),
+                   "corr_length_gap_accuracy_gap": round(r, 3)}]).to_csv(
+        ROOT / "results" / "ladder5_length_n600.csv", index=False)
 
 
 if __name__ == "__main__":
