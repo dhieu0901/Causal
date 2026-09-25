@@ -251,7 +251,7 @@ def prose_graph(prompt: str) -> list[tuple[str, str]]:
 
 def classify(n_items=N_ITEMS, sample_kmax=KMAX, kmax=KMAX, arms=("DR", "ED", "FE"),
              lexicons=("KEEP", "PSEUDO"), scramble=False, seed=SEED,
-             exclude_ids=None, keep_shown=False) -> pd.DataFrame:
+             exclude_ids=None, keep_shown=False, query_types=None) -> pd.DataFrame:
     """Classify the perturbation each item was SHOWN, per lexicon.
 
     Until 2026-09-24 this replayed the draw over the canonical SYMBOL graph,
@@ -281,9 +281,10 @@ def classify(n_items=N_ITEMS, sample_kmax=KMAX, kmax=KMAX, arms=("DR", "ED", "FE
     # sample being replayed; the defaults are the exploratory samples'.
     # keep_shown adds `shown_sym`, the graph shown in symbols under every name
     # mapping that fits (analyze_answer_change.py needs it); off by default so
-    # the files written here keep their columns.
+    # the files written here keep their columns. `query_types` is the pilot.py
+    # --query-types of the sample (B6 draws ate and ett only).
     items = make_items(n_items, seed, sample_kmax, "full_v1.5_default.csv", None, True,
-                       exclude_ids)
+                       exclude_ids, query_types)
     canon = canonical_structures()
     agree, missing = check_canonical(items, canon)
     maps = meta_mappings()

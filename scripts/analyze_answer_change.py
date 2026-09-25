@@ -244,9 +244,10 @@ def draws_for(tag, M, kw=None, lexicons=("KEEP", "PSEUDO")):
     entry in SAMPLES; analyze_r1_chains.py passes the lex sample's."""
     kw = kw or SAMPLES[tag][0]
     items = make_items(kw["n_items"], kw["seed"], kw["sample_kmax"], "full_v1.5_default.csv",
-                       None, True, kw["exclude_ids"])
+                       None, True, kw["exclude_ids"], kw.get("query_types"))
     C = classify(kw["n_items"], kw["sample_kmax"], kw["kmax"], arms=("DR",), seed=kw["seed"],
-                 exclude_ids=kw["exclude_ids"], lexicons=lexicons, keep_shown=True)
+                 exclude_ids=kw["exclude_ids"], lexicons=lexicons, keep_shown=True,
+                 query_types=kw.get("query_types"))
     C = C[C.query_type.isin(TYPES)].reset_index(drop=True)
     check_replay(C)
     canon = __import__("classify_perturbations").canonical_structures()
@@ -387,11 +388,25 @@ def main() -> int:
     # second. `gold`: a shown graph that cuts the path always implies No, so a
     # model that merely says No more often under any odd graph would look the
     # same; the Yes items whose estimand is kept are the check on that.
+    # "both": one value per draw, the mean of its KEEP and PSEUDO harms. A
+    # draw's group is the same under both lexicons (checked here), so pooling
+    # them doubles the answers behind each draw without mixing groups. This is
+    # the unit of the pre-registered B6 tests (prereg/B6.md).
+    g2 = D.pivot_table(index=["sample", "item", "cond"], columns="lexicon",
+                       values="group", aggfunc="first")
+    if (g2["KEEP"] != g2["PSEUDO"]).any():
+        raise SystemExit("a draw falls in different groups under KEEP and PSEUDO")
+    keys = ["sample", "item", "cond"]
+    both = (D.groupby(keys)[["vs_ORACLE", "vs_RAW"]].mean()
+            .join(D[D.lexicon == "KEEP"].set_index(keys)[["group", "route", "gold"]])
+            .reset_index().assign(lexicon="both"))
+    D = pd.concat([D, both], ignore_index=True)
+
     rows = []
     splits = [(c, "all", "all") for c in ("all", "DR_k1", "DR_k2", "DR_k3")]
     splits += [("all", rt, gd) for rt in ("no path", "backdoor") for gd in ("all", "yes", "no")]
     splits += [("all", "all", gd) for gd in ("yes", "no")]
-    for lex in ("KEEP", "PSEUDO"):
+    for lex in ("KEEP", "PSEUDO", "both"):
         for g in GROUPS[:3]:
             for cond, route, gold in splits:
                 x = D[(D.lexicon == lex) & (D.group == g) & D.vs_ORACLE.notna()]

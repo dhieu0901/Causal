@@ -108,7 +108,14 @@ def list_nodes(edges, var_names: dict[str, str] | None = None) -> str:
 
 
 def build(prompt: str, condition: str, edges=None, var_names=None) -> str:
-    """condition: RAW | RAW_CLEAN | RAW_INSTR | NAMES_ONLY | ORACLE | PERTURB (edges) | PROSE.
+    """condition: RAW | RAW_CLEAN | RAW_INSTR | NAMES_ONLY | ORACLE | PERTURB (edges) | PROSE,
+    and ORACLE_NI | PERTURB_NI.
+
+    ORACLE_NI and PERTURB_NI are ORACLE and PERTURB with the closing line "Use
+    this causal structure when reasoning." left out, and nothing else changed
+    (prereg/B6.md). Every graph block of every earlier phase carried that line,
+    so a model that follows a wrong graph might be obeying the instruction rather
+    than relying on the graph; the pair separates the two.
 
     NAMES_ONLY is the matched control for ORACLE. ORACLE adds FOUR things at
     once: a block of text in a fixed position, the variable names restated, THE
@@ -171,7 +178,9 @@ def build(prompt: str, condition: str, edges=None, var_names=None) -> str:
     else:
         body = describe_graph(edges, var_names)
         head = "The causal structure of this world is:"
-    block = f"\n\n{head}\n{body}\nUse this causal structure when reasoning."
+    block = f"\n\n{head}\n{body}"
+    if condition not in ("ORACLE_NI", "PERTURB_NI"):
+        block += "\nUse this causal structure when reasoning."
     return stripped + block + ANSWER_RULE
 
 

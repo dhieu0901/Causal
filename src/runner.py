@@ -162,6 +162,20 @@ def _openrouter_fields(r):
             "reasoning": extra.get("reasoning") or ""}
 
 
+# What the OpenAI API says when the account behind a key has no credit left.
+# Retrying cannot help, and on 2026-09-25 a run that kept retrying spent twenty
+# minutes sending calls that all failed this way. call() gives up at once and
+# run_batch stops sending; the caller can switch keys (OPENAI_KEY_VAR).
+OUT_OF_CREDIT = ("insufficient_quota", "exceeded your current quota",
+                 "credit_balance", "billing_hard_limit")
+OUT_OF_CREDIT_TAG = "OUT OF CREDIT"
+
+
+def out_of_credit(msg: str) -> bool:
+    m = (msg or "").lower()
+    return OUT_OF_CREDIT_TAG.lower() in m or any(x in m for x in OUT_OF_CREDIT)
+
+
 def call(client, model, prompt, temperature=0.0, max_tokens=700, retries=4,
          cache=None):
     """One completion, cached. Returns dict with text and usage.
@@ -221,6 +235,9 @@ def call(client, model, prompt, temperature=0.0, max_tokens=700, retries=4,
         except Exception as e:                       # rate limits, transient 5xx
             last = e
             msg = str(e)
+            if out_of_credit(msg):
+                last = f"{OUT_OF_CREDIT_TAG}: {msg}"
+                break
             if "temperature" in msg and "unsupported" in msg.lower():
                 temperature = 1.0                    # some models fix temperature
                 continue
@@ -246,7 +263,14 @@ def make_client(model):
     if "/" in model:
         raise SystemExit(f"{model}: an OpenRouter model must be pinned to one provider "
                          f"in runner.OPENROUTER before it is run")
-    return OpenAI()
+    # OPENAI_KEY_VAR names the .env variable that holds the key, so a run can
+    # move to a second account without the key ever being typed or printed.
+    var = os.environ.get("OPENAI_KEY_VAR", "OPENAI_API_KEY")
+    key = os.environ.get(var, "")
+    if not key:
+        raise SystemExit(f"{var} is not set. Add it to .env from your own terminal; "
+                         "never paste a key into a chat.")
+    return OpenAI(api_key=key)
 
 
 def billed_usd(model, r) -> float:
@@ -280,7 +304,7 @@ def run_batch(jobs, model, temperature=0.0, workers=16, max_tokens=700, on_tick=
     """
     client = make_client(model)
     prompts = list(dict.fromkeys(j["prompt"] for j in jobs))
-    done, spent = [0], [0.0]
+    done, spent, broke = [0], [0.0], [False]
 
     def one(p):
         if max_usd is not None and spent[0] >= max_usd and \
@@ -288,9 +312,15 @@ def run_batch(jobs, model, temperature=0.0, workers=16, max_tokens=700, on_tick=
             return p, {"text": "", "in_tok": 0, "out_tok": 0, "model": model,
                        "cached": False, "ok": False,
                        "error": f"not sent: this batch reached its {max_usd} USD cap"}
+        if broke[0] and read_cached(model, temperature, p, cache, max_tokens) is None:
+            return p, {"text": "", "in_tok": 0, "out_tok": 0, "model": model,
+                       "cached": False, "ok": False,
+                       "error": f"not sent: {OUT_OF_CREDIT_TAG} on this key"}
         r = call(client, model, p, temperature, max_tokens, cache=cache)
         with _lock:
             done[0] += 1
+            if out_of_credit(r.get("error", "")):
+                broke[0] = True
             if not r.get("cached"):
                 spent[0] += billed_usd(model, r)
             if on_tick and done[0] % 25 == 0:

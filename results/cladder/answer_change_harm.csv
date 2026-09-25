@@ -115,3 +115,61 @@ PSEUDO,answer changed,all,all,yes,ORACLE,-26.06,-30.57,-21.3,0.0005,0.0005,0.000
 PSEUDO,answer changed,all,all,yes,RAW,-8.64,-12.93,-4.42,0.0005,0.0005,0.0005,517,261
 PSEUDO,answer changed,all,all,no,ORACLE,8.62,1.75,16.94,0.0095,0.0075,0.011,58,47
 PSEUDO,answer changed,all,all,no,RAW,7.47,0.88,14.08,0.0295,0.0225,0.0295,58,47
+both,estimand kept,all,all,all,ORACLE,0.85,-1.93,3.63,0.543,0.5385,0.5525,108,108
+both,estimand kept,all,all,all,RAW,2.31,-1.85,6.56,0.279,0.279,0.302,108,108
+both,estimand kept,DR_k1,all,all,ORACLE,0.85,-1.93,3.63,0.543,0.5385,0.5525,108,108
+both,estimand kept,DR_k1,all,all,RAW,2.31,-1.85,6.56,0.279,0.279,0.302,108,108
+both,estimand kept,all,backdoor,all,ORACLE,0.85,-1.93,3.63,0.543,0.5385,0.5525,108,108
+both,estimand kept,all,backdoor,all,RAW,2.31,-1.85,6.56,0.279,0.279,0.302,108,108
+both,estimand kept,all,backdoor,yes,ORACLE,2.61,-1.96,7.03,0.2595,0.237,0.2645,51,51
+both,estimand kept,all,backdoor,yes,RAW,13.73,8.5,19.28,0.0005,0.0005,0.0005,51,51
+both,estimand kept,all,backdoor,no,ORACLE,-0.73,-4.09,2.49,0.6775,0.652,0.6975,57,57
+both,estimand kept,all,backdoor,no,RAW,-7.89,-13.45,-2.63,0.003,0.0015,0.003,57,57
+both,estimand kept,all,all,yes,ORACLE,2.61,-1.96,7.03,0.2595,0.237,0.2645,51,51
+both,estimand kept,all,all,yes,RAW,13.73,8.5,19.28,0.0005,0.0005,0.0005,51,51
+both,estimand kept,all,all,no,ORACLE,-0.73,-4.09,2.49,0.6775,0.652,0.6975,57,57
+both,estimand kept,all,all,no,RAW,-7.89,-13.45,-2.63,0.003,0.0015,0.003,57,57
+both,"estimand changed, answer kept",all,all,all,ORACLE,1.19,-0.31,2.74,0.1255,0.119,0.1295,829,405
+both,"estimand changed, answer kept",all,all,all,RAW,2.53,0.69,4.42,0.0065,0.006,0.008,829,405
+both,"estimand changed, answer kept",DR_k1,all,all,ORACLE,-1.03,-3.11,1.12,0.3445,0.327,0.346,268,268
+both,"estimand changed, answer kept",DR_k1,all,all,RAW,3.2,0.62,5.72,0.0165,0.011,0.021,268,268
+both,"estimand changed, answer kept",DR_k2,all,all,ORACLE,0.7,-1.32,2.72,0.499,0.498,0.5125,309,309
+both,"estimand changed, answer kept",DR_k2,all,all,RAW,0.97,-1.48,3.34,0.4015,0.4015,0.443,309,309
+both,"estimand changed, answer kept",DR_k3,all,all,ORACLE,4.13,1.79,6.58,0.0005,0.0005,0.0015,252,252
+both,"estimand changed, answer kept",DR_k3,all,all,RAW,3.74,1.39,6.22,0.0005,0.0005,0.004,252,252
+both,"estimand changed, answer kept",all,no path,all,ORACLE,3.11,1.07,5.09,0.0025,0.002,0.0035,477,256
+both,"estimand changed, answer kept",all,no path,all,RAW,1.52,-0.3,3.44,0.1125,0.108,0.122,477,256
+both,"estimand changed, answer kept",all,no path,no,ORACLE,3.11,1.07,5.09,0.0025,0.002,0.0035,477,256
+both,"estimand changed, answer kept",all,no path,no,RAW,1.52,-0.3,3.44,0.1125,0.108,0.122,477,256
+both,"estimand changed, answer kept",all,backdoor,all,ORACLE,-1.42,-3.48,0.63,0.1805,0.163,0.188,352,250
+both,"estimand changed, answer kept",all,backdoor,all,RAW,3.91,0.5,7.31,0.0235,0.0195,0.0265,352,250
+both,"estimand changed, answer kept",all,backdoor,yes,ORACLE,-1.79,-4.73,1.06,0.2245,0.2195,0.238,195,136
+both,"estimand changed, answer kept",all,backdoor,yes,RAW,13.08,8.6,17.47,0.0005,0.0005,0.0005,195,136
+both,"estimand changed, answer kept",all,backdoor,no,ORACLE,-0.96,-3.87,1.88,0.5145,0.5135,0.5305,157,114
+both,"estimand changed, answer kept",all,backdoor,no,RAW,-7.48,-11.48,-3.7,0.0005,0.0005,0.0005,157,114
+both,"estimand changed, answer kept",all,all,yes,ORACLE,-1.79,-4.73,1.06,0.2245,0.2195,0.238,195,136
+both,"estimand changed, answer kept",all,all,yes,RAW,13.08,8.6,17.47,0.0005,0.0005,0.0005,195,136
+both,"estimand changed, answer kept",all,all,no,ORACLE,2.1,0.37,3.86,0.0155,0.0155,0.023,634,269
+both,"estimand changed, answer kept",all,all,no,RAW,-0.71,-2.55,1.12,0.4555,0.434,0.4875,634,269
+both,answer changed,all,all,all,ORACLE,-23.25,-26.84,-19.83,0.0005,0.0005,0.0005,581,310
+both,answer changed,all,all,all,RAW,-16.44,-19.79,-13.08,0.0005,0.0005,0.0005,581,310
+both,answer changed,DR_k1,all,all,ORACLE,-15.48,-20.45,-10.3,0.0005,0.0005,0.0005,161,161
+both,answer changed,DR_k1,all,all,RAW,-9.89,-14.65,-5.02,0.0005,0.0005,0.0005,161,161
+both,answer changed,DR_k2,all,all,ORACLE,-25.21,-29.36,-21.21,0.0005,0.0005,0.0005,233,233
+both,answer changed,DR_k2,all,all,RAW,-16.92,-20.85,-13.09,0.0005,0.0005,0.0005,233,233
+both,answer changed,DR_k3,all,all,ORACLE,-27.5,-32.0,-22.86,0.0005,0.0005,0.0005,187,187
+both,answer changed,DR_k3,all,all,RAW,-21.48,-25.67,-17.29,0.0005,0.0005,0.0005,187,187
+both,answer changed,all,no path,all,ORACLE,-29.61,-33.62,-25.8,0.0005,0.0005,0.0005,461,260
+both,answer changed,all,no path,all,RAW,-21.29,-24.93,-17.6,0.0005,0.0005,0.0005,461,260
+both,answer changed,all,no path,yes,ORACLE,-29.61,-33.62,-25.8,0.0005,0.0005,0.0005,461,260
+both,answer changed,all,no path,yes,RAW,-21.29,-24.93,-17.6,0.0005,0.0005,0.0005,461,260
+both,answer changed,all,backdoor,all,ORACLE,1.18,-2.48,5.44,0.5545,0.551,0.5755,120,96
+both,answer changed,all,backdoor,all,RAW,2.22,-2.31,6.81,0.337,0.3365,0.3605,120,96
+both,answer changed,all,backdoor,yes,ORACLE,-3.53,-9.09,2.36,0.225,0.225,0.2445,59,47
+both,answer changed,all,backdoor,yes,RAW,-3.81,-10.88,3.57,0.303,0.2895,0.303,59,47
+both,answer changed,all,backdoor,no,ORACLE,5.74,1.45,11.72,0.0045,0.0035,0.0065,61,49
+both,answer changed,all,backdoor,no,RAW,8.06,2.63,13.8,0.002,0.001,0.003,61,49
+both,answer changed,all,all,yes,ORACLE,-26.65,-30.34,-23.01,0.0005,0.0005,0.0005,520,261
+both,answer changed,all,all,yes,RAW,-19.31,-22.8,-15.76,0.0005,0.0005,0.0005,520,261
+both,answer changed,all,all,no,ORACLE,5.74,1.45,11.72,0.0045,0.0035,0.0065,61,49
+both,answer changed,all,all,no,RAW,8.06,2.63,13.8,0.002,0.001,0.003,61,49

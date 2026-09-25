@@ -3,6 +3,7 @@
     python scripts/analyze_calm_direction.py
     python scripts/analyze_calm_direction.py --dump 60    # a blind sheet for hand coding
     python scripts/analyze_calm_direction.py --score      # score the filled sheet
+    python scripts/analyze_calm_direction.py --dump-unrelated   # second sheet (task 2.2c)
 
 The pre-registered test C3 (prereg/CALM.md) predicted that real names beat
 pseudowords when no graph is given. On CaLM it ran the other way for both
@@ -45,7 +46,7 @@ unrelated" resamples stories once and takes both means from the same draw,
 because a story can hold items of both classes.
 
 Writes: results/calm/calm_direction.csv
-        results/calm/calm_direction_hand.csv, once the sheet is filled
+        results/calm/calm_direction_hand.csv, once a sheet is filled
 """
 from __future__ import annotations
 
@@ -67,6 +68,10 @@ from stats import boot_p, cluster_boot
 
 OUT = ROOT / "results" / "calm"
 SHEET = OUT / "direction_sample_for_hand_coding.csv"
+# Task 2.2c: every graph-unrelated pair the first sheet did not hold, so that the
+# no-path items whose pair the real world runs forward are numerous enough to
+# compare. Read together with the first sheet.
+SHEET2 = OUT / "direction_sample_for_hand_coding_2.csv"
 CLASSES = ["forward", "reverse", "unrelated"]
 
 
@@ -201,12 +206,29 @@ def dump(C, n):
 
 
 def read_sheet():
-    if not SHEET.exists():
+    parts = [pd.read_csv(f, encoding="utf-8-sig", dtype=str).fillna("")
+             for f in (SHEET, SHEET2) if f.exists()]
+    if not parts:
         return None
-    S = pd.read_csv(SHEET, encoding="utf-8-sig", dtype=str).fillna("")
+    S = pd.concat(parts, ignore_index=True)
     S["your_code"] = S.your_code.str.strip().str.lower()
     S = S[S.your_code.isin(CLASSES)]
     return S if len(S) else None
+
+
+def dump_unrelated(C):
+    """Every graph-unrelated (treatment, outcome) pair not on the first sheet, shuffled."""
+    first = pd.read_csv(SHEET, encoding="utf-8-sig", dtype=str)
+    done = set(zip(first.treatment, first.outcome))
+    pool = C[C.direction == "unrelated"].drop_duplicates(["treatment", "outcome"])
+    pool = pool[[(t, o) not in done for t, o in zip(pool.treatment, pool.outcome)]]
+    pick = list(pool.item)
+    random.Random(20260926).shuffle(pick)
+    S = C.set_index("item").loc[pick, ["treatment", "outcome"]].reset_index()
+    S["your_code"] = ""
+    S["note"] = ""
+    S.to_csv(SHEET2, index=False, encoding="utf-8-sig")
+    print(f"  wrote {len(S)} pairs to {SHEET2.relative_to(ROOT)}")
 
 
 def score(C):
@@ -266,10 +288,14 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dump", type=int, default=0)
     ap.add_argument("--score", action="store_true")
+    ap.add_argument("--dump-unrelated", action="store_true", dest="dump_unrelated")
     a = ap.parse_args()
     C = classify()
     if a.dump:
         dump(C, a.dump)
+        return 0
+    if a.dump_unrelated:
+        dump_unrelated(C)
         return 0
     if a.score:
         score(C)

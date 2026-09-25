@@ -26,7 +26,7 @@ from stats import mcnemar_exact_p
 
 
 def make_items(n, seed, kmax=3, data="full_v1.5_default.csv", pair_to=None,
-               drop_nonsense=False, exclude_ids=None):
+               drop_nonsense=False, exclude_ids=None, query_types=None):
     """Draw a stratified item sample.
 
     `data` should stay `full_v1.5_default.csv`. CLadder also ships six
@@ -54,6 +54,10 @@ def make_items(n, seed, kmax=3, data="full_v1.5_default.csv", pair_to=None,
     was seen in the exploratory phase. The list is read from a frozen file, not
     from results/, so the draw stays the same after the confirmatory records
     themselves land in results/.
+
+    `query_types` keeps only those CLadder query types before the draw. B6
+    (prereg/B6.md) draws `ate` and `ett` only, the two types whose answer under
+    a wrong graph scripts/analyze_answer_change.py can compute.
     """
     d = pd.read_csv(ROOT / "data" / "cladder" / data)
 
@@ -74,6 +78,8 @@ def make_items(n, seed, kmax=3, data="full_v1.5_default.csv", pair_to=None,
         d = d[~d.story_id.astype(str).str.startswith("nonsense")]
     if exclude_ids is not None:
         d = d[~d.id.isin(set(exclude_ids))]
+    if query_types is not None:
+        d = d[d.query_type.isin(set(query_types))]
     fams = [f for f in FAMILY_STRUCTURE if max_k(f, "DR") >= kmax]
     d = d[d.graph_id.isin(fams)].reset_index(drop=True)
 
@@ -109,7 +115,7 @@ def read_ids(path) -> set[int]:
 
 def build_jobs(items, kmax=3, seed=0, types=("DR",), lexicon="KEEP",
                drop_residue=False, with_instr=False, with_names=False,
-               with_scramble=False, with_clean_raw=False):
+               with_scramble=False, with_clean_raw=False, with_noinstr=False):
     """Every graph is built over the story's own variable names.
 
     Using the symbol DAG (X -> V2 -> Y) beside a body about husbands and wives
@@ -171,6 +177,12 @@ def build_jobs(items, kmax=3, seed=0, types=("DR",), lexicon="KEEP",
             # to RAW, and so free, on every family that has no latent.
             jobs.append(dict(cond="RAW_CLEAN", prompt=build(prompt, "RAW_CLEAN"), **meta))
         jobs.append(dict(cond="ORACLE", prompt=build(prompt, "ORACLE", edges), **meta))
+        if with_noinstr:
+            # B6: the same block without "Use this causal structure when
+            # reasoning." Opt-in; the perturbed twins are added below with the
+            # very draw their instructed version uses.
+            jobs.append(dict(cond="ORACLE_NI", prompt=build(prompt, "ORACLE_NI", edges),
+                             **meta))
         if with_instr:
             # Opt-in: it adds a paid call per item and no existing analysis
             # reads it. See src/prompts.py for what the condition separates.
@@ -201,6 +213,9 @@ def build_jobs(items, kmax=3, seed=0, types=("DR",), lexicon="KEEP",
                 bad = random.Random(f"{seed}:{i}:{t}:{k}").choice(opts)
                 jobs.append(dict(cond=f"{t}_k{k}",
                                  prompt=build(prompt, "PERTURB", bad), **meta))
+                if with_noinstr:
+                    jobs.append(dict(cond=f"{t}_k{k}_NI",
+                                     prompt=build(prompt, "PERTURB_NI", bad), **meta))
     if unrelabelled:
         print(f"    [lexicon {lexicon}] dropped {unrelabelled} items that could not be "
               f"fully relabelled")
@@ -284,6 +299,11 @@ def main():
                          "cap cut off, with this larger cap, and write those rows "
                          "to pilot_raw{tag}_recap{N}.csv. A sensitivity check; the "
                          "main file is unchanged")
+    ap.add_argument("--query-types", default="", dest="query_types",
+                    help="draw only these CLadder query types, e.g. ate,ett (B6)")
+    ap.add_argument("--no-instr", action="store_true", dest="with_noinstr",
+                    help="also send ORACLE and every perturbation without the line "
+                         "'Use this causal structure when reasoning.' (B6)")
     ap.add_argument("--workers", type=int, default=16,
                     help="concurrent calls. Lower it when two runs share one "
                          "OpenRouter provider, which rate-limits (429) under load")
@@ -294,13 +314,14 @@ def main():
     a = ap.parse_args()
 
     sample_kmax = a.kmax if a.sample_kmax is None else a.sample_kmax
+    qtypes = [q.strip() for q in a.query_types.split(",") if q.strip()] or None
     items = make_items(a.n, a.seed, sample_kmax, a.data, a.pair_to, a.drop_nonsense,
-                       read_ids(a.exclude_ids) if a.exclude_ids else None)
+                       read_ids(a.exclude_ids) if a.exclude_ids else None, qtypes)
     jobs = build_jobs(items, a.kmax, a.seed,
                       tuple(t.strip() for t in a.types.split(",")), a.lexicon,
                       drop_residue=a.drop_residue, with_instr=a.with_instr,
                       with_names=a.with_names, with_scramble=a.with_scramble,
-                      with_clean_raw=a.with_clean_raw)
+                      with_clean_raw=a.with_clean_raw, with_noinstr=a.with_noinstr)
     if a.conds:
         keep = {c.strip() for c in a.conds.split(",") if c.strip()}
         unknown = keep - {j["cond"] for j in jobs}
