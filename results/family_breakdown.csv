@@ -16,3 +16,9 @@ slice,section,family,n_nodes,n_edges,arm,suspect_labels,estimate_pp,ci_lo,ci_hi,
 3 nodes (5 families),3,chain+collision+confounding+fork+mediation,3,,ORACLE,False,4.51,-1.99,11.3,0.1835,220,False
 4 nodes (5 families),3,IV+arrowhead+diamond+diamondcut+frontdoor,4,,ORACLE,True,7.02,1.52,12.56,0.016,270,False
 "4 nodes, without arrowhead",4,IV+diamond+diamondcut+frontdoor,4,,ORACLE,False,9.61,4.41,15.16,0.001,230,not in correction family
+all families except arrowhead,6,all but arrowhead,,,ORACLE,False,7.24,3.04,11.28,0.0005,450,not in correction family
+edge-count slices differ (permutation),7,,,,ORACLE,False,,,,0.166,490,not in correction family
+4 edges minus the rest,7,,,,ORACLE,False,8.18,-0.09,16.59,0.0515,490,not in correction family
+rung 1,8,rung 1,,,ORACLE,False,2.44,-9.52,16.28,0.878,15,not in correction family
+rung 2,8,rung 2,,,ORACLE,False,10.35,2.72,18.0,0.008,163,not in correction family
+rung 3,8,rung 3,,,ORACLE,False,3.7,-1.34,9.11,0.1575,312,not in correction family

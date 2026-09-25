@@ -38,6 +38,7 @@ import pandas as pd
 
 from pool_samples import (POOL_LEXICON, SAMPLES, SEED, boot, did_sample,
                           verify_item_map, _pilot)
+from stats import boot_two_sample
 
 ALPHA = 0.05
 
@@ -159,6 +160,66 @@ def main():
     report("4 nodes, without arrowhead", G.loc[G.index.isin(idx)],
            {"section": 4, "family": "+".join(sorted(gs)), "n_nodes": 4,
             "n_edges": "", "arm": "ORACLE", "suspect_labels": False}, rows)
+
+    # Every causal-group item whose CLadder label can be wrong is an arrowhead
+    # item: the published ATE, ETT, NDE and NIE deviate only there, all 38
+    # decisive causal-type label flips are arrowhead, and the other causal types
+    # (det-counterfactual, collider_bias, exp_away) reproduce 1,812 of 1,812.
+    # So the headline without arrowhead is the headline with no item that can
+    # carry a wrong label (review of the research proposal, 2026-09-24).
+    print("\n6. SENSITIVITY: the headline without any item that can carry a wrong label")
+    idx = fam.index[fam != "arrowhead"]
+    report("all families except arrowhead", G.loc[G.index.isin(idx)],
+           {"section": 6, "family": "all but arrowhead", "n_nodes": "",
+            "n_edges": "", "arm": "ORACLE", "suspect_labels": False}, rows)
+
+    # Does the effect differ by graph size, or is the four-edge slice merely the
+    # largest and so the only one with the power to pass correction? A slice
+    # passing BH is not a slice that differs from the others; that needs a test
+    # of the differences. One DiD per item (the mean of its cells), since the
+    # slices partition items: a permutation test of the between-slice spread,
+    # and the four-edge slice against all the others.
+    print("\n7. DO THE EDGE-COUNT SLICES DIFFER?")
+    x = G.mean(axis=1)
+    edges = fam.map(lambda g: st[g][1]).values
+
+    def spread(lab):
+        m = x.mean()
+        return sum(((x[lab == e].mean() - m) ** 2) * (lab == e).sum() for e in set(lab))
+
+    q0, lab = spread(edges), edges.copy()
+    rng = np.random.default_rng(SEED)
+    ge = 0
+    for _ in range(4000):
+        rng.shuffle(lab)
+        ge += spread(lab) >= q0
+    p_het = (ge + 1) / 4001
+    print(f"  permutation test over the {len(set(edges))} slices: p = {p_het:.4f}, n = {len(x)}")
+    rows.append({"slice": "edge-count slices differ (permutation)", "section": 7,
+                 "family": "", "n_nodes": "", "n_edges": "", "arm": "ORACLE",
+                 "suspect_labels": False, "estimate_pp": np.nan, "ci_lo": np.nan,
+                 "ci_hi": np.nan, "p_boot": round(p_het, 4), "n_items": len(x)})
+    a, b = x[edges == 4].sort_index().values, x[edges != 4].sort_index().values
+    est, lo, hi, p = boot_two_sample(a, b, SEED, 4000)
+    print(f"  four edges minus the rest, item means: {est:+.2f} [{lo:+.2f} ; {hi:+.2f}]"
+          f"  p={p:.4f}  n={len(a)} vs {len(b)}")
+    rows.append({"slice": "4 edges minus the rest", "section": 7, "family": "",
+                 "n_nodes": "", "n_edges": "", "arm": "ORACLE", "suspect_labels": False,
+                 "estimate_pp": round(est, 2), "ci_lo": round(lo, 2), "ci_hi": round(hi, 2),
+                 "p_boot": round(p, 4), "n_items": len(x)})
+
+    # By rung of Pearl's ladder, the frame the benchmark is built on. The causal
+    # group spans all three: collider_bias and exp_away are rung 1, ate rung 2,
+    # ett, nde, nie and det-counterfactual rung 3. Descriptive, outside the
+    # correction family, like sections 6 and 7.
+    print("\n8. BY RUNG OF THE CAUSAL LADDER")
+    rung_of = (pd.read_csv(ROOT / "data" / "full_v1.5_default.csv", usecols=["id", "rung"])
+               .set_index("id").rung.reindex(G.index))
+    for rg in sorted(rung_of.dropna().unique()):
+        idx = rung_of.index[rung_of == rg]
+        report(f"rung {int(rg)}", G.loc[G.index.isin(idx)],
+               {"section": 8, "family": f"rung {int(rg)}", "n_nodes": "", "n_edges": "",
+                "arm": "ORACLE", "suspect_labels": False}, rows)
 
     R = pd.DataFrame(rows)
 

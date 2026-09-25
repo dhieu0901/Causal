@@ -447,7 +447,18 @@ def seeds():
                 q[f"R1 PSEUDO{tag} {a_} minus {b_}"] = (
                     lambda s, v=(x[i] - y[i]).values: boot_items(v, s, NBOOT))
 
+    # the four-edge slice against the rest (analyze_by_family.py section 7)
+    from analyze_by_family import pooled_matrix, structure
+    Gm, fam_of = pooled_matrix()
+    st = structure()
+    xm = Gm.mean(axis=1)
+    ed = fam_of.reindex(Gm.index).map(lambda g: st[g][1]).values
+    a4, b4 = xm[ed == 4].sort_index().values, xm[ed != 4].sort_index().values
+    q["four edges minus the rest"] = lambda s, a=a4, b=b4: boot_two_sample(a, b, s, NBOOT)
+
     published = {
+        "four edges minus the rest": ("family_breakdown.csv", "estimate_pp",
+                                      {"slice": "4 edges minus the rest"}),
         "headline DiD (RAW)": ("pooled_headline.csv", "did_pp", {"pooling": "item level, de-duplicated"}),
         "Llama pooled DiD": ("second_family.csv", "estimate_pp",
                              {"section": "1 headline", "model": "Llama 3.3 70B",
