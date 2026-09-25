@@ -220,7 +220,13 @@ def relabel(it, lexicon: str, seed: str) -> tuple[str, bool]:
     from lexical import PSEUDOWORDS
     pool = list(PSEUDOWORDS)
     random.Random(f"pseudo:{seed}").shuffle(pool)
-    names = sorted(set(node_names(it).values()), key=len, reverse=True)
+    # Longest first, then alphabetical. Until 2026-09-25 this sorted by length
+    # only, so names of equal length kept the order of a Python set, which
+    # changes with each process's hash seed: the Llama run of that day gave
+    # some equal-length names each other's pseudowords compared with a rebuild.
+    # Every one of its 1,560 PSEUDO answers was matched to the cache under the
+    # prompt actually sent (docs/REPORT.md, the CaLM section).
+    names = sorted(set(node_names(it).values()), key=lambda n: (-len(n), n))
     new = dict(zip(names, pool))
     for n in names:
         def sub(m, w=new[n]):

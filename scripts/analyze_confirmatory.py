@@ -146,6 +146,11 @@ def classes(n, seed, exclude_ids):
     """The estimand verdict of every DR draw actually shown (classify_perturbations)."""
     from classify_perturbations import check_replay, classify
     N = classify(n, 1, 3, arms=("DR",), seed=seed, exclude_ids=exclude_ids)
+    # Only the causal query types are used by any test, and the confirmatory
+    # run sent only those (pilot.py --causal-only), so the replay proof covers
+    # exactly them. Checking every type failed on the first confirmatory run:
+    # prompts never sent are not in the cache. No test changes.
+    N = N[~N.query_type.isin(ARITH | IDENT)].reset_index(drop=True)
     check_replay(N)
     strict = N.estimand_unchanged & ~N.touches_causal_path
     N["unchanged_qt"] = np.where(N.query_type.isin(STRICT_TYPES), strict, N.estimand_unchanged)
