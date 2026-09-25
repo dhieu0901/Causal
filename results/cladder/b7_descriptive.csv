@@ -1,0 +1,45 @@
+part,family,lexicon,quantity,n_items,n_draws,estimate_pp,ci_lo,ci_hi,p_boot,p_min_seeds,p_max_seeds
+1 against RAW,gpt,KEEP,ORACLE minus RAW,479,,1.74,-0.7,4.18,0.1555,0.1485,0.176
+1 against RAW,gpt,KEEP,DR_k1 minus RAW,478,,-3.91,-6.59,-1.08,0.007,0.003,0.007
+1 against RAW,gpt,KEEP,DR_k2 minus RAW,480,,-9.1,-12.19,-6.18,0.0005,0.0005,0.0005
+1 against RAW,gpt,KEEP,DR_k3 minus RAW,352,,-9.14,-12.78,-5.54,0.0005,0.0005,0.0005
+1 against RAW,gpt,PSEUDO,ORACLE minus RAW,481,,3.78,0.21,7.24,0.0365,0.023,0.0365
+1 against RAW,gpt,PSEUDO,DR_k1 minus RAW,478,,1.81,-1.33,5.23,0.2665,0.2485,0.2665
+1 against RAW,gpt,PSEUDO,DR_k2 minus RAW,482,,-2.35,-5.43,0.55,0.122,0.121,0.1305
+1 against RAW,gpt,PSEUDO,DR_k3 minus RAW,354,,-6.54,-9.84,-3.3,0.0005,0.0005,0.0005
+1 against RAW,gpt,KEEP,ORACLE minus DR_k1,478,,5.93,3.17,8.82,0.0005,0.0005,0.0005
+"2 ladder, RAW",gpt,ladder,KEEP minus IRRELEVANT,482,,15.76,12.05,19.64,0.0005,0.0005,0.0005
+"2 ladder, RAW",gpt,ladder,IRRELEVANT minus PERMUTE,484,,-0.36,-3.21,2.37,0.817,0.799,0.8275
+"2 ladder, RAW",gpt,ladder,IRRELEVANT minus SYMBOL,484,,-4.0,-6.62,-1.48,0.001,0.001,0.002
+"2 ladder, RAW",gpt,ladder,PERMUTE minus SYMBOL,484,,-3.85,-6.69,-0.93,0.009,0.0065,0.011
+"2 ladder, RAW",gpt,ladder,SYMBOL minus PSEUDO,484,,2.41,0.21,4.65,0.0285,0.0265,0.037
+"2 ladder, RAW",gpt,ladder,KEEP minus SYMBOL,482,,11.61,8.33,14.92,0.0005,0.0005,0.0005
+3 where the harm lives,gpt,both,estimand kept: DR minus ORACLE,50,50.0,-1.17,-5.0,2.67,0.5635,0.562,0.5825
+3 where the harm lives,gpt,both,"estimand changed, answer kept: DR minus ORACLE",192,398.0,1.76,-0.43,3.97,0.1195,0.1195,0.1265
+3 where the harm lives,gpt,both,"answer changed, path cut: DR minus ORACLE",132,239.0,-30.47,-35.8,-25.35,0.0005,0.0005,0.0005
+3 where the harm lives,gpt,both,"answer changed, path kept: DR minus ORACLE",47,57.0,3.8,-2.78,11.27,0.263,0.263,0.306
+3 where the harm lives,gpt,both,"answer changed, path kept, implied yes: DR minus ORACLE",24,29.0,9.48,1.54,19.44,0.012,0.0095,0.0145
+3 where the harm lives,gpt,both,"answer changed, path kept, implied no: DR minus ORACLE",23,28.0,-2.08,-11.01,7.78,0.671,0.655,0.687
+3 where the harm lives,gpt,both,"path cut minus path kept, answer changed (B6 M3 construction)",156,296.0,-34.28,-43.12,-26.38,0.0005,0.0005,0.0005
+1 against RAW,luna,KEEP,ORACLE minus RAW,484,,2.07,-1.24,5.17,0.23,0.221,0.2345
+1 against RAW,luna,KEEP,DR_k1 minus RAW,484,,-15.5,-19.63,-11.36,0.0005,0.0005,0.0005
+1 against RAW,luna,KEEP,DR_k2 minus RAW,484,,-23.14,-27.89,-18.39,0.0005,0.0005,0.0005
+1 against RAW,luna,KEEP,DR_k3 minus RAW,356,,-26.12,-31.46,-20.79,0.0005,0.0005,0.0005
+1 against RAW,luna,PSEUDO,ORACLE minus RAW,484,,2.07,-1.65,5.99,0.332,0.3035,0.3485
+1 against RAW,luna,PSEUDO,DR_k1 minus RAW,484,,-5.79,-10.12,-1.65,0.005,0.005,0.008
+1 against RAW,luna,PSEUDO,DR_k2 minus RAW,484,,-9.71,-14.05,-5.17,0.0005,0.0005,0.0005
+1 against RAW,luna,PSEUDO,DR_k3 minus RAW,356,,-19.1,-24.72,-13.76,0.0005,0.0005,0.0005
+1 against RAW,luna,KEEP,ORACLE minus DR_k1,484,,17.56,13.22,21.9,0.0005,0.0005,0.0005
+"2 ladder, RAW",luna,ladder,KEEP minus IRRELEVANT,484,,20.04,15.91,24.17,0.0005,0.0005,0.0005
+"2 ladder, RAW",luna,ladder,IRRELEVANT minus PERMUTE,484,,-4.55,-8.06,-1.03,0.0135,0.0125,0.019
+"2 ladder, RAW",luna,ladder,IRRELEVANT minus SYMBOL,484,,-7.02,-10.74,-3.1,0.001,0.0005,0.0015
+"2 ladder, RAW",luna,ladder,PERMUTE minus SYMBOL,484,,-2.48,-6.62,1.65,0.2515,0.2515,0.2825
+"2 ladder, RAW",luna,ladder,SYMBOL minus PSEUDO,484,,0.41,-2.89,3.93,0.8455,0.845,0.861
+"2 ladder, RAW",luna,ladder,KEEP minus SYMBOL,484,,13.02,9.5,16.53,0.0005,0.0005,0.0005
+3 where the harm lives,luna,both,estimand kept: DR minus ORACLE,50,50.0,-1.0,-10.0,8.0,0.898,0.898,0.925
+3 where the harm lives,luna,both,"estimand changed, answer kept: DR minus ORACLE",192,398.0,3.52,0.13,7.27,0.0475,0.0475,0.056
+3 where the harm lives,luna,both,"answer changed, path cut: DR minus ORACLE",132,239.0,-69.04,-75.21,-62.87,0.0005,0.0005,0.0005
+3 where the harm lives,luna,both,"answer changed, path kept: DR minus ORACLE",47,57.0,-21.05,-31.58,-11.21,0.0005,0.0005,0.0005
+3 where the harm lives,luna,both,"answer changed, path kept, implied yes: DR minus ORACLE",24,29.0,-5.17,-13.79,2.0,0.3095,0.3,0.342
+3 where the harm lives,luna,both,"answer changed, path kept, implied no: DR minus ORACLE",23,28.0,-37.5,-53.7,-21.43,0.0005,0.0005,0.0005
+3 where the harm lives,luna,both,"path cut minus path kept, answer changed (B6 M3 construction)",156,296.0,-47.99,-58.74,-37.08,0.0005,0.0005,0.0005

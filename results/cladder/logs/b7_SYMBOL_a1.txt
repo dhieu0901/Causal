@@ -1,0 +1,43 @@
+    [lexicon SYMBOL] 463 items carry residue outside variable_mapping - KEPT (reported only)
+    [lexicon SYMBOL] residue biases this condition TOWARDS KEEP; see REPORT.md section 7.2
+items=986  jobs/model=484  lexicon=SYMBOL  paired_to=None  families=['IV', 'arrowhead', 'chain', 'collision', 'confounding', 'diamond', 'diamondcut', 'fork', 'frontdoor', 'mediation']
+
+>>> gpt-5.6-luna: 484 calls
+    25/470
+    50/470
+    75/470
+    100/470
+    125/470
+    150/470
+    175/470
+    200/470
+    225/470
+    250/470
+    275/470
+    300/470
+    325/470
+    350/470
+    375/470
+    400/470
+    425/470
+    450/470
+    done: {'calls': 484, 'cached': 0, 'errors': 0, 'err_rate': 0.0, 'in_tok': 58860, 'out_tok': 211009}   spent so far 0.26 USD
+
+saved D:\code\Noisy Causal\results\cladder\raw\pilot_raw_lunaconfladderSYMBOL.csv  (484 rows)
+
+======================================================================
+PILOT: DO CHINH XAC THEO DIEU KIEN
+======================================================================
+
+--- gpt-5.6-luna ---
+            n    acc  parse
+cond                       
+PROSE     NaN    NaN    NaN
+RAW     484.0  69.42  100.0
+ORACLE    NaN    NaN    NaN
+  Delta_struct = ORACLE - RAW = +nan pp
+  Cost of stripping prose (PROSE - RAW) = +nan pp
+
+======================================================================
+McNEMAR EXACT (paired, on the same items)
+======================================================================

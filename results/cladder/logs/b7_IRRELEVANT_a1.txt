@@ -1,0 +1,44 @@
+    [lexicon IRRELEVANT] 463 items carry residue outside variable_mapping - KEPT (reported only)
+    [lexicon IRRELEVANT] residue biases this condition TOWARDS KEEP; see REPORT.md section 7.2
+items=986  jobs/model=484  lexicon=IRRELEVANT  paired_to=None  families=['IV', 'arrowhead', 'chain', 'collision', 'confounding', 'diamond', 'diamondcut', 'fork', 'frontdoor', 'mediation']
+
+>>> gpt-5.6-luna: 484 calls
+    25/484
+    50/484
+    75/484
+    100/484
+    125/484
+    150/484
+    175/484
+    200/484
+    225/484
+    250/484
+    275/484
+    300/484
+    325/484
+    350/484
+    375/484
+    400/484
+    425/484
+    450/484
+    475/484
+    done: {'calls': 484, 'cached': 0, 'errors': 0, 'err_rate': 0.0, 'in_tok': 59101, 'out_tok': 154730}   spent so far 0.20 USD
+
+saved D:\code\Noisy Causal\results\cladder\raw\pilot_raw_lunaconfladderIRRELEVANT.csv  (484 rows)
+
+======================================================================
+PILOT: DO CHINH XAC THEO DIEU KIEN
+======================================================================
+
+--- gpt-5.6-luna ---
+            n   acc  parse
+cond                      
+PROSE     NaN   NaN    NaN
+RAW     484.0  62.4  100.0
+ORACLE    NaN   NaN    NaN
+  Delta_struct = ORACLE - RAW = +nan pp
+  Cost of stripping prose (PROSE - RAW) = +nan pp
+
+======================================================================
+McNEMAR EXACT (paired, on the same items)
+======================================================================

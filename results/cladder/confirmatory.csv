@@ -11,3 +11,15 @@ gpt,unparsed scored as wrong,H3a,"RAW: IRRELEVANT minus PERMUTE, equivalent with
 gpt,unparsed scored as wrong,H3b,RAW: KEEP minus SYMBOL,positive,9.71,6.2,13.02,,,0.0005,0.003,0.0005,0.0005,484,confirmed
 gpt,unparsed scored as wrong,H4-KEEP,"slope per reversed edge, estimand-changing items, KEEP",negative,-3.47,-5.31,-1.62,,,0.0005,0.003,0.0005,0.0005,298,confirmed
 gpt,unparsed scored as wrong,H4-PSEUDO,"slope per reversed edge, estimand-changing items, PSEUDO",negative,-3.52,-5.48,-1.57,,,0.0005,0.003,0.0005,0.0005,298,confirmed
+luna,primary,H1,DiD [(KEEP - PSEUDO) | RAW] - [(KEEP - PSEUDO) | ORACLE],positive,0.0,-4.13,4.34,,,1.0,1.0,1.0,1.0,484,not confirmed
+luna,primary,H2,PSEUDO: ORACLE minus DR_k1,positive,7.85,3.51,12.4,,,0.0005,0.003,0.0005,0.002,484,confirmed
+luna,primary,H3a,"RAW: IRRELEVANT minus PERMUTE, equivalent within 5 pp",within +-5 pp,-4.55,-8.06,-1.03,-7.44,-1.65,0.3775,0.755,0.3775,0.4,484,not confirmed
+luna,primary,H3b,RAW: KEEP minus SYMBOL,positive,13.02,9.5,16.53,,,0.0005,0.003,0.0005,0.0005,484,confirmed
+luna,primary,H4-KEEP,"slope per reversed edge, estimand-changing items, KEEP",negative,-6.04,-8.56,-3.36,,,0.0005,0.003,0.0005,0.0005,298,confirmed
+luna,primary,H4-PSEUDO,"slope per reversed edge, estimand-changing items, PSEUDO",negative,-6.04,-8.72,-3.36,,,0.0005,0.003,0.0005,0.0005,298,confirmed
+luna,unparsed scored as wrong,H1,DiD [(KEEP - PSEUDO) | RAW] - [(KEEP - PSEUDO) | ORACLE],positive,0.0,-4.13,4.34,,,1.0,1.0,1.0,1.0,484,not confirmed
+luna,unparsed scored as wrong,H2,PSEUDO: ORACLE minus DR_k1,positive,7.85,3.51,12.4,,,0.0005,0.003,0.0005,0.002,484,confirmed
+luna,unparsed scored as wrong,H3a,"RAW: IRRELEVANT minus PERMUTE, equivalent within 5 pp",within +-5 pp,-4.55,-8.06,-1.03,-7.44,-1.65,0.3775,0.755,0.3775,0.4,484,not confirmed
+luna,unparsed scored as wrong,H3b,RAW: KEEP minus SYMBOL,positive,13.02,9.5,16.53,,,0.0005,0.003,0.0005,0.0005,484,confirmed
+luna,unparsed scored as wrong,H4-KEEP,"slope per reversed edge, estimand-changing items, KEEP",negative,-6.04,-8.56,-3.36,,,0.0005,0.003,0.0005,0.0005,298,confirmed
+luna,unparsed scored as wrong,H4-PSEUDO,"slope per reversed edge, estimand-changing items, PSEUDO",negative,-6.04,-8.72,-3.36,,,0.0005,0.003,0.0005,0.0005,298,confirmed
