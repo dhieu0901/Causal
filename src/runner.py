@@ -249,6 +249,18 @@ def make_client(model):
     return OpenAI()
 
 
+def billed_usd(model, r) -> float:
+    """What one fresh call cost. OpenRouter bills each call and says so; OpenAI
+    does not, so its calls are priced at list price from their own token counts,
+    the same rates estimate_cost uses."""
+    if "usd" in r:
+        return r["usd"] or 0.0
+    if model in PRICES_PER_M:
+        pi, po = PRICES_PER_M[model]
+        return (r.get("in_tok", 0) * pi + r.get("out_tok", 0) * po) / 1e6
+    return 0.0
+
+
 def run_batch(jobs, model, temperature=0.0, workers=16, max_tokens=700, on_tick=None,
               cache=None, max_usd=None):
     """jobs: list of dicts each carrying a 'prompt'. Returns them with 'result'.
@@ -258,8 +270,10 @@ def run_batch(jobs, model, temperature=0.0, workers=16, max_tokens=700, on_tick=
     and with 16 threads both would miss the cache at the same moment and both
     be paid for.
 
-    `max_usd` stops sending once the calls of THIS batch have been billed that
-    much (OpenRouter reports each call's cost). The calls not sent come back as
+    `max_usd` stops sending once the calls of THIS batch have cost that much
+    (billed_usd: OpenRouter's own figure, list price for OpenAI - before
+    2026-09-25 only OpenRouter calls counted, so the cap never stopped an OpenAI
+    batch). The calls not sent come back as
     failures, so guard_errors stops the run; everything paid for is cached and
     a re-run resumes. Up to `workers` calls already in flight can still land,
     so the overshoot is at most that many calls.
@@ -278,7 +292,7 @@ def run_batch(jobs, model, temperature=0.0, workers=16, max_tokens=700, on_tick=
         with _lock:
             done[0] += 1
             if not r.get("cached"):
-                spent[0] += r.get("usd", 0.0)
+                spent[0] += billed_usd(model, r)
             if on_tick and done[0] % 25 == 0:
                 on_tick(done[0], len(prompts))
         return p, r

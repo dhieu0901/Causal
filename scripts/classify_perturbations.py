@@ -250,7 +250,8 @@ def prose_graph(prompt: str) -> list[tuple[str, str]]:
 
 
 def classify(n_items=N_ITEMS, sample_kmax=KMAX, kmax=KMAX, arms=("DR", "ED", "FE"),
-             lexicons=("KEEP", "PSEUDO"), scramble=False) -> pd.DataFrame:
+             lexicons=("KEEP", "PSEUDO"), scramble=False, seed=SEED,
+             exclude_ids=None) -> pd.DataFrame:
     """Classify the perturbation each item was SHOWN, per lexicon.
 
     Until 2026-09-24 this replayed the draw over the canonical SYMBOL graph,
@@ -276,7 +277,10 @@ def classify(n_items=N_ITEMS, sample_kmax=KMAX, kmax=KMAX, arms=("DR", "ED", "FE
     pseudowords orders the nodes differently. DR and ED depend on edge order
     only, which relabelling preserves.
     """
-    items = make_items(n_items, SEED, sample_kmax, "full_v1.5_default.csv", None, True)
+    # `seed` and `exclude_ids` are the pilot.py --seed and --exclude-ids of the
+    # sample being replayed; the defaults are the exploratory samples'.
+    items = make_items(n_items, seed, sample_kmax, "full_v1.5_default.csv", None, True,
+                       exclude_ids)
     canon = canonical_structures()
     agree, missing = check_canonical(items, canon)
     maps = meta_mappings()
@@ -321,10 +325,10 @@ def classify(n_items=N_ITEMS, sample_kmax=KMAX, kmax=KMAX, arms=("DR", "ED", "FE
                     opts = ENUMERATORS[t](edges, nodes, k)
                     if opts:
                         draws.append((f"{t}_k{k}", t, k, random.Random(
-                            f"{SEED}:{i}:{t}:{k}").choice(opts)))
+                            f"{seed}:{i}:{t}:{k}").choice(opts)))
             if scramble:
                 draws.append(("SCRAMBLE", "SCRAMBLE", 0, random.Random(
-                    f"{SEED}:{i}:SCRAMBLE").choice(enumerate_scramble(edges, nodes))))
+                    f"{seed}:{i}:SCRAMBLE").choice(enumerate_scramble(edges, nodes))))
             for cond, t, k, shown in draws:
                 verdicts = set()
                 for n2s in n2s_all:

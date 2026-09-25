@@ -21,12 +21,12 @@ from perturb import (FAMILY_STRUCTURE, to_edges, max_k, ENUMERATORS,
                      enumerate_scramble)
 from prompts import build, parse_answer, strip_structure, parse_prose_graph, ANSWER_RE
 from lexical import relabel_item, residue
-from runner import run_batch, usage_summary, guard_errors, is_ok, OPENROUTER
+from runner import run_batch, usage_summary, guard_errors, is_ok, OPENROUTER, billed_usd
 from stats import mcnemar_exact_p
 
 
 def make_items(n, seed, kmax=3, data="full_v1.5_default.csv", pair_to=None,
-               drop_nonsense=False):
+               drop_nonsense=False, exclude_ids=None):
     """Draw a stratified item sample.
 
     `data` should stay `full_v1.5_default.csv`. CLadder also ships six
@@ -48,6 +48,12 @@ def make_items(n, seed, kmax=3, data="full_v1.5_default.csv", pair_to=None,
 
     `pair_to` reuses the ids sampled from another file, for the case where two
     files really are item-matched.
+
+    `exclude_ids` removes those CLadder ids before the draw. The confirmatory
+    phase (prereg/CONFIRMATORY.md) draws with it so that no question it asks
+    was seen in the exploratory phase. The list is read from a frozen file, not
+    from results/, so the draw stays the same after the confirmatory records
+    themselves land in results/.
     """
     d = pd.read_csv(ROOT / "data" / data)
 
@@ -66,6 +72,8 @@ def make_items(n, seed, kmax=3, data="full_v1.5_default.csv", pair_to=None,
 
     if drop_nonsense:
         d = d[~d.story_id.astype(str).str.startswith("nonsense")]
+    if exclude_ids is not None:
+        d = d[~d.id.isin(set(exclude_ids))]
     fams = [f for f in FAMILY_STRUCTURE if max_k(f, "DR") >= kmax]
     d = d[d.graph_id.isin(fams)].reset_index(drop=True)
 
@@ -90,6 +98,13 @@ def make_items(n, seed, kmax=3, data="full_v1.5_default.csv", pair_to=None,
         picked += rng.sample(list(g.index), min(per, len(g)))
     picked = picked[:n] if len(picked) >= n else picked
     return d.loc[picked].reset_index(drop=True)
+
+
+def read_ids(path) -> set[int]:
+    """CLadder ids from a text file, one per line; blank lines and # comments skipped."""
+    lines = (ROOT / path if not Path(path).is_absolute() else Path(path)).read_text(
+        encoding="utf-8").splitlines()
+    return {int(x.split("#")[0]) for x in lines if x.split("#")[0].strip()}
 
 
 def build_jobs(items, kmax=3, seed=0, types=("DR",), lexicon="KEEP",
@@ -209,6 +224,10 @@ def main():
                     help="lexical split, e.g. test-noncommonsense-v1.5.csv")
     ap.add_argument("--tag", default="", help="suffix for the output files")
     ap.add_argument("--types", default="DR", help="perturbation types, e.g. DR,ED,FE")
+    ap.add_argument("--exclude-ids", default=None, dest="exclude_ids",
+                    help="file of CLadder ids (one per line, # comments) to leave "
+                         "out of the draw; the confirmatory phase uses "
+                         "prereg/excluded_ids.txt")
     ap.add_argument("--pair-to", default=None, dest="pair_to",
                     help="reuse the ids sampled from this split, so the two runs "
                          "are paired item by item")
@@ -269,12 +288,14 @@ def main():
                     help="concurrent calls. Lower it when two runs share one "
                          "OpenRouter provider, which rate-limits (429) under load")
     ap.add_argument("--max-usd", type=float, default=None, dest="max_usd",
-                    help="per model: stop sending once this run has been billed "
-                         "this much (OpenRouter models only; see runner.run_batch)")
+                    help="for the whole run, all models and re-asks together: stop "
+                         "sending once this much has been spent (OpenRouter's billed "
+                         "cost, list price for OpenAI; see runner.billed_usd)")
     a = ap.parse_args()
 
     sample_kmax = a.kmax if a.sample_kmax is None else a.sample_kmax
-    items = make_items(a.n, a.seed, sample_kmax, a.data, a.pair_to, a.drop_nonsense)
+    items = make_items(a.n, a.seed, sample_kmax, a.data, a.pair_to, a.drop_nonsense,
+                       read_ids(a.exclude_ids) if a.exclude_ids else None)
     jobs = build_jobs(items, a.kmax, a.seed,
                       tuple(t.strip() for t in a.types.split(",")), a.lexicon,
                       drop_residue=a.drop_residue, with_instr=a.with_instr,
@@ -370,14 +391,31 @@ def main():
         return allrows
 
     allrows, recaprows = [], []
+    # --max-usd caps the whole invocation: every model and every re-ask draw on
+    # one budget. It used to be handed to each run_batch afresh, so three models
+    # could spend three caps.
+    spent = [0.0]
+
+    def budget():
+        return None if a.max_usd is None else max(0.0, a.max_usd - spent[0])
+
+    def charge(recs, model):
+        spent[0] += sum(billed_usd(model, r["result"]) for r in recs
+                        if not r["result"].get("cached"))
+        # One unmistakable line, whatever error guard_errors happens to quote:
+        # run scripts grep for it and do not retry a run the cap stopped.
+        if any("USD cap" in r["result"].get("error", "") for r in recs):
+            print(f"    SPENDING CAP REACHED: {spent[0]:.2f} USD spent, --max-usd {a.max_usd}")
+
     for model in a.models.split(","):
         model = model.strip()
         print(f"\n>>> {model}: {len(jobs)} calls")
         recs = run_batch(jobs, model, temperature=a.temperature, workers=a.workers,
-                         max_tokens=a.max_tokens, max_usd=a.max_usd,
+                         max_tokens=a.max_tokens, max_usd=budget(),
                          on_tick=lambda d, t: print(f"    {d}/{t}", flush=True))
+        charge(recs, model)
         u = usage_summary(recs)
-        print(f"    done: {u}")
+        print(f"    done: {u}   spent so far {spent[0]:.2f} USD")
         guard_errors(recs, label=model)
         allrows += rows_of(recs, model, a.max_tokens)
         if a.recap:
@@ -391,7 +429,8 @@ def main():
                   f"{a.max_tokens} tokens, with {a.recap}")
             if cut:
                 rec2 = run_batch(cut, model, temperature=a.temperature, workers=a.workers,
-                                 max_tokens=a.recap, max_usd=a.max_usd)
+                                 max_tokens=a.recap, max_usd=budget())
+                charge(rec2, model)
                 print(f"    done: {usage_summary(rec2)}")
                 guard_errors(rec2, label=f"{model} recap")
                 recaprows += rows_of(rec2, model, a.recap)

@@ -177,7 +177,7 @@ Chạy `python scripts/verify_data_provenance.py` để đối chiếu từng by
 - ~~Bậc thang từ vựng trên mẫu n=580~~ - **đã chạy 24/09/2026** ở điều kiện `RAW`, xem bảng bậc thang.
 - ~~Điều kiện `NAMES_ONLY`~~ và ~~`SCRAMBLE`~~ - **đã chạy 24/09/2026 trên n600**, `analyze_structure_arms.py` mục 6. Cùng đợt chạy: cạnh ngẫu nhiên hại hơn không có cạnh nào, `SCRAMBLE` trừ `NAMES_ONLY` = -13,95 (`KEEP`) và -7,96 (`PSEUDO`); `SCRAMBLE` ngang `DR_k3`. Khác đợt: trên `PSEUDO`, `ORACLE` trừ `NAMES_ONLY` = +4,34 [+0,12 ; +8,58].
 - Toàn bộ đợt 24/09 tốn **15,62 USD** thật (ước tính trước khi chạy: 16,11), 0 lỗi API, lệnh ở `scripts/run_n600_extensions.sh`; kiểm độ trôi thêm **5,54 USD** (ước tính 5,58).
-- **R1 mới chạy trên `PSEUDO`.** Chưa có DiD cho model suy luận; chạy thêm `KEEP` tốn khoảng 1,8 USD. R1 ở nhiệt độ 0,6 nên mỗi câu trả lời là một lần rút.
+- **R1 mới chạy trên `PSEUDO`.** Chưa có DiD cho model suy luận; chạy thêm `KEEP` tốn khoảng 3,3 USD (dry-run 25/09; lượt `PSEUDO` thật tốn 3,10 USD). R1 ở nhiệt độ 0,6 nên mỗi câu trả lời là một lần rút.
 - Điểm hoà vốn `k*` vẫn **chưa xác lập**: vế giá vững, vế ngân sách đạt ở 2/3 model trên mẫu gộp, nhưng `k*` cần cả hai và tử số của nó phần lớn là `backadj`.
 - `analyze_types.bootstrap_fit` **đã nâng 600 lên 10.000 vòng** (2026-09-22). Lý do cũ ghi ở đây - "hai ô đổi phán quyết theo seed" - **đã kiểm và KHÔNG tái lập được**: chín ô model x nhánh, năm seed, ở cả 600 lẫn 10.000 vòng đều cho cùng một bộ phán quyết. Việc nâng vẫn đáng làm vì sai số Monte Carlo ở 600 vòng cỡ 0,1 pp, ngang với các hiệu bảng này phải phân xử.
 
@@ -194,7 +194,7 @@ src/                 thư viện dùng chung
   runner.py            gọi API có cache, chặn trần chi phí, dừng khi lỗi quá 1%
   stats.py             McNemar, bootstrap theo item và theo ô
 
-scripts/             42 script Python và 6 script shell, nhóm theo tiền tố
+scripts/             43 script Python và 7 script shell, nhóm theo tiền tố
   pilot.py, induction.py, check_drift.py
                        3 script GỌI API (tốn credit nếu chưa có trong cache)
   verify_*, audit_cladder_arithmetic, ci_active_gold
@@ -202,16 +202,23 @@ scripts/             42 script Python và 6 script shell, nhóm theo tiền tố
   analyze_* (19), pool_samples, classify_perturbations, compare_price_lexicon,
   induction_baselines, measure_raw_leak, feasibility, make_figures
                        26 script phân tích, mỗi script ghi một nhóm bảng trong results/
+  analyze_confirmatory 6 phép kiểm của giai đoạn xác nhận (prereg/); tự kiểm
+                       trên n600 trước, phải ra đúng các dòng đã công bố
   check_consistency, check_numbers, check_pipeline_order, verify_determinism
                        4 cổng: số khớp giữa các script và qua 5 seed, mọi con số
                        trong tài liệu truy được về một dòng CSV, không script nào
                        đọc file trước khi nó được ghi, chạy lại ra đúng từng byte
   audit_cache_agreement, backfill_ids
                        2 script chạy tay (cần cache API không phát hành)
-  run_analysis.sh      chạy lại toàn bộ phân tích, 38 bước, 0 USD
+  run_analysis.sh      chạy lại toàn bộ phân tích, 39 bước, 0 USD
   run_clean_raw.sh, run_n600_extensions.sh, run_llama70b.sh, run_r1.sh
                        lệnh đúng của các đợt chạy tốn credit đã làm
+  run_confirmatory.sh  giai đoạn xác nhận trên mẫu mới (khoảng 19 USD, trần 20,20)
   run_full.sh          kế hoạch chạy đủ n=800 (khoảng 70 USD), chưa chạy
+
+prereg/              đăng ký trước giai đoạn xác nhận, commit trước lượt gọi đầu tiên
+  CONFIRMATORY.md      mẫu, điều kiện, 6 phép kiểm, quy tắc quyết định
+  excluded_ids.txt     1.121 id CLadder đã dùng ở giai đoạn thăm dò, bị loại khỏi mẫu mới
 
 results/             ~120 bảng kết quả (CSV), mỗi bảng do một script trong scripts/ ghi
   raw/                 52 file bản ghi từng câu trả lời của model: pilot_raw_* từ
