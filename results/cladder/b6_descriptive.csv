@@ -1,0 +1,22 @@
+quantity,estimate_pp,ci_lo,ci_hi,p_boot,n_draws
+estimand kept: DR minus ORACLE,0.63,-1.89,3.14,0.68,53
+estimand kept: DR_NI minus ORACLE_NI,-1.42,-5.66,2.36,0.4975,53
+"estimand changed, answer kept: DR minus ORACLE",4.56,2.51,6.63,0.0005,493
+"estimand changed, answer kept: DR_NI minus ORACLE_NI",1.08,-0.5,2.73,0.1885,493
+answer changed: DR minus ORACLE,-21.87,-26.17,-17.66,0.0005,375
+answer changed: DR_NI minus ORACLE_NI,-17.78,-21.26,-14.29,0.0005,375
+"answer changed, path kept: DR minus ORACLE",3.19,-1.06,7.58,0.1475,68
+"answer changed, path kept: DR_NI minus ORACLE_NI",-3.92,-8.45,0.6,0.09,68
+"path cut, DR_k1: DR minus ORACLE",-26.17,-34.21,-17.69,0.0005,57
+"path cut, DR_k2: DR minus ORACLE",-29.07,-34.14,-23.89,0.0005,135
+"path cut, DR_k3: DR minus ORACLE",-26.09,-31.52,-20.72,0.0005,115
+KEEP: ORACLE minus RAW,1.24,-1.64,4.08,0.38,335
+KEEP: ORACLE_NI minus RAW,3.64,1.2,6.14,0.0045,334
+KEEP: ORACLE_NI minus ORACLE,2.1,-0.15,4.29,0.0695,334
+KEEP: DR_k1 minus RAW,-2.34,-5.82,1.09,0.175,335
+KEEP: DR_k1_NI minus RAW,-1.29,-4.18,1.49,0.377,335
+PSEUDO: ORACLE minus RAW,3.34,-0.35,7.29,0.0795,334
+PSEUDO: ORACLE_NI minus RAW,3.23,-0.45,6.82,0.0805,335
+PSEUDO: ORACLE_NI minus ORACLE,0.15,-2.79,3.04,0.9375,334
+PSEUDO: DR_k1 minus RAW,0.9,-3.04,4.89,0.6635,334
+PSEUDO: DR_k1_NI minus RAW,-0.45,-3.78,2.94,0.8055,335

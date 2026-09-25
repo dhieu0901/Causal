@@ -5,12 +5,14 @@ family,part,graph_class,hand_code,n_pairs,estimate_pp,ci_lo,ci_hi,p_boot,n_items
 ,agreement,reverse,forward,0.0,,,,,,,,
 ,agreement,reverse,reverse,20.0,,,,,,,,
 ,agreement,reverse,unrelated,0.0,,,,,,,,
-,agreement,unrelated,forward,6.0,,,,,,,,
-,agreement,unrelated,reverse,6.0,,,,,,,,
-,agreement,unrelated,unrelated,8.0,,,,,,,,
-llama,no-path items,,forward,,-20.0,-57.14,0.0,0.1865,10.0,7.0,30.0,10.0
-llama,no-path items,,reverse,,0.0,-21.05,21.21,1.0,35.0,25.0,37.14,37.14
-llama,no-path items,,unrelated,,-25.0,-57.14,0.0,0.1875,8.0,6.0,25.0,0.0
-gpt,no-path items,,forward,,-10.71,-30.43,0.0,0.177,10.0,7.0,10.0,0.0
-gpt,no-path items,,reverse,,-11.83,-24.71,-1.01,0.0425,35.0,25.0,16.35,5.38
-gpt,no-path items,,unrelated,,-4.35,-15.0,0.0,0.6965,8.0,6.0,4.17,0.0
+,agreement,unrelated,forward,28.0,,,,,,,,
+,agreement,unrelated,reverse,26.0,,,,,,,,
+,agreement,unrelated,unrelated,12.0,,,,,,,,
+llama,no-path items,,forward,,-25.71,-43.75,-9.08,0.0035,35.0,25.0,51.43,25.71
+llama,no-path items,,reverse,,-7.02,-23.08,9.8,0.495,57.0,37.0,38.6,31.58
+llama,no-path items,,unrelated,,-25.0,-54.55,-6.67,0.045,12.0,8.0,41.67,16.67
+llama,no-path items,,forward minus reverse,,-18.7,-44.16,6.96,0.1405,104.0,47.0,,
+gpt,no-path items,,forward,,-7.92,-19.1,1.77,0.13,35.0,25.0,15.24,5.94
+gpt,no-path items,,reverse,,-13.46,-24.16,-3.8,0.0065,57.0,37.0,17.06,4.49
+gpt,no-path items,,unrelated,,-8.82,-25.0,0.0,0.2,12.0,8.0,8.33,0.0
+gpt,no-path items,,forward minus reverse,,5.54,-9.05,21.53,0.484,104.0,47.0,,

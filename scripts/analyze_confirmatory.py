@@ -54,7 +54,10 @@ LLAMA = "meta-llama/llama-3.3-70b-instruct"
 # --kmax 3 --drop-nonsense --exclude-ids prereg/excluded_ids.txt
 CONF = dict(n=1000, seed=20260925, exclude="prereg/excluded_ids.txt")
 # family -> (models, file prefix, re-ask cap or None)
-FAMILIES = {"gpt": (TIER, "conf", None), "llama": ([LLAMA], "llamaconf", 1500)}
+# "luna": B7 (prereg/B7.md), the same six tests on a current reasoning model,
+# gpt-5.6-luna, at its default reasoning effort and temperature.
+FAMILIES = {"gpt": (TIER, "conf", None), "llama": ([LLAMA], "llamaconf", 1500),
+            "luna": (["gpt-5.6-luna"], "lunaconf", None)}
 
 # (test, what, kind, predicted sign). kind "two" = two-sided bootstrap test,
 # "tost" = two one-sided tests against +-MARGIN.

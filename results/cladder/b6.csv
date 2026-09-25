@@ -1,0 +1,11 @@
+analysis,test,quantity,predicted,estimate_pp,ci_lo,ci_hi,ci90_lo,ci90_hi,p_boot,p_holm,p_min_seeds,p_max_seeds,n_draws,n_items,verdict
+primary,M1,path cut: DR minus ORACLE,negative,-27.42,-32.14,-22.48,,,0.0005,0.0025,0.0005,0.0005,307,,confirmed
+primary,M2,"estimand changed, answer kept: DR minus ORACLE, within +-5",within +-5,4.56,2.51,6.63,2.8,6.25,0.3375,0.675,0.3237,0.3435,493,,not confirmed
+primary,M3,path cut minus answer changed with the path kept (DR minus ORACLE),negative,-30.6,-36.66,-24.6,,,0.0005,0.0025,0.0005,0.0005,375,,confirmed
+primary,R1,"path cut, no instruction: DR_NI minus ORACLE_NI",negative,-20.85,-24.78,-16.91,,,0.0005,0.0025,0.0005,0.0005,307,,confirmed
+primary,R2,"path cut: harm with the instruction minus harm without, within +-5",within +-5,-6.57,-10.45,-2.65,-9.86,-3.34,0.805,0.805,0.785,0.805,307,,not confirmed
+unparsed scored as wrong,M1,path cut: DR minus ORACLE,negative,-27.58,-32.3,-22.6,,,0.0005,0.0025,0.0005,0.0005,307,,confirmed
+unparsed scored as wrong,M2,"estimand changed, answer kept: DR minus ORACLE, within +-5",within +-5,2.97,0.9,5.02,1.21,4.69,0.0267,0.0535,0.0267,0.0348,493,,not confirmed
+unparsed scored as wrong,M3,path cut minus answer changed with the path kept (DR minus ORACLE),negative,-28.07,-34.44,-21.77,,,0.0005,0.0025,0.0005,0.0005,375,,confirmed
+unparsed scored as wrong,R1,"path cut, no instruction: DR_NI minus ORACLE_NI",negative,-20.79,-24.8,-16.83,,,0.0005,0.0025,0.0005,0.0005,307,,confirmed
+unparsed scored as wrong,R2,"path cut: harm with the instruction minus harm without, within +-5",within +-5,-6.79,-10.62,-2.89,-10.07,-3.55,0.8305,0.8305,0.817,0.8305,307,,not confirmed

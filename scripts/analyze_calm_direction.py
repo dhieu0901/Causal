@@ -281,6 +281,19 @@ def hand_split(C) -> pd.DataFrame | None:
                              raw_keep_says_yes_pct=yk, raw_pseudo_says_yes_pct=yp))
             print(f"    real world {h:9s} {e:+7.2f} [{lo:+6.2f} ; {hi:+6.2f}]  n={len(w):3d}  "
                   f"says Yes under RAW: KEEP {yk:5.2f}%  PSEUDO {yp:5.2f}%")
+        # Does the pull of a real name depend on which way the real world runs?
+        # Stories resampled once, both means from the same draw.
+        nop = C[C.direction != "forward"].set_index("item").hand
+        w = W[W.index.isin(set(nop.dropna().index))]
+        per = [diff_stories(w, nop, story_of, "forward", "reverse", sd) for sd in SEEDS]
+        e, lo, hi, p = per[0]
+        ps = [q[3] for q in per]
+        rows.append(dict(family=family, part="no-path items", hand_code="forward minus reverse",
+                         estimate_pp=round(e, 2), ci_lo=round(lo, 2), ci_hi=round(hi, 2),
+                         p_boot=round(p, 4), n_items=len(w),
+                         n_stories=w.index.map(story_of).nunique()))
+        print(f"    forward minus reverse {e:+7.2f} [{lo:+6.2f} ; {hi:+6.2f}]  "
+              f"p {min(ps):.4f}-{max(ps):.4f}")
     return pd.DataFrame(rows)
 
 

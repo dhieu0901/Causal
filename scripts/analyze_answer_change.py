@@ -151,12 +151,30 @@ class Matcher:
             err.append((max(abs(self.stated(m, s, t, c) - v) for t, c, v in qs), m))
         if not err:
             return []
-        # Every SCM within rounding; failing that, the nearest one if it is
-        # within one more unit (a few stated values are off by 0.0002 past
-        # rounding, e.g. 0.615 printed as 0.61; the next SCM is then 0.05 away).
+        # Every SCM within rounding; failing that, every SCM within rounding
+        # once CLadder's own faulty formula is allowed for; failing that, the
+        # nearest one if it is within one more unit (a few stated values are off
+        # by 0.0002 past rounding, e.g. 0.615 printed as 0.61; the next SCM is
+        # then 0.05 away).
         ok = [m for e, m in err if e <= TOL]
+        if not ok:
+            ok = [m for m in self.by.get((r.story_id, r.graph_id), [])
+                  if max(min(abs(self.stated(m, self.get(m), t, c) - v),
+                             abs(self.naive(self.get(m), t, c) - v)) for t, c, v in qs) <= TOL]
         best = min(e for e, _ in err)
         return ok or ([m for e, m in err if e == best] if best <= 2 * TOL else [])
+
+    @staticmethod
+    def naive(s, t, c):
+        """P(t | c) by the faulty formula of REPORT section 1.1: the target's
+        parents treated as independent. Added 2026-09-25, when the B6 sample
+        brought an `IV` item (id 16780) whose stated P(Y=1 | V2) are 0.54 and
+        0.51: its SCM gives 0.5459 and 0.5244, the faulty formula 0.5413 and
+        0.5097. Used only when no SCM matches without it, so every item matched
+        before matches the same SCM (answer_change.csv unchanged)."""
+        (var, val), = t.items()
+        q = VG.naive_parent_independent(s, var, given=c or None)
+        return q if val == 1 else 1 - q
 
 
 # ------------------------------------------------ what a graph implies

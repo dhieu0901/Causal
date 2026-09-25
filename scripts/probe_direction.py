@@ -127,7 +127,12 @@ def main() -> int:
         left = None if a.max_usd is None else max(0.0, a.max_usd - spent)
         recs = run_batch(J, m, temperature=0.0, workers=a.workers, max_tokens=MAX_TOKENS,
                          max_usd=left)
-        spent += sum(billed_usd(m, r["result"]) for r in recs if not r["result"].get("cached"))
+        # Once per DISTINCT prompt: many rows share a prompt (the same two names
+        # recur across items) and a result. Summing over rows, as the first run
+        # on 2026-09-25 did, printed 1.39 USD for calls that cost 0.23; sending
+        # was never affected, run_batch caps per prompt.
+        spent += sum(billed_usd(m, r) for r in {x["prompt"]: x["result"] for x in recs}.values()
+                     if not r.get("cached"))
         if any("USD cap" in r["result"].get("error", "") for r in recs):
             print(f"    SPENDING CAP REACHED: {spent:.2f} USD spent, --max-usd {a.max_usd}")
         print(f"  {m}: {usage_summary(recs)}  spent so far {spent:.2f} USD")

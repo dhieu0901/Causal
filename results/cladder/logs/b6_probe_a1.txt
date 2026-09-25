@@ -1,0 +1,5 @@
+3154 (item, lexicon, edge) rows, 533 distinct prompts per model
+  gpt-4.1-nano: {'calls': 3154, 'cached': 0, 'errors': 0, 'err_rate': 0.0, 'in_tok': 309702, 'out_tok': 31720}  spent so far 0.04 USD
+  gpt-4.1-mini: {'calls': 3154, 'cached': 0, 'errors': 0, 'err_rate': 0.0, 'in_tok': 309702, 'out_tok': 64120}  spent so far 0.27 USD
+  gpt-4.1: {'calls': 3154, 'cached': 0, 'errors': 0, 'err_rate': 0.0, 'in_tok': 309702, 'out_tok': 62921}  spent so far 1.39 USD
+  wrote results\cladder\raw\probe_direction_raw.csv  (9462 rows, 1.39 USD)

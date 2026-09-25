@@ -21,9 +21,14 @@ only if the previous one holds:
      the formula CLadder itself writes in step3, and see whether it reproduces
      CLadder's own published answer.
   4. SCALE. How many questions end up with a flipped label, out of the whole set.
+  5. THE NUMBERS PRINTED IN THE PROMPTS. Found 2026-09-25, when an `IV` item
+     of the B6 sample matched no SCM: the `IV` questions state P(Y=1 | V2=v),
+     and those figures come from the same parents-independent formula. Checked
+     on every `ate` item of the family in full_v1.5_default.csv.
 
 Run:  python scripts/audit_cladder_arithmetic.py
 Writes: results/cladder/cladder_arithmetic_audit.csv
+        results/cladder/iv_stated_conditionals.csv
 """
 
 from __future__ import annotations
@@ -410,6 +415,103 @@ def step4_scale(qs):
     return brk, tot
 
 
+QTY = re.compile(r"^P\((\w+)=(\d)(?:\s*\|\s*([^)]*))?\)\s*=\s*(-?[0-9.]+)$")
+TOL_PRINT = 0.0051           # the reasoning field states two decimals
+
+
+def step5_iv_prompts(vg, meta):
+    """Do the P(Y=1 | V2) printed in `IV` prompts use the faulty formula?
+
+    Each `ate` item of the family is matched to its SCM through the four
+    probabilities its reasoning field states: the two P(X=1 | V2), which the
+    faulty formula cannot touch (X's parents V1 and V2 are independent roots),
+    and the two P(Y=1 | V2), allowed to fit either computation. Then both
+    computations are compared with the printed P(Y=1 | V2), and the Wald ratio
+    the question asks for is taken from the printed and from the true figures.
+    """
+    print("\n" + "=" * 88)
+    print("STEP 5 - the P(Y=1 | V2) printed in IV prompts")
+    print("=" * 88)
+    d = pd.read_csv(ROOT / "data" / "cladder" / "full_v1.5_default.csv")
+    d = d[(d.graph_id == "IV") & (d.query_type == "ate")]
+    by = {}
+    for m in meta:
+        if m["graph_id"] == "IV":
+            by.setdefault(m["story_id"], []).append(m)
+    scms = {}
+    rows = []
+    for r in d.itertuples():
+        qs = []
+        for line in str(r.reasoning).splitlines():
+            q = QTY.match(line.strip())
+            if q and q.group(3):
+                k, v = q.group(3).split("=")
+                qs.append((q.group(1), int(q.group(2)), {k.strip(): int(v)}, float(q.group(4))))
+        fits = []
+        for m in by.get(r.story_id, []):
+            if m["model_id"] not in scms:
+                scms[m["model_id"]] = vg.SCM(m["params"])
+            sc = scms[m["model_id"]]
+            dev_t, dev_n, ok = [], [], True
+            for var, val, c, v in qs:
+                t = sc.prob({var: 1}, given=c)
+                t = t if val == 1 else 1 - t
+                if var == "X":
+                    ok &= abs(t - v) <= TOL_PRINT
+                    continue
+                n = naive(sc, var, given=c)
+                n = n if val == 1 else 1 - n
+                dev_t.append(abs(t - v))
+                dev_n.append(abs(n - v))
+            if ok and dev_t and max(min(a, b) for a, b in zip(dev_t, dev_n)) <= TOL_PRINT:
+                fits.append((m, sc, max(dev_t), max(dev_n)))
+        if not fits:
+            rows.append(dict(id=r.id, matched=False))
+            continue
+        m, sc, dt, dn = fits[0]
+        y = {v2: sc.prob({"Y": 1}, given={"V2": v2}) for v2 in (0, 1)}
+        x = {v2: sc.prob({"X": 1}, given={"V2": v2}) for v2 in (0, 1)}
+        printed = {(var, c["V2"]): (v if val == 1 else 1 - v) for var, val, c, v in qs}
+        wald_true = (y[1] - y[0]) / (x[1] - x[0])
+        # Two printed P(X=1 | V2) can round to the same figure; the ratio the
+        # question asks for is then undefined from the prompt, and left blank.
+        dx = printed[("X", 1)] - printed[("X", 0)]
+        wald_printed = (printed[("Y", 1)] - printed[("Y", 0)]) / dx if dx else float("nan")
+        # Which of the two the label follows. The question asks "Will X increase
+        # (or decrease) the chance of Y?"; the reasoning field's own final line
+        # ("0.16 > 0") is the value the label was built from.
+        asks = "decrease" if "decrease the chance" in r.prompt else "increase"
+        last = [ln for ln in str(r.reasoning).splitlines() if re.search(r"[<>] 0$", ln.strip())]
+        stated_val = float(last[-1].split()[0]) if last else float("nan")
+
+        def ans(v):
+            return "yes" if (v > 0 if asks == "increase" else v < 0) else "no"
+
+        rows.append(dict(id=r.id, matched=True, n_scm=len(fits),
+                         printed_fits_true=dt <= TOL_PRINT, printed_fits_faulty=dn <= TOL_PRINT,
+                         max_dev_true=round(dt, 4), max_dev_faulty=round(dn, 4),
+                         wald_true=round(wald_true, 4), wald_printed=round(wald_printed, 4),
+                         sign_differs=(bool((wald_true > 0) != (wald_printed > 0))
+                                       if dx else None),
+                         label=r.label, reasoning_value=stated_val,
+                         label_follows_reasoning=ans(stated_val) == r.label,
+                         label_follows_true=ans(wald_true) == r.label))
+    R = pd.DataFrame(rows)
+    m = R[R.matched]
+    print(f"  {len(R)} IV ate items, {len(m)} matched to an SCM")
+    print(f"  printed P(Y=1 | V2) fits the faulty formula: {int(m.printed_fits_faulty.sum())}/{len(m)}")
+    print(f"  printed P(Y=1 | V2) fits the true value:     {int(m.printed_fits_true.sum())}/{len(m)}")
+    sd = m.sign_differs.dropna().astype(bool)
+    print(f"  the Wald ratio from the printed figures has the other sign from the true one: "
+          f"{int(sd.sum())}/{len(sd)} ({len(m) - len(sd)} undefined from the printed figures)")
+    print(f"  the label follows the reasoning field's value (built from the printed figures): "
+          f"{int(m.label_follows_reasoning.sum())}/{len(m)}; it follows the true ratio: "
+          f"{int(m.label_follows_true.sum())}/{len(m)}")
+    out = ROOT / "results" / "cladder" / "iv_stated_conditionals.csv"
+    R.to_csv(out, index=False)
+    print(f"  wrote {out.relative_to(ROOT)}")
+
+
 def main():
     vg = load_solver()
     meta = json.loads((ROOT / "data" / "cladder" / "cladder-meta.json").read_text(encoding="utf-8"))
@@ -420,6 +522,7 @@ def main():
     step3_chain(qs)
     step3b_arrowhead(vg, meta, qs)
     brk, tot = step4_scale(qs)
+    step5_iv_prompts(vg, meta)
 
     out = ROOT / "results" / "cladder" / "cladder_arithmetic_audit.csv"
     pd.DataFrame(rows).to_csv(out, index=False)

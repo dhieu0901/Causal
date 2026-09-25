@@ -59,6 +59,10 @@ def _key(model, temp, prompt, cache=None, max_tokens=700):
 PRICES_PER_M = {"gpt-4.1-nano": (0.10, 0.40),
                 "gpt-4.1-mini": (0.40, 1.60),
                 "gpt-4.1": (2.00, 8.00),
+                # OpenAI's price page on 2026-09-25 (B7, prereg/B7.md). A
+                # reasoning model: its output count includes the hidden
+                # reasoning, which is what is billed.
+                "gpt-5.6-luna": (0.20, 1.20),
                 # OpenRouter, the pinned provider's price on 2026-09-24. For R1
                 # the output price also covers the reasoning tokens.
                 "meta-llama/llama-3.3-70b-instruct": (0.135, 0.40),
