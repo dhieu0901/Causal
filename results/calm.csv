@@ -1,0 +1,22 @@
+family,analysis,test,quantity,predicted,estimate_pp,ci_lo,ci_hi,p_boot,p_holm,p_min_seeds,p_max_seeds,n_items,n_stories,verdict
+llama,primary,C1,DiD [(KEEP - PSEUDO) | RAW] - [(KEEP - PSEUDO) | ORACLE],positive,-3.91,-7.95,-0.22,0.041,0.041,0.041,0.054,486,92,borderline (changes with the bootstrap seed)
+llama,primary,C2,PSEUDO: ORACLE minus DR_k1,positive,6.84,4.15,9.66,0.0005,0.0015,0.0005,0.0005,497,92,confirmed
+llama,primary,C3,RAW: KEEP minus PSEUDO,positive,-6.63,-10.9,-2.66,0.001,0.002,0.001,0.002,498,92,contradicted
+llama,items resampled,C1,DiD [(KEEP - PSEUDO) | RAW] - [(KEEP - PSEUDO) | ORACLE],positive,-3.91,-8.23,0.41,0.094,0.094,0.0715,0.094,486,92,not confirmed
+llama,items resampled,C2,PSEUDO: ORACLE minus DR_k1,positive,6.84,4.23,9.66,0.0005,0.0015,0.0005,0.0005,497,92,confirmed
+llama,items resampled,C3,RAW: KEEP minus PSEUDO,positive,-6.63,-10.44,-2.41,0.001,0.002,0.0005,0.0015,498,92,contradicted
+llama,unparsed scored as wrong,C1,DiD [(KEEP - PSEUDO) | RAW] - [(KEEP - PSEUDO) | ORACLE],positive,-5.77,-9.71,-1.95,0.004,0.004,0.0025,0.006,520,92,contradicted
+llama,unparsed scored as wrong,C2,PSEUDO: ORACLE minus DR_k1,positive,5.96,3.09,9.01,0.0005,0.0015,0.0005,0.0005,520,92,confirmed
+llama,unparsed scored as wrong,C3,RAW: KEEP minus PSEUDO,positive,-6.92,-11.22,-2.98,0.0015,0.003,0.0005,0.003,520,92,contradicted
+llama,re-asked at 1500,C1,DiD [(KEEP - PSEUDO) | RAW] - [(KEEP - PSEUDO) | ORACLE],positive,-3.46,-7.14,-0.17,0.0495,0.0495,0.0495,0.0645,520,92,borderline (changes with the bootstrap seed)
+llama,re-asked at 1500,C2,PSEUDO: ORACLE minus DR_k1,positive,7.12,4.56,9.94,0.0005,0.0015,0.0005,0.0005,520,92,confirmed
+llama,re-asked at 1500,C3,RAW: KEEP minus PSEUDO,positive,-6.35,-10.43,-2.55,0.001,0.002,0.001,0.002,520,92,contradicted
+gpt,primary,C1,DiD [(KEEP - PSEUDO) | RAW] - [(KEEP - PSEUDO) | ORACLE],positive,-6.89,-9.4,-4.56,0.0005,0.0015,0.0005,0.0005,512,92,contradicted
+gpt,primary,C2,PSEUDO: ORACLE minus DR_k1,positive,6.25,4.24,8.35,0.0005,0.0015,0.0005,0.0005,513,92,confirmed
+gpt,primary,C3,RAW: KEEP minus PSEUDO,positive,-7.33,-9.58,-5.15,0.0005,0.0015,0.0005,0.0005,520,92,contradicted
+gpt,items resampled,C1,DiD [(KEEP - PSEUDO) | RAW] - [(KEEP - PSEUDO) | ORACLE],positive,-6.89,-9.14,-4.74,0.0005,0.0015,0.0005,0.0005,512,92,contradicted
+gpt,items resampled,C2,PSEUDO: ORACLE minus DR_k1,positive,6.25,4.24,8.31,0.0005,0.0015,0.0005,0.0005,513,92,confirmed
+gpt,items resampled,C3,RAW: KEEP minus PSEUDO,positive,-7.33,-9.41,-5.25,0.0005,0.0015,0.0005,0.0005,520,92,contradicted
+gpt,unparsed scored as wrong,C1,DiD [(KEEP - PSEUDO) | RAW] - [(KEEP - PSEUDO) | ORACLE],positive,-4.55,-7.28,-1.72,0.0025,0.0025,0.0005,0.0025,520,92,contradicted
+gpt,unparsed scored as wrong,C2,PSEUDO: ORACLE minus DR_k1,positive,5.71,3.71,7.8,0.0005,0.0015,0.0005,0.0005,520,92,confirmed
+gpt,unparsed scored as wrong,C3,RAW: KEEP minus PSEUDO,positive,-5.32,-7.87,-2.82,0.0005,0.0015,0.0005,0.0005,520,92,contradicted

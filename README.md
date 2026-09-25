@@ -27,9 +27,32 @@ Tỷ lệ phép đảo vô hại tụt từ **24,8%** (`price400`) và **22,1%**
 
 **2. Năm lỗi trong CLadder v1.5**, kèm lệnh tái lập từng lỗi - xem mục cảnh báo bên dưới và `docs/CLADDER_DATA_ERRORS.md`. Xuất xứ dữ liệu kiểm được từng byte bằng `scripts/verify_data_provenance.py`.
 
-## Kết quả thực nghiệm
+## Kết quả đã xác nhận (25/09/2026, đăng ký trước)
 
-**Cấp một khối cấu trúc làm giảm tác hại của việc ẩn danh tên biến, trên nhóm câu hỏi thực sự cần suy luận nhân quả.**
+Sáu kết luận của giai đoạn thăm dò được cố định trước (`prereg/CONFIRMATORY.md`, commit `7d7f293`, push trước lượt gọi đầu tiên) và kiểm lại trên **484 câu CLadder chưa từng hỏi**, ba model GPT-4.1, hiệu chỉnh Holm, phải giữ nguyên qua năm seed:
+
+| Giả thuyết | Ước lượng (pp) | CI 95% | Phán quyết |
+|---|---|---|---|
+| H1: đồ thị đúng bù tổn thất do ẩn danh (con số tiêu đề cũ +5,98) | **+2,67** | [-1,15 ; +6,54] | **không xác nhận** |
+| H2: đồ thị đúng hơn đồ thị đảo một cạnh, tên ẩn danh | +2,93 | [+0,00 ; +5,87] | không xác nhận |
+| H3a: prior sai không hại hơn không có prior (trong 5 điểm) | -0,36 | [-3,21 ; +2,37] | xác nhận |
+| H3b: prior đúng của tên thật | **+11,61** | [+8,33 ; +14,92] | xác nhận |
+| H4: tác hại mỗi cạnh đảo khi estimand đổi, tên quen | -3,05 | [-4,94 ; -1,18] | xác nhận |
+| H4: như trên, tên ẩn danh | -3,41 | [-5,58 ; -1,34] | xác nhận |
+
+Benchmark thứ hai, **CaLM** (`prereg/CALM.md`): 520 câu ATE trên đồ thị ngẫu nhiên, không lấy từ CLadder, đáp án tính lại khớp 100/100 nhãn CaLM công bố.
+
+| Giả thuyết | Llama 3.3 70B | GPT-4.1 |
+|---|---|---|
+| C2: model đi theo chiều cạnh được cấp | **+6,84** [+4,15 ; +9,66], xác nhận | **+6,25** [+4,24 ; +8,35], xác nhận |
+| C3: tên thật giúp khi không có đồ thị | -6,63 [-10,90 ; -2,66], **ngược chiều** | -7,33 [-9,58 ; -5,15], **ngược chiều** |
+| C1: đồ thị bù tổn thất do ẩn danh | -3,91 [-7,95 ; -0,22], sát ngưỡng | -6,89 [-9,40 ; -4,56], **ngược chiều** |
+
+Trên CaLM, tên thật khiến model trả lời Có ở những câu không có đường nhân quả (GPT-4.1: 16,17% so với 4,38% khi ẩn danh), vì nhiều câu hỏi ngược chiều câu chuyện. **Kết luận đứng vững:** prior đúng của tên có giá trị lớn khi câu hỏi thuận chiều câu chuyện; prior sai không hại hơn không có prior; tác hại tăng theo số cạnh đảo; model đi theo đồ thị được cấp. **Không đứng vững:** "đồ thị đúng bù lại cái mất do ẩn danh". Chi tiết: `docs/REPORT.md` mục 4c, 4d.
+
+## Kết quả thăm dò (giai đoạn trước, đọc như giả thuyết)
+
+**Cấp một khối cấu trúc làm giảm tác hại của việc ẩn danh tên biến, trên nhóm câu hỏi thực sự cần suy luận nhân quả.** *Không được xác nhận trên câu mới, xem mục trên.*
 
 **+5,98 pp, CI 95% [+1,67 ; +10,19], p = 0,0055, n = 490 item** (gộp ba mẫu, bỏ trùng theo id gốc). Khớp `results/structure_arms.csv`.
 
@@ -64,7 +87,7 @@ Trên `n600` (chạy 24/09/2026, `results/ladder5_steps_n600.csv`), bị gán pr
 
 **Mọi nhãn dự án chấm điểm đều đã tính lại độc lập.** Ba loại truy vấn từng bỏ trống - `det-counterfactual`, `collider_bias`, `exp_away`, cộng 1.812 câu và 28 trong 86 item của nhóm nhân quả - nay đã kiểm: **1.812/1.812 nhãn tái lập chính xác**. Chạy `scripts/verify_counterfactual.py`.
 
-n = 490 item ghép cặp qua ba mẫu, 3 model của **một họ** (giới hạn duy nhất đủ nghiêm trọng để chặn công bố), **98.463** lượt chấm điểm (đếm từ `results/raw/*_raw*.csv`, đã trừ dữ liệu cách ly).
+Giai đoạn thăm dò: n = 490 item ghép cặp qua ba mẫu, ba model GPT-4.1, lặp lại trên Llama 3.3 70B và một phần trên DeepSeek-R1. Giai đoạn xác nhận: 484 câu mới. CaLM: 520 câu. Tổng **123.282** lượt chấm điểm trên CLadder và **10.456** trên CaLM (đếm từ `results/raw/*_raw*.csv`, đã trừ dữ liệu cách ly).
 
 ## Thiết kế
 
@@ -189,6 +212,9 @@ Chạy `python scripts/verify_data_provenance.py` để đối chiếu từng by
 - ~~Bậc thang từ vựng trên mẫu n=580~~ - **đã chạy 24/09/2026** ở điều kiện `RAW`, xem bảng bậc thang.
 - ~~Điều kiện `NAMES_ONLY`~~ và ~~`SCRAMBLE`~~ - **đã chạy 24/09/2026 trên n600**, `analyze_structure_arms.py` mục 6. Cùng đợt chạy: cạnh ngẫu nhiên hại hơn không có cạnh nào, `SCRAMBLE` trừ `NAMES_ONLY` = -13,95 (`KEEP`) và -7,96 (`PSEUDO`); `SCRAMBLE` ngang `DR_k3`. Khác đợt: trên `PSEUDO`, `ORACLE` trừ `NAMES_ONLY` = +4,34 [+0,12 ; +8,58].
 - Toàn bộ đợt 24/09 tốn **15,62 USD** thật (ước tính trước khi chạy: 16,11), 0 lỗi API, lệnh ở `scripts/run_n600_extensions.sh`; kiểm độ trôi thêm **5,54 USD** (ước tính 5,58).
+- ~~Giai đoạn xác nhận trên câu mới~~ - **đã chạy 25/09/2026**, 16,75 USD, xem mục Kết quả đã xác nhận.
+- ~~Benchmark thứ hai~~ - **CaLM, đã chạy 25/09/2026** trên Llama (0,35 USD) và GPT-4.1 (5,53 USD).
+- **B6 chưa chạy:** đồ thị sai không kèm câu dặn "Use this causal structure", để tách *dựa vào* đồ thị khỏi *nghe lời* dặn. Khoảng 4-5 USD.
 - **R1 mới chạy trên `PSEUDO`.** Chưa có DiD cho model suy luận; chạy thêm `KEEP` tốn khoảng 3,3 USD (dry-run 25/09; lượt `PSEUDO` thật tốn 3,10 USD). R1 ở nhiệt độ 0,6 nên mỗi câu trả lời là một lần rút.
 - Điểm hoà vốn `k*` vẫn **chưa xác lập**: vế giá vững, vế ngân sách đạt ở 2/3 model trên mẫu gộp, nhưng `k*` cần cả hai và tử số của nó phần lớn là `backadj`.
 - `analyze_types.bootstrap_fit` **đã nâng 600 lên 10.000 vòng** (2026-09-22). Lý do cũ ghi ở đây - "hai ô đổi phán quyết theo seed" - **đã kiểm và KHÔNG tái lập được**: chín ô model x nhánh, năm seed, ở cả 600 lẫn 10.000 vòng đều cho cùng một bộ phán quyết. Việc nâng vẫn đáng làm vì sai số Monte Carlo ở 600 vòng cỡ 0,1 pp, ngang với các hiệu bảng này phải phân xử.
@@ -237,11 +263,11 @@ prereg/              đăng ký trước giai đoạn xác nhận, commit trư�
   CALM.md              benchmark thứ hai: câu CaLM, điều kiện, 3 phép kiểm
   excluded_ids.txt     1.121 id CLadder đã dùng ở giai đoạn thăm dò, bị loại khỏi mẫu mới
 
-results/             ~120 bảng kết quả (CSV), mỗi bảng do một script trong scripts/ ghi
-  raw/                 52 file bản ghi từng câu trả lời của model: pilot_raw_* từ
-                       các lần gọi API, induction_raw_* do induction.py dựng từ cache.
-                       Mọi bảng ở trên tính từ đây
-  logs/                40 log của các lần chạy tốn credit (chi phí, lỗi API)
+results/             125 bảng kết quả (CSV), mỗi bảng do một script trong scripts/ ghi
+  raw/                 63 file bản ghi từng câu trả lời của model: pilot_raw_* và
+                       calm_raw_* từ các lần gọi API, induction_raw_* do
+                       induction.py dựng từ cache. Mọi bảng ở trên tính từ đây
+  logs/                49 log của các lần chạy tốn credit (chi phí, lỗi API)
   _itemmap_*.csv       ánh xạ item của từng mẫu sang id gốc CLadder
 ```
 

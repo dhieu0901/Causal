@@ -1,0 +1,106 @@
+    [lexicon IRRELEVANT] 463 items carry residue outside variable_mapping - KEPT (reported only)
+    [lexicon IRRELEVANT] residue biases this condition TOWARDS KEEP; see REPORT.md section 7.2
+items=986  jobs/model=484  lexicon=IRRELEVANT  paired_to=None  families=['IV', 'arrowhead', 'chain', 'collision', 'confounding', 'diamond', 'diamondcut', 'fork', 'frontdoor', 'mediation']
+
+>>> gpt-4.1-nano: 484 calls
+    25/484
+    50/484
+    75/484
+    100/484
+    125/484
+    150/484
+    175/484
+    200/484
+    225/484
+    250/484
+    275/484
+    300/484
+    325/484
+    350/484
+    375/484
+    400/484
+    425/484
+    450/484
+    475/484
+    done: {'calls': 484, 'cached': 484, 'errors': 0, 'err_rate': 0.0, 'in_tok': 59585, 'out_tok': 152983}   spent so far 0.00 USD
+
+>>> gpt-4.1-mini: 484 calls
+    25/484
+    50/484
+    75/484
+    100/484
+    125/484
+    150/484
+    175/484
+    200/484
+    225/484
+    250/484
+    275/484
+    300/484
+    325/484
+    350/484
+    375/484
+    400/484
+    425/484
+    450/484
+    475/484
+    done: {'calls': 484, 'cached': 484, 'errors': 0, 'err_rate': 0.0, 'in_tok': 59585, 'out_tok': 92181}   spent so far 0.00 USD
+
+>>> gpt-4.1: 484 calls
+    25/484
+    50/484
+    75/484
+    100/484
+    125/484
+    150/484
+    175/484
+    200/484
+    225/484
+    250/484
+    275/484
+    300/484
+    325/484
+    350/484
+    375/484
+    400/484
+    425/484
+    450/484
+    475/484
+    done: {'calls': 484, 'cached': 484, 'errors': 0, 'err_rate': 0.0, 'in_tok': 59585, 'out_tok': 84804}   spent so far 0.00 USD
+
+saved D:\code\Noisy Causal\results\raw\pilot_raw_confladderIRRELEVANT.csv  (1452 rows)
+
+======================================================================
+PILOT: DO CHINH XAC THEO DIEU KIEN
+======================================================================
+
+--- gpt-4.1-nano ---
+            n    acc  parse
+cond                       
+PROSE     NaN    NaN    NaN
+RAW     484.0  59.71   97.9
+ORACLE    NaN    NaN    NaN
+  Delta_struct = ORACLE - RAW = +nan pp
+  Cost of stripping prose (PROSE - RAW) = +nan pp
+
+--- gpt-4.1-mini ---
+            n   acc  parse
+cond                      
+PROSE     NaN   NaN    NaN
+RAW     484.0  65.7   99.6
+ORACLE    NaN   NaN    NaN
+  Delta_struct = ORACLE - RAW = +nan pp
+  Cost of stripping prose (PROSE - RAW) = +nan pp
+
+--- gpt-4.1 ---
+            n    acc  parse
+cond                       
+PROSE     NaN    NaN    NaN
+RAW     484.0  63.64   99.6
+ORACLE    NaN    NaN    NaN
+  Delta_struct = ORACLE - RAW = +nan pp
+  Cost of stripping prose (PROSE - RAW) = +nan pp
+
+======================================================================
+McNEMAR EXACT (paired, on the same items)
+======================================================================

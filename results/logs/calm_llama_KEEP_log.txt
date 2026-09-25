@@ -1,0 +1,50 @@
+items=520  stories=92  jobs/model=1040  lexicon=KEEP
+
+>>> meta-llama/llama-3.3-70b-instruct: 1040 calls
+    25/1040
+    50/1040
+    75/1040
+    100/1040
+    125/1040
+    150/1040
+    175/1040
+    200/1040
+    225/1040
+    250/1040
+    275/1040
+    300/1040
+    325/1040
+    350/1040
+    375/1040
+    400/1040
+    425/1040
+    450/1040
+    475/1040
+    500/1040
+    525/1040
+    550/1040
+    575/1040
+    600/1040
+    625/1040
+    650/1040
+    675/1040
+    700/1040
+    725/1040
+    750/1040
+    775/1040
+    800/1040
+    825/1040
+    850/1040
+    875/1040
+    900/1040
+    925/1040
+    950/1040
+    975/1040
+    1000/1040
+    1025/1040
+    done: {'calls': 1040, 'cached': 0, 'errors': 0, 'err_rate': 0.0, 'in_tok': 176211, 'out_tok': 262160}   spent so far 0.13 USD
+
+>>> meta-llama/llama-3.3-70b-instruct: re-asking the 18 answers cut off at 700 tokens, with 1500
+
+wrote results\raw\calm_raw_llamaKEEP.csv  (1040 rows, 0.13 USD)
+wrote results\raw\calm_raw_llamaKEEP_recap1500.csv  (18 rows)

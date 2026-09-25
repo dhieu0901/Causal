@@ -202,13 +202,18 @@ def main() -> int:
             print(f"\n  sensitivity: cut-off answers re-asked at {recap} tokens")
             rows += run_tests(RK, RP, models, story_of, f"re-asked at {recap}", family)
         # Exploratory, not a test: accuracy by condition, split by whether the
-        # answer needs the probabilities (has_data) or only the graph.
+        # answer needs the probabilities (has_data) or only the graph, and by
+        # whether a directed path runs from treatment to outcome at all (with
+        # none, the answer is No whatever the probabilities). The share of Yes
+        # answers shows which way a prior pushes. "all" pools the family's models.
         for lex, d in (("KEEP", K), ("PSEUDO", P)):
             d = d[d.parsed == 1]
-            for (m, c, hd), g in d.groupby(["model", "cond", "has_data"]):
-                acc.append(dict(family=family, model=m, lexicon=lex, cond=c,
-                                needs_probabilities=bool(hd), n=len(g),
-                                accuracy_pct=round(100 * g.correct.mean(), 2)))
+            for who, dd in [(m, d[d.model == m]) for m in models] + [("all", d)]:
+                for (c, hd, pa), g in dd.groupby(["cond", "has_data", "path"]):
+                    acc.append(dict(family=family, model=who, lexicon=lex, cond=c,
+                                    needs_probabilities=bool(hd), path=bool(pa), n=len(g),
+                                    accuracy_pct=round(100 * g.correct.mean(), 2),
+                                    says_yes_pct=round(100 * (g.pred == "yes").mean(), 2)))
     if rows:
         pd.DataFrame(rows).to_csv(ROOT / "results" / "calm.csv", index=False)
         pd.DataFrame(acc).to_csv(ROOT / "results" / "calm_accuracy.csv", index=False)
