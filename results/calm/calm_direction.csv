@@ -1,0 +1,13 @@
+family,direction,quantity,estimate_pp,ci_lo,ci_hi,p_boot,p_min_seeds,p_max_seeds,n_items,n_stories,raw_keep_acc_pct,raw_pseudo_acc_pct,raw_keep_says_yes_pct,raw_pseudo_says_yes_pct,oracle_keep_acc_pct
+llama,forward,RAW: KEEP minus PSEUDO,0.0,0.0,0.0,1.0,1.0,1.0,219,83,99.56,99.57,44.44,44.59,99.13
+llama,reverse,RAW: KEEP minus PSEUDO,-7.88,-15.76,0.0,0.06,0.0555,0.0715,203,78,58.45,66.01,41.55,33.99,94.2
+llama,unrelated,RAW: KEEP minus PSEUDO,-22.37,-34.09,-10.77,0.0005,0.0005,0.0005,76,36,52.63,75.0,47.37,25.0,84.21
+llama,"unrelated, shared cause",RAW: KEEP minus PSEUDO,-22.22,-38.1,-6.25,0.0085,0.0055,0.012,36,20,63.89,86.11,36.11,13.89,80.56
+llama,"unrelated, no shared cause",RAW: KEEP minus PSEUDO,-22.5,-37.22,-7.89,0.005,0.005,0.008,40,18,42.5,65.0,57.5,35.0,87.5
+llama,reverse minus unrelated,difference in RAW: KEEP minus PSEUDO,14.49,1.29,27.54,0.033,0.024,0.037,279,92,,,,,
+gpt,forward,RAW: KEEP minus PSEUDO,-1.74,-2.9,-0.77,0.0005,0.0005,0.0005,237,84,98.12,100.0,45.44,45.12,96.89
+gpt,reverse,RAW: KEEP minus PSEUDO,-12.5,-17.06,-8.13,0.0005,0.0005,0.0005,207,78,83.55,95.38,16.45,4.62,97.26
+gpt,unrelated,RAW: KEEP minus PSEUDO,-11.21,-19.05,-4.37,0.0005,0.0005,0.0005,76,36,84.58,96.26,15.42,3.74,95.18
+gpt,"unrelated, shared cause",RAW: KEEP minus PSEUDO,-6.0,-12.62,0.0,0.073,0.073,0.0845,36,20,90.65,97.0,9.35,3.0,93.52
+gpt,"unrelated, no shared cause",RAW: KEEP minus PSEUDO,-15.79,-27.52,-5.17,0.0025,0.0005,0.0035,40,18,79.17,95.61,20.83,4.39,96.67
+gpt,reverse minus unrelated,difference in RAW: KEEP minus PSEUDO,-1.29,-9.36,7.39,0.731,0.705,0.779,283,92,,,,,

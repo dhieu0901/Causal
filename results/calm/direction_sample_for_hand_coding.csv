@@ -1,0 +1,61 @@
+﻿item,treatment,outcome,your_code,note
+500,crop quality,crop yield,unrelated,"Hai khía cạnh đầu ra của mùa vụ (chất lượng vs sản lượng), không trực tiếp gây ra nhau"
+1346,the person's overall health,the amount of exercise a person gets,reverse,Tập thể dục tác động lên sức khỏe
+946,humidity,weather conditions,reverse,Điều kiện thời tiết tổng thể quyết định độ ẩm
+672,skills proficiency,salary,forward,Trình độ kỹ năng quyết định mức lương
+229,body weight,caloric intake,reverse,Lượng calo nạp vào quyết định cân nặng
+8,amount of money saved,financial return on investment,forward,Vốn tích lũy đem đầu tư sinh ra lợi nhuận
+531,whether the person gets wet,whether the person stays dry,unrelated,"Hai mặt đối nghịch cùng một trạng thái (đồng nhất/phủ định ngữ nghĩa, không phải quan hệ nhân quả vật lý một chiều)"
+1070,soil moisture level,amount of rainfall,reverse,Lượng mưa quyết định độ ẩm của đất
+1530,the number of hours studied for an exam,the amount of sleep the night before the exam,unrelated,Hai biến hành vi độc lập tác động lên kết quả thi
+407,temperature,rainfall,forward,Nhiệt độ chi phối quá trình bốc hơi và lượng mưa
+149,test score,final grade in the class,forward,Điểm bài thi thành phần cấu thành điểm tổng kết môn
+1188,humidity level,weather conditions,reverse,Thời tiết quyết định mức độ ẩm
+708,job performance rating,years of work experience,reverse,Số năm kinh nghiệm nâng cao đánh giá hiệu suất
+567,years of work experience,level of education,unrelated,Hai thuộc tính hồ sơ cá nhân độc lập
+477,the exam score,the number of hours studied for an exam,reverse,Số giờ học tác động lên điểm thi
+1412,the grade the student receives on a test,the amount of sleep the student gets,reverse,Giấc ngủ tác động lên kết quả làm bài
+1224,the amount of sleep the student gets,the grade the student receives on a test,forward,Ngủ đủ giấc giúp điểm bài thi tốt hơn
+652,quality of life,income level,reverse,Thu nhập cải thiện chất lượng cuộc sống
+625,customer satisfaction,product quality,reverse,Chất lượng sản phẩm quyết định độ hài lòng của khách
+517,distance from home to workplace,availability of public transportation,unrelated,Khoảng cách địa lý và quy hoạch giao thông công cộng không gây ra nhau
+770,availability of public transportation,weather condition,unrelated,Hai yếu tố ngoại cảnh độc lập
+220,soil moisture level,crop yield,forward,Độ ẩm đất ảnh hưởng trực tiếp đến năng suất cây trồng
+847,education level,quality of life,forward,Trình độ học vấn nâng cao chất lượng cuộc sống
+37,revenue generated from the product,customer satisfaction with a product,reverse,Khách hài lòng thúc đẩy hành vi mua tạo ra doanh thu
+1299,road construction,travel time to destination,forward,Thi công đường sá gây kéo dài thời gian di chuyển
+1566,weather conditions,humidity,forward,Thời tiết quyết định độ ẩm không khí
+555,level of education,job performance rating,forward,Học vấn bổ trợ kiến thức nâng cao hiệu quả làm việc
+1095,sales revenue,investment in advertising,reverse,Chi phí quảng cáo thúc đẩy doanh thu bán hàng
+1521,temperature,wind speed,forward,Chênh lệch nhiệt độ tạo chênh lệch áp suất sinh ra gió
+729,number of hours studied,exam score,forward,Số giờ ôn tập cải thiện điểm thi
+1181,child's social skills,parents' income,reverse,Thu nhập phụ huynh đầu tư môi trường phát triển kỹ năng xã hội của con
+600,salary,job experience,reverse,Kinh nghiệm làm việc quyết định mức lương
+289,profit of farmers,weather conditions,reverse,Thời tiết quyết định mùa màng và lợi nhuận nông dân
+528,the crop yield in the region,the water level in a river,reverse,Mực nước sông (nguồn tưới tiêu) quyết định năng suất cây trồng
+760,wind speed,temperature,reverse,Nhiệt độ sinh ra gió (ngược lại của dòng 29)
+765,job performance,skills proficiency,reverse,Kỹ năng tốt mang lại hiệu suất công việc cao
+507,job performance,salary,forward,Hiệu suất công việc quyết định mức lương
+168,job performance,income level,forward,Hiệu suất công việc quyết định mức thu nhập
+917,traffic congestion,travel time to work,forward,Ùn tắc giao thông làm tăng thời gian đi làm
+778,job performance,salary,forward,Hiệu suất công việc quyết định mức lương (giống 37)
+1295,patient's diet,patient's life expectancy,forward,Chế độ ăn uống tác động lên tuổi thọ
+1598,patient's exercise habits,patient's diet,unrelated,Hai thói quen sinh hoạt độc lập
+1442,humidity level,profit of farmers,forward,Độ ẩm ảnh hưởng sâu bệnh/mùa màng tác động đến lợi nhuận
+365,the water level of a river,the growth of crops,forward,Nguồn nước sông hỗ trợ tưới tiêu và sinh trưởng cây
+1341,likelihood of flooding,amount of rainfall,reverse,Lượng mưa quyết định nguy cơ ngập lụt
+1116,amount of sunlight,crop yield,forward,Ánh sáng mặt trời (quang hợp) quyết định năng suất mùa màng
+1370,availability of public transportation,travel time to work,forward,Sự sẵn có của phương tiện công cộng ảnh hưởng thời gian đi làm
+1399,healthcare coverage,education level,reverse,Trình độ học vấn cao dẫn đến việc làm có phúc lợi bảo hiểm y tế tốt
+999,whether the person stays dry,whether the person gets wet,unrelated,Hai trạng thái đối nghịch của cùng một khái niệm
+1122,the score obtained on the exam,the amount of sleep the night before the exam,reverse,Giấc ngủ đêm trước thi quyết định độ tỉnh táo và điểm số
+673,the growth rate of crops,the water level in the river,reverse,Mực nước sông quyết định tốc độ sinh trưởng của cây trồng
+1042,the score obtained on the exam,the overall performance in the course,forward,Điểm bài thi đóng góp vào kết quả chung của khóa học
+96,soil moisture,amount of rainfall,reverse,Lượng mưa quyết định độ ẩm của đất (giống 8)
+1457,amount of rainfall,groundwater level,forward,Mưa bổ cập làm dâng mực nước ngầm
+993,whether the person stays dry,the decision to bring an umbrella,reverse,Quyết định mang ô giúp người không bị ướt
+241,overall gpa,grade in the course,reverse,Điểm môn học thành phần cấu thành GPA tổng
+611,revenue,sales,reverse,Doanh số/số lượng bán hàng sinh ra tổng doanh thu
+1106,job experience,skills proficiency,forward,Kinh nghiệm làm việc tích lũy nâng cao trình độ kỹ năng
+1389,employment status,happiness level,forward,Tình trạng việc làm ảnh hưởng trực tiếp đến mức độ hạnh phúc
+193,wind speed,crop yield,forward,"Tốc độ gió (gió bão, gãy đổ, mất nước) ảnh hưởng năng suất cây trồng"

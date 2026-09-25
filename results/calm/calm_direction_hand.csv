@@ -1,0 +1,16 @@
+family,part,graph_class,hand_code,n_pairs,estimate_pp,ci_lo,ci_hi,p_boot,n_items,n_stories,raw_keep_says_yes_pct,raw_pseudo_says_yes_pct
+,agreement,forward,forward,20.0,,,,,,,,
+,agreement,forward,reverse,0.0,,,,,,,,
+,agreement,forward,unrelated,0.0,,,,,,,,
+,agreement,reverse,forward,0.0,,,,,,,,
+,agreement,reverse,reverse,20.0,,,,,,,,
+,agreement,reverse,unrelated,0.0,,,,,,,,
+,agreement,unrelated,forward,6.0,,,,,,,,
+,agreement,unrelated,reverse,6.0,,,,,,,,
+,agreement,unrelated,unrelated,8.0,,,,,,,,
+llama,no-path items,,forward,,-20.0,-57.14,0.0,0.1865,10.0,7.0,30.0,10.0
+llama,no-path items,,reverse,,0.0,-21.05,21.21,1.0,35.0,25.0,37.14,37.14
+llama,no-path items,,unrelated,,-25.0,-57.14,0.0,0.1875,8.0,6.0,25.0,0.0
+gpt,no-path items,,forward,,-10.71,-30.43,0.0,0.177,10.0,7.0,10.0,0.0
+gpt,no-path items,,reverse,,-11.83,-24.71,-1.01,0.0425,35.0,25.0,16.35,5.38
+gpt,no-path items,,unrelated,,-4.35,-15.0,0.0,0.6965,8.0,6.0,4.17,0.0

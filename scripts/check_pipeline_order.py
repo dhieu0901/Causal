@@ -58,6 +58,8 @@ ORDER = [
     "feasibility", "make_figures",
     "measure_raw_leak",
     "analyze_second_family", "analyze_confirmatory", "analyze_calm",
+    "analyze_b5_vs_raw", "analyze_answer_change", "analyze_r1_chains",
+    "analyze_calm_direction",
     "check_consistency",
     "check_numbers", "check_pipeline_order", "verify_determinism",
 ]

@@ -1,0 +1,7 @@
+lexicon,slope,pp_per_edge,ci_lo,ci_hi,p_boot,p_min_seeds,p_max_seeds,n_items
+KEEP,observed,-1.84,-3.75,0.16,0.0675,0.055,0.0675,313
+KEEP,composition only,-3.65,-4.64,-2.75,0.0005,0.0005,0.0005,313
+KEEP,residual,1.81,0.08,3.64,0.0415,0.037,0.048,313
+PSEUDO,observed,-3.49,-5.49,-1.45,0.0015,0.0005,0.0015,322
+PSEUDO,composition only,-2.4,-2.84,-1.95,0.0005,0.0005,0.0005,322
+PSEUDO,residual,-1.1,-2.93,0.76,0.2485,0.242,0.2535,322

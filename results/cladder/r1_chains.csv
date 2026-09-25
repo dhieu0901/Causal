@@ -1,0 +1,87 @@
+item,id,family,query_type,true_edge,shown_edge,residue,prompt_states_true,raw_states_shown,raw_states_true,raw_conflict_words,raw_conflict_near_edge,raw_no_effect_phrases,raw_chars,raw_pred,raw_correct,oracle_states_shown,oracle_states_true,oracle_conflict_words,oracle_conflict_near_edge,oracle_no_effect_phrases,oracle_chars,oracle_pred,oracle_correct,dr_k1_states_shown,dr_k1_states_true,dr_k1_conflict_words,dr_k1_conflict_near_edge,dr_k1_no_effect_phrases,dr_k1_chars,dr_k1_pred,dr_k1_correct,group,route
+7,15133,IV,ate,zuph -> rukz,rukz -> zuph,True,False,False,False,False,False,1,17377,no,1,False,True,False,False,3,11640,no,1,True,False,False,False,1,21659,no,1,"estimand changed, answer kept",backdoor
+8,13835,IV,ate,zory -> gyzp,gyzp -> zory,True,False,False,False,False,False,0,12991,no,1,False,True,True,False,7,16080,no,1,True,False,False,False,6,25881,no,1,unidentified under the shown graph,unidentified
+10,4741,IV,ate,qwiu -> jyka,jyka -> qwiu,True,False,False,True,False,False,0,13417,no,1,False,True,True,True,7,20205,no,1,True,False,True,True,22,29943,no,1,"estimand changed, answer kept",no path
+11,9410,IV,ate,wibl -> swoy,swoy -> wibl,True,False,False,False,False,False,2,13711,no,1,False,True,True,True,3,16870,no,1,True,False,True,True,10,24630,no,1,unidentified under the shown graph,unidentified
+12,10311,IV,det-counterfactual,tijv -> wibl,wibl -> tijv,True,True,False,True,True,True,0,14349,yes,0,False,True,True,True,1,15592,no,1,True,True,True,True,7,19322,no,1,,
+13,20753,IV,det-counterfactual,wibl -> pexu,pexu -> wibl,True,True,False,True,True,True,1,10977,no,1,False,True,True,True,0,7660,no,1,True,True,True,True,1,13464,no,1,,
+14,20742,IV,det-counterfactual,glimx -> zory,zory -> glimx,True,True,False,True,True,True,0,11811,yes,1,False,True,False,False,0,17459,yes,1,True,True,True,True,0,17402,yes,1,,
+15,20143,IV,det-counterfactual,tijv -> xevo,xevo -> tijv,True,True,False,False,True,True,0,10895,yes,1,False,True,False,False,0,9046,yes,1,True,True,True,True,4,15209,yes,1,,
+16,9804,IV,det-counterfactual,xevu -> rixq,rixq -> xevu,True,True,False,True,True,True,0,15878,no,1,False,True,True,True,1,10634,no,1,True,True,True,True,1,21682,yes,0,,
+17,10048,IV,det-counterfactual,yupt -> xevo,xevo -> yupt,True,True,False,False,True,True,0,11190,yes,0,False,True,True,True,1,8003,yes,0,True,True,True,True,2,14809,yes,0,,
+26,12885,arrowhead,ate,wibl -> kwox,kwox -> wibl,True,False,False,False,True,False,5,8023,no,0,False,True,True,False,2,12905,yes,1,True,False,True,True,1,14123,yes,1,answer changed,backdoor
+27,7599,arrowhead,ate,xevu -> glimx,glimx -> xevu,True,False,False,False,False,False,0,2979,yes,1,False,True,False,False,3,11404,yes,1,True,False,False,False,5,7021,yes,1,estimand kept,backdoor
+28,2356,arrowhead,ate,kwox -> wibl,wibl -> kwox,False,False,False,False,True,False,11,8832,no,0,False,True,True,True,7,26863,yes,1,True,False,True,True,3,23512,no,0,answer changed,backdoor
+30,9885,arrowhead,det-counterfactual,jyka -> xevu,xevu -> jyka,True,True,False,False,True,True,0,16196,yes,0,False,True,True,True,2,24163,no,1,True,False,True,True,7,29162,yes,0,,
+31,19218,arrowhead,nde,zory -> tijv,tijv -> zory,True,False,False,False,True,True,22,15995,no,1,False,True,False,False,0,16391,no,1,True,False,False,False,0,21177,no,1,,
+32,17732,arrowhead,nie,yomx -> xevo,xevo -> yomx,True,False,False,False,True,True,17,14312,no,1,False,True,True,False,4,29685,yes,0,True,False,False,False,10,34515,yes,0,,
+33,20254,arrowhead,det-counterfactual,glimx -> lirg,lirg -> glimx,True,True,False,True,True,True,8,15371,no,1,False,True,True,True,0,13386,no,1,True,True,True,True,0,19791,no,1,,
+34,19501,arrowhead,ett,qwiu -> pexu,pexu -> qwiu,False,False,False,False,True,False,0,9273,no,1,False,True,True,True,1,21003,no,1,True,False,True,True,0,14821,no,1,estimand kept,backdoor
+35,18031,arrowhead,nie,gyzp -> uvzi,uvzi -> gyzp,True,False,False,True,True,True,1,20669,yes,1,False,True,False,False,0,11499,yes,1,True,True,True,True,20,13646,no,0,,
+44,12094,chain,ate,vubr -> swoq,swoq -> vubr,True,False,False,False,True,False,0,15514,no,1,False,True,False,False,5,15196,no,1,True,False,False,False,20,20279,no,1,"estimand changed, answer kept",no path
+47,1702,chain,ate,tijv -> muvq,muvq -> tijv,True,False,False,False,True,False,0,10820,no,1,False,True,False,False,4,11508,no,1,True,False,True,True,2,17437,no,1,"estimand changed, answer kept",no path
+48,13793,chain,nie,kraz -> wibl,wibl -> kraz,True,False,False,False,True,True,0,3238,no,1,False,True,True,True,0,26180,no,1,True,True,False,False,15,6133,no,1,,
+49,6551,chain,ett,gwet -> hwax,hwax -> gwet,True,False,False,False,True,False,3,23432,no,0,False,True,False,False,7,13201,no,0,True,False,False,False,8,15635,no,0,answer changed,no path
+50,18540,chain,ett,swoy -> zupj,zupj -> swoy,True,False,False,False,True,False,0,4261,yes,1,False,True,True,True,1,16258,yes,1,True,False,True,True,11,19721,no,0,answer changed,no path
+51,13794,chain,nie,kwoz -> kwox,kwox -> kwoz,True,False,False,False,True,True,6,5180,no,0,False,True,False,False,2,12361,yes,1,True,True,False,False,18,10115,no,0,,
+52,3292,chain,ett,xevu -> kraz,kraz -> xevu,True,False,False,False,False,False,0,6114,no,1,False,True,True,True,22,17913,no,1,True,False,True,True,11,18719,no,1,"estimand changed, answer kept",no path
+53,13705,chain,ett,xevo -> xevu,xevu -> xevo,True,False,False,False,True,False,0,5244,yes,1,False,True,True,True,1,14293,yes,1,True,False,True,True,1,15736,yes,1,answer changed,no path
+54,1961,collision,exp_away,kraz -> yomx,yomx -> kraz,True,False,False,False,False,False,0,3795,yes,1,False,True,False,False,4,8511,yes,1,True,False,True,True,6,14915,yes,1,,
+55,2761,collision,exp_away,jyka -> yomx,yomx -> jyka,True,False,False,False,True,True,5,11618,no,1,False,True,False,False,11,23848,no,1,True,False,True,True,2,15951,no,1,,
+58,2714,collision,exp_away,xyfo -> rixq,rixq -> xyfo,True,False,False,False,False,False,0,3377,no,1,False,True,False,False,4,12078,no,1,True,False,False,False,2,12886,no,1,,
+59,2769,collision,exp_away,cwoi -> zuph,zuph -> cwoi,True,False,False,False,True,True,4,9075,no,0,False,True,False,False,3,29591,yes,1,True,False,False,False,10,13474,no,0,,
+60,6732,collision,collider_bias,vubr -> xyfo,xyfo -> vubr,True,False,False,False,False,False,2,6317,no,1,False,True,False,False,4,5654,no,1,True,False,False,False,6,15295,yes,0,,
+62,12370,collision,collider_bias,wibl -> tijw,tijw -> wibl,True,False,False,False,False,False,10,5664,no,1,False,True,False,False,13,10092,no,1,True,False,True,True,41,21877,no,1,,
+63,12314,collision,collider_bias,jyka -> kwox,kwox -> jyka,True,False,False,False,False,False,0,7134,no,1,False,True,False,False,6,9385,no,1,True,False,False,False,10,9911,yes,0,,
+65,1960,collision,collider_bias,kraz -> zupj,zupj -> kraz,True,False,False,False,False,False,28,7151,no,0,False,True,True,False,103,20571,yes,1,True,False,True,True,28,6479,yes,1,,
+75,8487,confounding,ate,zuph -> tijv,tijv -> zuph,True,False,False,False,True,True,2,8308,yes,1,False,True,False,False,6,17481,yes,1,True,False,False,False,21,16600,no,0,answer changed,no path
+77,14113,confounding,ate,xevu -> rixq,rixq -> xevu,True,False,False,False,True,True,2,21012,yes,1,False,True,False,False,0,19418,yes,1,True,True,True,True,16,14944,no,0,answer changed,no path
+78,10113,confounding,det-counterfactual,kraz -> lirg,lirg -> kraz,True,True,False,True,True,True,9,14741,no,1,False,True,True,True,4,13201,no,1,True,True,True,True,6,21017,no,1,,
+79,18807,confounding,ett,pexu -> muvq,muvq -> pexu,True,False,False,False,True,True,3,8326,yes,1,False,True,True,True,5,29517,yes,1,True,False,True,True,11,20118,no,0,answer changed,no path
+80,10155,confounding,det-counterfactual,wibl -> zupj,zupj -> wibl,True,True,False,True,True,False,1,11669,yes,0,False,True,True,True,1,22311,yes,0,True,True,True,True,1,28865,no,1,,
+81,20463,confounding,det-counterfactual,muvy -> rixq,rixq -> muvy,True,True,False,True,False,False,0,13552,no,0,False,True,True,True,4,22043,yes,1,True,True,True,True,1,25639,yes,1,,
+82,18797,confounding,ett,lirg -> tijw,tijw -> lirg,True,False,False,True,True,True,1,12043,no,1,False,True,True,True,1,23358,no,1,True,False,True,True,21,19120,no,1,"estimand changed, answer kept",no path
+83,8435,confounding,ett,zuph -> rixq,rixq -> zuph,True,False,False,False,True,True,0,12588,no,1,False,True,True,True,0,24511,no,1,True,True,True,True,22,17251,no,1,"estimand changed, answer kept",no path
+90,10879,diamond,ate,tijw -> cwoi,cwoi -> tijw,False,False,False,False,True,False,0,12129,yes,1,False,True,False,False,5,26861,no,0,True,False,True,True,2,25222,no,0,"estimand changed, answer kept",backdoor
+91,586,diamond,ate,glimx -> xevo,xevo -> glimx,False,False,False,False,False,False,0,1664,yes,1,False,True,True,True,3,7229,yes,1,True,False,False,False,7,16239,yes,1,answer changed,backdoor
+93,5379,diamond,ate,qwiu -> jyka,jyka -> qwiu,False,False,False,False,False,False,0,3634,no,1,False,True,True,True,0,8253,no,1,True,False,False,False,6,16480,no,1,answer changed,backdoor
+96,6068,diamond,nie,zuph -> tijv,tijv -> zuph,True,False,False,False,True,True,1,11424,no,0,False,True,False,False,4,18974,no,0,True,False,True,True,19,11750,no,0,,
+97,5443,diamond,nie,yomx -> kwox,kwox -> yomx,False,False,False,False,False,False,3,5671,no,0,False,True,False,False,4,8959,yes,1,True,False,True,True,16,15497,no,0,,
+98,5283,diamond,nie,cwoi -> lirg,lirg -> cwoi,True,False,False,False,True,False,6,5769,no,1,False,True,False,False,2,17693,no,1,True,False,True,True,16,17416,no,1,,
+99,20088,diamond,det-counterfactual,tijw -> xyfo,xyfo -> tijw,True,True,False,False,False,False,0,14198,no,0,False,True,False,False,1,13866,yes,1,True,False,True,True,1,19306,yes,1,,
+100,11645,diamond,nie,xevo -> swoy,swoy -> xevo,False,False,False,True,False,False,2,7475,no,0,False,True,True,True,3,18337,yes,1,True,False,True,True,10,28235,no,0,,
+101,517,diamond,nie,tijw -> swoy,swoy -> tijw,True,False,False,False,True,True,5,4030,no,0,False,True,True,True,1,27446,no,0,True,True,True,True,16,10966,no,0,,
+110,5106,diamondcut,ate,gyzp -> uvzi,uvzi -> gyzp,True,False,False,False,True,False,0,16334,yes,1,False,True,True,True,0,18708,yes,1,True,False,True,True,0,20003,yes,1,estimand kept,backdoor
+112,15509,diamondcut,ate,gwet -> kwox,kwox -> gwet,True,False,False,False,True,True,0,18420,yes,1,False,False,True,True,1,23141,yes,1,True,False,True,True,2,21618,yes,1,"estimand changed, answer kept",backdoor
+114,19977,diamondcut,det-counterfactual,jyka -> qwiu,qwiu -> jyka,True,True,False,True,True,True,1,16946,no,0,False,True,True,True,0,10275,no,0,True,True,True,True,2,26536,no,0,,
+115,10764,diamondcut,ett,qwiu -> swoy,swoy -> qwiu,True,False,False,False,True,False,0,19896,no,1,False,True,True,False,3,15517,no,1,True,False,True,False,5,20179,no,1,estimand kept,backdoor
+116,9570,diamondcut,det-counterfactual,jyka -> xevu,xevu -> jyka,True,True,False,False,True,True,1,25776,yes,1,False,True,True,True,1,16181,no,0,True,True,True,True,0,27910,no,0,,
+117,5086,diamondcut,ett,muvy -> gyzp,gyzp -> muvy,True,False,False,False,True,False,0,15661,no,0,False,False,True,False,8,20934,no,0,True,False,True,False,0,14696,no,0,"estimand changed, answer kept",backdoor
+118,350,diamondcut,ett,rukz -> muvy,muvy -> rukz,True,False,False,False,True,False,0,10346,yes,0,False,True,True,False,3,19856,yes,0,True,False,True,True,0,14690,yes,0,"estimand changed, answer kept",backdoor
+119,10718,diamondcut,ett,tijv -> rixq,rixq -> tijv,True,False,False,False,True,False,0,20462,no,1,False,True,True,True,1,21204,no,1,True,False,True,True,3,19620,no,1,estimand kept,backdoor
+130,5789,fork,ate,cwoi -> swoq,swoq -> cwoi,True,False,False,False,True,False,0,15371,no,1,False,True,True,True,13,33688,no,1,True,False,True,True,0,12679,no,1,"estimand changed, answer kept",backdoor
+132,207,fork,ett,rukz -> tijw,tijw -> rukz,True,False,False,False,True,False,3,15866,yes,1,False,True,True,True,2,15688,yes,1,True,False,True,False,2,9834,yes,1,answer changed,no path
+133,16015,fork,ett,muvq -> rukz,rukz -> muvq,True,False,False,False,False,False,0,3489,yes,1,False,True,True,True,2,16152,yes,1,True,False,False,False,0,9316,yes,1,"estimand changed, answer kept",backdoor
+134,9656,fork,det-counterfactual,yomx -> tijv,tijv -> yomx,True,True,False,True,False,False,1,10093,yes,1,False,True,True,True,2,13855,yes,1,True,True,True,True,13,14739,yes,1,,
+135,19943,fork,det-counterfactual,xevo -> hwax,hwax -> xevo,True,True,False,True,True,True,0,15135,no,0,False,True,True,True,0,12040,yes,1,True,True,True,True,5,23673,no,0,,
+136,940,fork,ett,xevu -> uvzi,uvzi -> xevu,True,False,False,False,True,True,1,19158,no,1,False,True,False,False,2,16669,no,1,True,False,True,True,2,19974,no,1,"estimand changed, answer kept",no path
+137,5054,fork,ett,xevo -> pexu,pexu -> xevo,True,False,False,False,True,True,0,9805,no,1,False,True,True,True,0,12421,no,1,True,False,True,True,2,22530,yes,0,"estimand changed, answer kept",backdoor
+145,9014,frontdoor,ate,vubr -> zupj,zupj -> vubr,False,False,False,False,False,False,4,8287,no,0,False,True,False,False,8,19844,yes,1,False,False,True,True,16,15868,no,0,answer changed,no path
+146,14651,frontdoor,ate,gwet -> kwoz,kwoz -> gwet,False,False,False,False,True,True,7,11348,no,0,False,True,True,True,7,18855,yes,1,True,True,False,False,17,11559,no,0,answer changed,no path
+148,19325,frontdoor,ate,wibl -> xevo,xevo -> wibl,False,False,False,False,False,False,0,6647,no,0,False,True,True,True,10,20779,yes,1,False,False,False,False,15,20340,no,0,answer changed,no path
+149,4166,frontdoor,ate,wibl -> xyfo,xyfo -> wibl,False,False,False,False,False,False,1,9003,no,0,False,True,False,False,4,19068,yes,1,True,False,False,False,17,19539,no,0,answer changed,no path
+150,20623,frontdoor,det-counterfactual,qwiu -> gwet,gwet -> qwiu,True,True,False,True,True,True,1,15960,yes,1,False,True,True,True,7,19760,yes,1,True,True,True,True,9,29545,yes,1,,
+151,9004,frontdoor,nie,gwet -> qwiu,qwiu -> gwet,False,False,False,True,False,False,10,8942,no,0,False,True,False,False,6,17529,yes,1,True,True,True,True,16,21831,no,0,,
+152,10229,frontdoor,det-counterfactual,kraz -> swoy,swoy -> kraz,False,True,False,False,True,True,0,22893,no,1,False,True,True,True,0,23454,yes,0,True,True,True,True,2,30941,no,1,,
+153,19421,frontdoor,ett,qwiu -> yomx,yomx -> qwiu,False,False,False,False,False,False,0,16841,no,1,False,True,False,False,4,30669,no,1,True,False,False,False,15,18485,no,1,"estimand changed, answer kept",no path
+154,4267,frontdoor,nie,wibl -> glimx,glimx -> wibl,False,False,False,True,True,True,8,9930,no,0,False,True,True,False,5,20627,yes,1,True,True,True,True,26,12614,no,0,,
+155,4167,frontdoor,ett,zuph -> rixq,rixq -> zuph,False,False,False,False,False,False,0,10321,no,1,False,True,False,False,4,19242,no,1,True,False,False,False,3,19426,no,1,"estimand changed, answer kept",backdoor
+162,1128,mediation,ate,glimx -> zory,zory -> glimx,True,False,False,False,True,False,1,8817,no,1,False,True,False,False,2,17640,yes,0,True,False,False,False,4,21621,yes,0,estimand kept,backdoor
+164,17234,mediation,ate,muvq -> swoq,swoq -> muvq,True,False,False,False,True,False,1,6936,yes,1,False,True,True,True,0,12323,yes,1,True,False,False,False,1,5102,yes,1,estimand kept,backdoor
+167,4955,mediation,ate,jyka -> gyzp,gyzp -> jyka,True,False,False,False,True,False,0,5117,no,1,False,True,True,True,0,8735,no,1,True,False,True,True,0,7190,no,1,estimand kept,backdoor
+168,15266,mediation,ett,xyfo -> yupt,yupt -> xyfo,False,False,False,False,False,False,0,5962,no,1,False,True,True,False,0,15548,no,1,True,False,True,False,0,23987,no,1,"estimand changed, answer kept",backdoor
+169,16591,mediation,nde,jyka -> tijw,tijw -> jyka,False,False,False,False,True,True,0,10532,no,1,False,True,False,False,0,10797,no,1,True,False,True,True,5,12805,no,1,,
+170,11567,mediation,ett,tijw -> rukz,rukz -> tijw,True,False,False,False,False,False,0,4455,no,1,False,True,False,False,0,14619,no,1,True,False,False,False,0,10215,no,1,estimand kept,backdoor
+171,13453,mediation,ett,kwox -> hwax,hwax -> kwox,True,False,False,False,False,False,0,3504,no,1,False,True,True,True,17,22170,no,1,True,False,True,True,1,19570,no,1,answer changed,backdoor
+172,20217,mediation,det-counterfactual,yomx -> rixq,rixq -> yomx,True,True,False,True,True,False,0,6911,no,1,False,True,True,True,3,8563,no,1,True,True,True,True,7,21786,no,1,,
+173,20215,mediation,det-counterfactual,rukz -> swoq,swoq -> rukz,True,True,False,False,True,False,0,15285,no,1,False,True,True,False,0,15072,no,1,True,True,True,True,4,21998,no,1,,

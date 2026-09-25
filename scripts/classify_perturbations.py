@@ -251,7 +251,7 @@ def prose_graph(prompt: str) -> list[tuple[str, str]]:
 
 def classify(n_items=N_ITEMS, sample_kmax=KMAX, kmax=KMAX, arms=("DR", "ED", "FE"),
              lexicons=("KEEP", "PSEUDO"), scramble=False, seed=SEED,
-             exclude_ids=None) -> pd.DataFrame:
+             exclude_ids=None, keep_shown=False) -> pd.DataFrame:
     """Classify the perturbation each item was SHOWN, per lexicon.
 
     Until 2026-09-24 this replayed the draw over the canonical SYMBOL graph,
@@ -279,6 +279,9 @@ def classify(n_items=N_ITEMS, sample_kmax=KMAX, kmax=KMAX, arms=("DR", "ED", "FE
     """
     # `seed` and `exclude_ids` are the pilot.py --seed and --exclude-ids of the
     # sample being replayed; the defaults are the exploratory samples'.
+    # keep_shown adds `shown_sym`, the graph shown in symbols under every name
+    # mapping that fits (analyze_answer_change.py needs it); off by default so
+    # the files written here keep their columns.
     items = make_items(n_items, seed, sample_kmax, "full_v1.5_default.csv", None, True,
                        exclude_ids)
     canon = canonical_structures()
@@ -330,9 +333,10 @@ def classify(n_items=N_ITEMS, sample_kmax=KMAX, kmax=KMAX, arms=("DR", "ED", "FE
                 draws.append(("SCRAMBLE", "SCRAMBLE", 0, random.Random(
                     f"{seed}:{i}:SCRAMBLE").choice(enumerate_scramble(edges, nodes))))
             for cond, t, k, shown in draws:
-                verdicts = set()
+                verdicts, bads = set(), set()
                 for n2s in n2s_all:
                     bad = sorted((n2s[pos[a]], n2s[pos[b]]) for a, b in shown)
+                    bads.add(tuple(bad))
                     verdicts.add((same_estimand(sym, bad, sym_nodes),
                                   touches_causal_path(sym, bad)))
                 if len(verdicts) != 1:
@@ -343,7 +347,8 @@ def classify(n_items=N_ITEMS, sample_kmax=KMAX, kmax=KMAX, arms=("DR", "ED", "FE
                 rows.append(dict(item=i, lexicon=lex, family=r["graph_id"],
                                  query_type=r["query_type"], cond=cond, arm=t, k=k,
                                  estimand_unchanged=unch, touches_causal_path=touch,
-                                 replay_in_cache=key.exists()))
+                                 replay_in_cache=key.exists(),
+                                 **({"shown_sym": sorted(bads)} if keep_shown else {})))
     print(f"  {no_map} items with no fitting name mapping, {ambiguous} draws whose "
           f"verdict depends on an automorphism - both left out.\n")
     return pd.DataFrame(rows)

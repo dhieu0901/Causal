@@ -1,0 +1,10 @@
+sample,lexicon,cond,reference,delta_pp,ci_lo,ci_hi,p_boot,p_min_seeds,p_max_seeds,n_items,exploratory_samples,survives_BH
+conf,KEEP,ORACLE,RAW,1.74,-0.7,4.18,0.1555,0.1485,0.176,479,lex -5.04; n600 -0.17; price400 -0.08,False
+conf,KEEP,DR_k1,RAW,-3.91,-6.59,-1.08,0.007,0.003,0.007,478,lex -8.72; n600 -6.11; price400 -5.16,True
+conf,KEEP,DR_k2,RAW,-9.1,-12.19,-6.18,0.0005,0.0005,0.0005,480,price400 -7.36,True
+conf,KEEP,DR_k3,RAW,-9.14,-12.78,-5.54,0.0005,0.0005,0.0005,352,price400 -6.90,True
+conf,PSEUDO,ORACLE,RAW,3.78,0.21,7.24,0.0365,0.023,0.0365,481,lex +7.75; n600 +6.30; price400 +1.01,False
+conf,PSEUDO,DR_k1,RAW,1.81,-1.33,5.23,0.2665,0.2485,0.2665,478,lex -0.58; n600 -1.26; price400 -0.50,False
+conf,PSEUDO,DR_k2,RAW,-2.35,-5.43,0.55,0.122,0.121,0.1305,482,price400 -2.95,False
+conf,PSEUDO,DR_k3,RAW,-6.54,-9.84,-3.3,0.0005,0.0005,0.0005,354,price400 -5.03,True
+conf,KEEP,ORACLE,DR_k1,5.93,3.17,8.82,0.0005,0.0005,0.0005,478,,True
