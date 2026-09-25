@@ -80,12 +80,12 @@ N600_NEW = {"PERMUTE", "IRRELEVANT", "SYMBOL"}
 def load(lex, sample="lex"):
     if sample == "n600":
         tag = f"_n600ladder{lex}" if lex in N600_NEW else f"_n600{lex}"
-        p = ROOT / "results" / "raw" / f"pilot_raw{tag}.csv"
+        p = ROOT / "results" / "cladder" / "raw" / f"pilot_raw{tag}.csv"
         if not p.exists():
             raise SystemExit(f"thieu {p.name}: chay bash scripts/run_n600_extensions.sh")
         return pd.read_csv(p)
     for tag in (f"_lex{lex}", f"_instr{lex}"):
-        p = ROOT / "results" / "raw" / f"pilot_raw{tag}.csv"
+        p = ROOT / "results" / "cladder" / "raw" / f"pilot_raw{tag}.csv"
         if p.exists():
             return pd.read_csv(p)
     raise SystemExit(
@@ -128,7 +128,7 @@ def main():
                     help="use the whole sample instead of the genuinely-causal group only")
     a = ap.parse_args()
     samples = [a.sample] if a.sample != "both" else (
-        ["lex", "n600"] if (ROOT / "results" / "raw" / "pilot_raw_n600ladderSYMBOL.csv").exists()
+        ["lex", "n600"] if (ROOT / "results" / "cladder" / "raw" / "pilot_raw_n600ladderSYMBOL.csv").exists()
         else ["lex"])
     for sample in samples:
         run(a, sample)
@@ -157,7 +157,7 @@ def run(a, sample):
         rows.append(r)
     acc = pd.DataFrame(rows)
     print(acc[["model"] + LADDER].to_string(index=False))
-    acc.to_csv(ROOT / "results" / f"ladder5_accuracy{sfx}.csv", index=False)
+    acc.to_csv(ROOT / "results" / "cladder" / f"ladder5_accuracy{sfx}.csv", index=False)
 
     print("\n" + "=" * W)
     print("2. EACH RUNG CHANGES EXACTLY ONE THING - this is what IRRELEVANT buys")
@@ -185,7 +185,7 @@ def run(a, sample):
         st["run"] = ["same run" if (ends[s_] <= N600_NEW or not ends[s_] & N600_NEW)
                      else "crosses runs" for s_ in st.step]
     print(st.to_string(index=False))
-    st.to_csv(ROOT / "results" / f"ladder5_steps{sfx}.csv", index=False)
+    st.to_csv(ROOT / "results" / "cladder" / f"ladder5_steps{sfx}.csv", index=False)
     print("\n  Read 'equivalence_bound' whenever a step is NOT established: it says")
     print("  how large the true effect could still be, instead of only reporting a")
     print("  failure to reject.")
@@ -225,7 +225,7 @@ def run(a, sample):
             print("  familiarity of surface form.")
     if a.sample == "n600":
         length_check(D, causal)
-    print(f"\n  Wrote: results/ladder5_accuracy{sfx}.csv, results/ladder5_steps{sfx}.csv")
+    print(f"\n  Wrote: results/cladder/ladder5_accuracy{sfx}.csv, results/cladder/ladder5_steps{sfx}.csv")
 
 
 def length_check(D, causal):
@@ -257,7 +257,7 @@ def length_check(D, causal):
           f"average; across {len(j)} items corr(length gap, accuracy gap) = {r:+.3f}")
     pd.DataFrame([{"items": len(j), "mean_extra_chars": round(gap_len[j].mean(), 1),
                    "corr_length_gap_accuracy_gap": round(r, 3)}]).to_csv(
-        ROOT / "results" / "ladder5_length_n600.csv", index=False)
+        ROOT / "results" / "cladder" / "ladder5_length_n600.csv", index=False)
 
 
 if __name__ == "__main__":

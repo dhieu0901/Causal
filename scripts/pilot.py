@@ -55,7 +55,7 @@ def make_items(n, seed, kmax=3, data="full_v1.5_default.csv", pair_to=None,
     from results/, so the draw stays the same after the confirmatory records
     themselves land in results/.
     """
-    d = pd.read_csv(ROOT / "data" / data)
+    d = pd.read_csv(ROOT / "data" / "cladder" / data)
 
     # The three test-*-v1.5.csv files ship the background and the given
     # quantities but NOT the question - 0% of their prompts contain a '?', while
@@ -266,7 +266,7 @@ def main():
                          "what the rest would cost")
     ap.add_argument("--cost-ref", default="", dest="cost_ref",
                     help="FILE:COND, with --dry-run. Price each new call at the SAME "
-                         "item's output tokens under COND in results/raw/FILE, which must "
+                         "item's output tokens under COND in results/cladder/raw/FILE, which must "
                          "be a run of this very sample, e.g. "
                          "pilot_raw_n600PSEUDO.csv:DR_k1")
     ap.add_argument("--temperature", type=float, default=0.0,
@@ -319,7 +319,7 @@ def main():
         ref = None
         if a.cost_ref:
             fname, cond = a.cost_ref.rsplit(":", 1)
-            ref = pd.read_csv(ROOT / "results" / "raw" / fname)
+            ref = pd.read_csv(ROOT / "results" / "cladder" / "raw" / fname)
             # `item` is a row index into THIS sample, so a file from another
             # sample would price every call at an unrelated question.
             meta = {j["item"]: (j["graph_id"], j["gold"]) for j in jobs}
@@ -436,11 +436,11 @@ def main():
                 recaprows += rows_of(rec2, model, a.recap)
 
     df = pd.DataFrame(allrows)
-    out = ROOT / "results" / "raw" / f"pilot_raw{a.tag}.csv"
+    out = ROOT / "results" / "cladder" / "raw" / f"pilot_raw{a.tag}.csv"
     df.to_csv(out, index=False)
     print(f"\nsaved {out}  ({len(df)} rows)")
     if a.recap:
-        out2 = ROOT / "results" / "raw" / f"pilot_raw{a.tag}_recap{a.recap}.csv"
+        out2 = ROOT / "results" / "cladder" / "raw" / f"pilot_raw{a.tag}_recap{a.recap}.csv"
         pd.DataFrame(recaprows).to_csv(out2, index=False)
         print(f"saved {out2}  ({len(recaprows)} rows)")
 

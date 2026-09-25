@@ -64,7 +64,7 @@ GROUPS = {"rung1_arith": ARITH, "identify": IDENT, "causal": None}
 
 
 def load(tag):
-    p = ROOT / "results" / "raw" / f"pilot_raw_instr{tag}.csv"
+    p = ROOT / "results" / "cladder" / "raw" / f"pilot_raw_instr{tag}.csv"
     if not p.exists():
         raise SystemExit(
             f"thieu {p.name}. Chay:\n"
@@ -131,7 +131,7 @@ def main():
                      "tong": round(acc["ORACLE"] - acc["RAW"], 2)})
     dec = pd.DataFrame(rows)
     print(dec.to_string(index=False))
-    dec.to_csv(ROOT / "results" / "instruction_decomposition.csv", index=False)
+    dec.to_csv(ROOT / "results" / "cladder" / "instruction_decomposition.csv", index=False)
 
     print("\n" + "=" * W)
     print("2. THE DECISIVE TEST: can the instruction alone, with no graph, close")
@@ -170,7 +170,7 @@ def main():
         print(sub[["ma", "test", "DiD_pp", "ci_lo", "ci_hi", "p", "established"]]
               .to_string(index=False))
         print()
-    res.to_csv(ROOT / "results" / "instruction_interaction.csv", index=False)
+    res.to_csv(ROOT / "results" / "cladder" / "instruction_interaction.csv", index=False)
 
     print("=" * W)
     print("3. DOC KET QUA")
@@ -196,8 +196,8 @@ def main():
             print("  become a statement about ASKING the model to reason causally, not")
             print("  about SUPPLYING it with structure. This is a negative finding, and it")
             print("  has to go into the report before any draft is submitted anywhere.")
-    print("\n  Da ghi: results/instruction_decomposition.csv,")
-    print("          results/instruction_interaction.csv")
+    print("\n  Da ghi: results/cladder/instruction_decomposition.csv,")
+    print("          results/cladder/instruction_interaction.csv")
 
 
 if __name__ == "__main__":

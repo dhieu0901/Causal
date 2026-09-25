@@ -13,7 +13,7 @@ Method, taking no number from REPORT.md:
   4. for each of those, see which side the yes/no label in the data agrees with
 
 Run:  python scripts/verify_labels.py
-Writes: a table to the console, and results/_label_flips.csv
+Writes: a table to the console, and results/cladder/_label_flips.csv
 """
 
 import csv
@@ -72,9 +72,9 @@ def label_for(value, thr, polarity):
 def count_label_flips(verbose=True, write_csv=True):
     """Returns (n_following_broken_value, n_decisive_questions, table_by_query_type)."""
     vg = _load_solver()
-    meta = json.loads(open(os.path.join(ROOT, "data", "cladder-meta.json"),
+    meta = json.loads(open(os.path.join(ROOT, "data", "cladder", "cladder-meta.json"),
                            encoding="utf-8").read())
-    qs = json.loads(open(os.path.join(ROOT, "data", "cladder-questions.json"),
+    qs = json.loads(open(os.path.join(ROOT, "data", "cladder", "cladder-questions.json"),
                          encoding="utf-8").read())
     scms = {m["model_id"]: m for m in meta}
 
@@ -137,7 +137,7 @@ def count_label_flips(verbose=True, write_csv=True):
     total = broken + sum(c["correct"] for c in per_qt.values())
 
     if write_csv:
-        out = os.path.join(ROOT, "results", "_label_flips.csv")
+        out = os.path.join(ROOT, "results", "cladder", "_label_flips.csv")
         with open(out, "w", encoding="utf-8", newline="") as fh:
             w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
             w.writeheader()
@@ -163,7 +163,7 @@ def count_label_flips(verbose=True, write_csv=True):
         print(f"  => {broken}/{total} labels follow the BROKEN value "
               f"({100.0 * broken / total:.1f}%)")
         if write_csv:
-            print("  wrote results/_label_flips.csv")
+            print("  wrote results/cladder/_label_flips.csv")
 
     return broken, total, {k: dict(v) for k, v in per_qt.items()}
 

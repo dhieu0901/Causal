@@ -4,7 +4,7 @@ import json, re, random
 from collections import Counter, defaultdict
 from pathlib import Path
 
-DATA = Path(__file__).resolve().parent.parent / "data"
+DATA = Path(__file__).resolve().parent.parent / "data" / "cladder"
 DESC = re.compile(r"^(.+?)-(.+?)-(.+?)-model(\d+)-spec(\d+)-q(\d+)$")
 
 

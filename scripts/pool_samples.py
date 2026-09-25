@@ -45,7 +45,7 @@ So the headline is CORRECT and properly de-duplicated. What was missing was a
 script that produces it. Now there is one.
 
 Run:  python scripts/pool_samples.py
-Writes: results/pooled_headline.csv and results/_itemmap_*.csv
+Writes: results/cladder/pooled_headline.csv and results/cladder/_itemmap_*.csv
 """
 
 from __future__ import annotations
@@ -113,7 +113,7 @@ def draw_items(full, pilot, n, kmax, drop):
 def verify_item_map(tag, n, kmax, drop, full, pilot):
     """Recover item -> id, and PROVE it by matching the saved CSV row by row."""
     it = draw_items(full, pilot, n, kmax, drop)
-    saved = pd.read_csv(ROOT / "results" / "raw" / f"pilot_raw_{tag}KEEP.csv")
+    saved = pd.read_csv(ROOT / "results" / "cladder" / "raw" / f"pilot_raw_{tag}KEEP.csv")
     want = (saved[["item"] + KEY].drop_duplicates()
             .sort_values("item")[KEY].reset_index(drop=True))
     got = it[KEY].reset_index(drop=True)
@@ -123,7 +123,7 @@ def verify_item_map(tag, n, kmax, drop, full, pilot):
             f"Either the arguments (n={n}, kmax={kmax}, drop={drop}) are wrong or "
             f"pilot.py has changed. Stopping rather than pooling on a bad key.")
     out = it[["id"]].reset_index().rename(columns={"index": "item"})
-    out.to_csv(ROOT / "results" / f"_itemmap_{tag}.csv", index=False)
+    out.to_csv(ROOT / "results" / "cladder" / f"_itemmap_{tag}.csv", index=False)
     return out
 
 
@@ -146,7 +146,7 @@ def attach_id(d, imap, label):
 
 
 def load(tag, lex, imap):
-    d = pd.read_csv(ROOT / "results" / "raw" / f"pilot_raw_{tag}{lex}.csv")
+    d = pd.read_csv(ROOT / "results" / "cladder" / "raw" / f"pilot_raw_{tag}{lex}.csv")
     return attach_id(d, imap, f"{tag}/{lex}")
 
 
@@ -191,7 +191,7 @@ def boot(W, seed=SEED, n=NBOOT):
 
 def main():
     pilot = _pilot()
-    full = pd.read_csv(ROOT / "data" / "full_v1.5_default.csv")
+    full = pd.read_csv(ROOT / "data" / "cladder" / "full_v1.5_default.csv")
 
     print("=" * 78)
     print("POOLING THREE SAMPLES AT ITEM LEVEL, DE-DUPLICATED BY CLADDER id")
@@ -248,7 +248,7 @@ def main():
     # stage 12 of the sweep and this script runs at stage 5, so the comparison
     # would silently be against the previous run. Prose-against-CSV is
     # scripts/check_numbers.py's job. This script states what it measured and
-    # writes it to results/pooled_headline.csv; nothing else.
+    # writes it to results/cladder/pooled_headline.csv; nothing else.
     print(f"  do duoc o day : n={len(pooled)}, DiD {e:+.2f}, "
           f"CI [{lo:+.2f} ; {hi:+.2f}], p={p:.4f}")
     print("  So doi chieu voi REPORT do scripts/check_numbers.py lo, vi no doc")
@@ -259,9 +259,9 @@ def main():
     print("\n  The headline is correct and properly de-duplicated. What was missing")
     print("  was a script that produces it; now there is one.")
 
-    out = ROOT / "results" / "pooled_headline.csv"
+    out = ROOT / "results" / "cladder" / "pooled_headline.csv"
     pd.DataFrame(rows).to_csv(out, index=False)
-    print(f"\nwrote {out.relative_to(ROOT)} and results/_itemmap_*.csv")
+    print(f"\nwrote {out.relative_to(ROOT)} and results/cladder/_itemmap_*.csv")
     return 0
 
 

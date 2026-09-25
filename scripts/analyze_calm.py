@@ -6,10 +6,10 @@
    commit 1c1e93a of OpenCausaLab/CaLM); the recomputed gold (src/calm.gold)
    agrees with all 100 answers CaLM publishes in its Lite release, and
    src/calm.mode with all 100 of its mode labels. Any failure exits 1. Writes
-   results/calm_items.csv: every item, its mode, gold and whether it is used.
+   results/calm/calm_items.csv: every item, its mode, gold and whether it is used.
 
 2. TESTS, for each model family whose records exist
-   (results/raw/calm_raw_{prefix}{KEEP,PSEUDO}.csv, scripts/calm_run.py):
+   (results/calm/raw/calm_raw_{prefix}{KEEP,PSEUDO}.csv, scripts/calm_run.py):
 
      C1  per item [(KEEP - PSEUDO) | RAW] - [(KEEP - PSEUDO) | ORACLE]   > 0
      C2  per item, PSEUDO: ORACLE - DR_k1                                > 0
@@ -22,7 +22,7 @@
    with the seed is borderline. Then the registered sensitivity analyses
    (items resampled instead of stories; unparsed answers scored as wrong; for
    Llama, cut-off answers re-asked) and an exploratory accuracy table.
-   Writes results/calm.csv and results/calm_accuracy.csv.
+   Writes results/calm/calm.csv and results/calm/calm_accuracy.csv.
 """
 from __future__ import annotations
 
@@ -40,7 +40,7 @@ import pandas as pd
 import calm
 from stats import boot_cells, boot_p, cluster_boot
 
-RAW = ROOT / "results" / "raw"
+RAW = ROOT / "results" / "calm" / "raw"
 NBOOT = 4000
 SEEDS = [20260907, 1, 2, 3, 4]
 ALPHA = 0.05
@@ -85,12 +85,12 @@ def check() -> pd.DataFrame:
                  has_data=bool(x["Background"]["data_info"].strip()),
                  used=int(x["index"] in used)) for x in full]
     T = pd.DataFrame(rows).sort_values("item")
-    T.to_csv(ROOT / "results" / "calm_items.csv", index=False)
+    T.to_csv(ROOT / "results" / "calm" / "calm_items.csv", index=False)
     u = T[T.used == 1]
     print(f"  {len(T)} items: {({k: int(v) for k, v in T['mode'].value_counts().items()})}; used {len(u)} REAL items "
           f"from {u.story.nunique()} stories, gold yes {int((u.gold == 'yes').sum())} / "
           f"no {int((u.gold == 'no').sum())}")
-    print("  wrote results/calm_items.csv")
+    print("  wrote results/calm/calm_items.csv")
     return T
 
 
@@ -181,7 +181,7 @@ def main() -> int:
     for family, (models, prefix, recap) in FAMILIES.items():
         f = {lex: RAW / f"calm_raw_{prefix}{lex}.csv" for lex in ("KEEP", "PSEUDO")}
         if not all(p.exists() for p in f.values()):
-            print(f"\n  {family}: no CaLM records yet (results/raw/calm_raw_{prefix}*.csv)")
+            print(f"\n  {family}: no CaLM records yet (results/calm/raw/calm_raw_{prefix}*.csv)")
             continue
         K, P = pd.read_csv(f["KEEP"]), pd.read_csv(f["PSEUDO"])
         print("\n" + "=" * 78)
@@ -215,9 +215,9 @@ def main() -> int:
                                     accuracy_pct=round(100 * g.correct.mean(), 2),
                                     says_yes_pct=round(100 * (g.pred == "yes").mean(), 2)))
     if rows:
-        pd.DataFrame(rows).to_csv(ROOT / "results" / "calm.csv", index=False)
-        pd.DataFrame(acc).to_csv(ROOT / "results" / "calm_accuracy.csv", index=False)
-        print("\n  wrote results/calm.csv, results/calm_accuracy.csv")
+        pd.DataFrame(rows).to_csv(ROOT / "results" / "calm" / "calm.csv", index=False)
+        pd.DataFrame(acc).to_csv(ROOT / "results" / "calm" / "calm_accuracy.csv", index=False)
+        print("\n  wrote results/calm/calm.csv, results/calm/calm_accuracy.csv")
     return 0
 
 

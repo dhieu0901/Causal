@@ -79,7 +79,7 @@ NHAN = {"rung1_arith": "rung-1 so hoc", "identify": "backadj identification",
 def load():
     out = {}
     for lex in LEXICONS:
-        p = ROOT / "results" / "raw" / f"pilot_raw_lex{lex}.csv"
+        p = ROOT / "results" / "cladder" / "raw" / f"pilot_raw_lex{lex}.csv"
         if not p.exists():
             raise SystemExit(f"{p.name} missing: run pilot.py --lexicon {lex}")
         out[lex] = pd.read_csv(p)
@@ -172,7 +172,7 @@ def main():
                      "query_type": ", ".join(sorted(qs & set(one.query_type)))})
     comp = pd.DataFrame(rows)
     print(comp.to_string(index=False))
-    comp.to_csv(ROOT / "results" / "querygroup_composition.csv", index=False)
+    comp.to_csv(ROOT / "results" / "cladder" / "querygroup_composition.csv", index=False)
 
     print("\n" + "=" * W)
     print("1. Delta_struct = ORACLE - RAW, PHAN RA THEO NHOM  (dieu kien KEEP)")
@@ -192,7 +192,7 @@ def main():
         rows.append(r)
     dec = pd.DataFrame(rows)
     print(dec.to_string(index=False))
-    dec.to_csv(ROOT / "results" / "querygroup_delta_struct.csv", index=False)
+    dec.to_csv(ROOT / "results" / "cladder" / "querygroup_delta_struct.csv", index=False)
     print("\n  backadj is 18.4% of the sample but dominates the pooled Delta_struct.")
     print("  For gpt-4.1-mini, removing it FLIPS the sign of Delta_struct.")
 
@@ -256,9 +256,9 @@ def main():
                             "worst_harm_pp": round(float(np.nanmin(ds2)), 2)})
 
     mc = pd.DataFrame(rows)
-    mc.to_csv(ROOT / "results" / "querygroup_mcnemar.csv", index=False)
+    mc.to_csv(ROOT / "results" / "cladder" / "querygroup_mcnemar.csv", index=False)
     pd.DataFrame(summary).to_csv(
-        ROOT / "results" / "querygroup_mcnemar_summary.csv", index=False)
+        ROOT / "results" / "cladder" / "querygroup_mcnemar_summary.csv", index=False)
 
     print("=" * W)
     print("3. THE INTERACTION TEST - the headline claim, tested properly")
@@ -293,7 +293,7 @@ def main():
     # that under BH only 1/3 models passes on its own, not 2/3 - review item
     # V7-10 - and until now that verdict lived in prose with no column behind it.
     did["bh_q05_family16"] = bh(did.p_boot.tolist())
-    did.to_csv(ROOT / "results" / "querygroup_interaction.csv", index=False)
+    did.to_csv(ROOT / "results" / "cladder" / "querygroup_interaction.csv", index=False)
     per_m = did[(did.group == NHAN["causal"]) & (did.scope != "9 cells pooled")]
     print(f"  BH q=.05 over all {len(did)} interaction tests: "
           f"{int(per_m.bh_q05_family16.sum())}/{len(per_m)} models pass alone "
@@ -325,7 +325,7 @@ def main():
                          "ci_lo": round(lo, 2), "ci_hi": round(hi, 2)})
         print()
     eq = pd.DataFrame(rows)
-    eq.to_csv(ROOT / "results" / "querygroup_equivalence.csv", index=False)
+    eq.to_csv(ROOT / "results" / "cladder" / "querygroup_equivalence.csv", index=False)
     print("  Rung 1 is a real effect; rungs 2 and 3 are tightly bounded around zero.")
     print("  That is an equivalence bound, not an argument from failure to reject.")
 
@@ -380,7 +380,7 @@ def main():
                       "ci_hi": round(hi, 2), "p_boot": round(p, 4)})
     if len(srows) >= 2:
         pd.DataFrame(srows).to_csv(
-            ROOT / "results" / "querygroup_sensitivity.csv", index=False)
+            ROOT / "results" / "cladder" / "querygroup_sensitivity.csv", index=False)
         by = {r["scheme"]: r for r in srows}
         cur, alt = by.get("bo ca hai (hien tai)"), by.get("de xuat V7-13")
         if cur and alt:
@@ -409,7 +409,7 @@ def main():
           f"CI [{caurow.ci_lo:+.2f} ; {caurow.ci_hi:+.2f}]  p={caurow.p_boot:.4f}")
     print("\n  Filtering out backadj and rung-1 STRENGTHENS the headline claim rather")
     print("  than weakening it.")
-    print("  Wrote: results/querygroup_*.csv")
+    print("  Wrote: results/cladder/querygroup_*.csv")
 
 
 if __name__ == "__main__":

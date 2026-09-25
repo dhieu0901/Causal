@@ -55,7 +55,7 @@ IDENT = {"backadj"}
 
 
 def load(lex):
-    p = ROOT / "results" / "raw" / f"pilot_raw_edfe{lex}.csv"
+    p = ROOT / "results" / "cladder" / "raw" / f"pilot_raw_edfe{lex}.csv"
     if not p.exists():
         raise SystemExit(
             f"thieu {p.name}. Chay:\n"
@@ -86,7 +86,7 @@ def boot(by_model, seed, n=4000):
     call, so each row's interval depended on how many bootstraps had run before
     it, and reordering the loop reordered the draws. Every other bootstrap in the
     repository seeds each call; this one now does too, which moved the intervals
-    of results/errortype_by_lexicon.csv by bootstrap noise and nothing else - the
+    of results/cladder/errortype_by_lexicon.csv by bootstrap noise and nothing else - the
     point estimates are the same numbers. REVIEW 17.17 lists the moves.
     """
     items = sorted(set().union(*[set(s.index) for s in by_model.values()]))
@@ -137,7 +137,7 @@ def main():
     cost = pd.DataFrame(rows)
     print(cost[["lexicon", "error_type", "cost_pp", "ci_lo", "ci_hi", "established"]]
           .to_string(index=False))
-    cost.to_csv(ROOT / "results" / "errortype_by_lexicon.csv", index=False)
+    cost.to_csv(ROOT / "results" / "cladder" / "errortype_by_lexicon.csv", index=False)
 
     print("\n" + "=" * W)
     print("2. IS A REVERSED EDGE MORE EXPENSIVE THAN THE OTHER TWO TYPES")
@@ -160,7 +160,7 @@ def main():
                          "ci_hi": round(hi, 2), "established": ok})
     rank = pd.DataFrame(rows)
     print(rank.to_string(index=False))
-    rank.to_csv(ROOT / "results" / "errortype_ranking.csv", index=False)
+    rank.to_csv(ROOT / "results" / "cladder" / "errortype_ranking.csv", index=False)
 
     print("\n" + "=" * W)
     print("3. DOC KET QUA")
@@ -185,7 +185,7 @@ def main():
     print("\n  SAMPLE-SIZE WARNING. The causal group leaves only about 60 items per cell,")
     print("  so a 'not established' result here means NOT RESOLVABLE at this sample")
     print("  size, not zero. Read the equivalence_bound column in the CSV.")
-    print("\n  Da ghi: results/errortype_by_lexicon.csv, results/errortype_ranking.csv")
+    print("\n  Da ghi: results/cladder/errortype_by_lexicon.csv, results/cladder/errortype_ranking.csv")
 
 
 if __name__ == "__main__":

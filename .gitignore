@@ -11,6 +11,6 @@ cache/
 # Tai lieu noi bo va slide - khong phat hanh
 docs/
 slides.tex
-results/chain_sample_for_hand_coding.md
+results/cladder/chain_sample_for_hand_coding.md
 cache_drift/
 slides.*

@@ -33,7 +33,7 @@ throughout. This file is the missing layer.
                    different interval from the same seed (found 2026-09-24)
 
 Exit 1 on any failed check. Borderline verdicts are listed, not failed.
-Writes: results/seed_stability.csv
+Writes: results/cladder/seed_stability.csv
 """
 from __future__ import annotations
 
@@ -49,7 +49,7 @@ import pandas as pd
 
 from stats import boot_items, boot_p, boot_two_sample, cluster_boot
 
-RES = ROOT / "results"
+RES = ROOT / "results" / "cladder"
 TIER = ["gpt-4.1-nano", "gpt-4.1-mini", "gpt-4.1"]
 NONCAUSAL = {"marginal", "correlation", "backadj"}
 LATENT_FAMILIES = {"IV", "arrowhead", "frontdoor"}
@@ -206,7 +206,7 @@ SAMPLE_FILES = {
     "price400": ["price400KEEP", "price400PSEUDO", "cleanrawprice400KEEP", "cleanrawprice400PSEUDO"],
 }
 META = ["graph_id", "gold", "query_type", "story_id"]
-FULL = pd.read_csv(ROOT / "data" / "full_v1.5_default.csv", low_memory=False).set_index("id")
+FULL = pd.read_csv(ROOT / "data" / "cladder" / "full_v1.5_default.csv", low_memory=False).set_index("id")
 
 
 def pred(d):
@@ -531,7 +531,7 @@ def seeds():
         if not stable:
             BORDERLINE.append(text)
     pd.DataFrame(rows).to_csv(RES / "seed_stability.csv", index=False)
-    print(f"\n  {len(SEEDS)} seeds x {NBOOT} draws each; wrote results/seed_stability.csv")
+    print(f"\n  {len(SEEDS)} seeds x {NBOOT} draws each; wrote results/cladder/seed_stability.csv")
 
 
 def main() -> int:

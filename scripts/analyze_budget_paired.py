@@ -49,7 +49,7 @@ TIER = ["gpt-4.1", "gpt-4.1-mini", "gpt-4.1-nano"]
 
 
 def load(tag, prefix="price400"):
-    p = ROOT / "results" / "raw" / f"pilot_raw_{prefix}{tag}.csv"
+    p = ROOT / "results" / "cladder" / "raw" / f"pilot_raw_{prefix}{tag}.csv"
     if not p.exists():
         raise SystemExit(f"thieu {p.name}: chay pilot.py --lexicon {tag} --tag _{prefix}{tag}")
     return pd.read_csv(p)
@@ -91,7 +91,7 @@ def main():
     per = pd.DataFrame(rows)
     print(per.to_string(index=False))
     sfx = "" if a.prefix == "price400" else f"_{a.prefix}"
-    per.to_csv(ROOT / "results" / f"budget_per_branch{sfx}.csv", index=False)
+    per.to_csv(ROOT / "results" / "cladder" / f"budget_per_branch{sfx}.csv", index=False)
     print("\n  This reproduces section 8.2 EXACTLY. Note the n values: 390/382/371, NOT")
     print("  the 382/371 that section 8.2 quotes - those two belong to the section 2 basis.")
 
@@ -129,7 +129,7 @@ def main():
                      "n_can_de_p05": n_need})
     pair = pd.DataFrame(rows)
     print(pair.to_string(index=False))
-    pair.to_csv(ROOT / "results" / f"budget_paired_ci{sfx}.csv", index=False)
+    pair.to_csv(ROOT / "results" / "cladder" / f"budget_paired_ci{sfx}.csv", index=False)
 
     # ------------------------------------------------------------------
     # The pooled column. REPORT.md section 8.2 carries a third column headed
@@ -142,8 +142,8 @@ def main():
     pooled_rows = []
     tags = [("price400", ""), ("n600", "_n600")]
     have = [(pfx, sfx2) for pfx, sfx2 in tags
-            if (ROOT / "results" / "raw" / f"pilot_raw_{pfx}KEEP.csv").exists()
-            and (ROOT / "results" / f"_itemmap_{pfx}.csv").exists()]
+            if (ROOT / "results" / "cladder" / "raw" / f"pilot_raw_{pfx}KEEP.csv").exists()
+            and (ROOT / "results" / "cladder" / f"_itemmap_{pfx}.csv").exists()]
     if len(have) == 2 and a.prefix == "price400":
         print("\n" + "=" * W)
         print("2b. GOP HAI MAU, bo trung theo id goc CLadder")
@@ -155,7 +155,7 @@ def main():
                     Kx, Px = load("KEEP", pfx), load("PSEUDO", pfx)
                 except SystemExit:
                     continue
-                imap = pd.read_csv(ROOT / "results" / f"_itemmap_{pfx}.csv")
+                imap = pd.read_csv(ROOT / "results" / "cladder" / f"_itemmap_{pfx}.csv")
                 to_id = dict(zip(imap.item, imap.id))
                 common = (set(per_item(Kx, m, "ORACLE").index)
                           & set(per_item(Kx, m, "RAW").index)
@@ -188,7 +188,7 @@ def main():
         if pooled_rows:
             pooled = pd.DataFrame(pooled_rows)
             print(pooled.to_string(index=False))
-            pooled.to_csv(ROOT / "results" / "budget_paired_pooled.csv", index=False)
+            pooled.to_csv(ROOT / "results" / "cladder" / "budget_paired_pooled.csv", index=False)
             print("\n  De-dup theo id goc: mot cau xuat hien o ca hai mau chi tinh MOT lan.")
             print("  Gop KHONG phai nhan ban - hai mau dung chung mot phan item, va")
             print("  chung duoc rut tu cung mot benchmark boi cung mot nguoi.")
@@ -216,8 +216,8 @@ def main():
               f"de hieu dat p<0,05")
     print("\n  n_needed_for_p05 is a PLANNING number, not a result: it assumes the effect")
     print("  size and the variance stay unchanged as the sample grows.")
-    print(f"  Da ghi: results/budget_per_branch{sfx}.csv, "
-          f"results/budget_paired_ci{sfx}.csv")
+    print(f"  Da ghi: results/cladder/budget_per_branch{sfx}.csv, "
+          f"results/cladder/budget_paired_ci{sfx}.csv")
 
 
 if __name__ == "__main__":

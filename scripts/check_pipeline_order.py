@@ -12,7 +12,7 @@ Why it parses instead of greps. The first version of this check was a regular
 expression over the source, and on 2026-09-23 it reported "0 violations" for an
 edge that had just been introduced - a read written as
 
-    ref = ROOT / "results" / "structure_arms.csv"
+    ref = ROOT / "results" / "cladder" / "structure_arms.csv"
     ...
     pd.read_csv(ref)
 
@@ -67,7 +67,7 @@ WRITERS = {"to_csv", "to_json"}
 
 
 class Flow(ast.NodeVisitor):
-    """Collects results/*.csv reads and writes, following local assignments."""
+    """Collects results/cladder/*.csv reads and writes, following local assignments."""
 
     def __init__(self):
         self.env: dict[str, str] = {}      # varname -> filename
@@ -83,7 +83,7 @@ class Flow(ast.NodeVisitor):
     # -- resolving an expression to a results/ filename --------------------
 
     def _name(self, node) -> str | None:
-        """A results/<file> path, or None. Handles ROOT / "results" / "x.csv"."""
+        """A results/<file> path, or None. Handles ROOT / "results" / "cladder" / "x.csv"."""
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
             return node.value if node.value.endswith((".csv", ".json")) else None
         if isinstance(node, ast.JoinedStr):
@@ -94,7 +94,7 @@ class Flow(ast.NodeVisitor):
         if isinstance(node, ast.Name):
             return self.env.get(node.id)
         if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
-            # ROOT / "results" / "x.csv"  ->  take the rightmost operand
+            # ROOT / "results" / "cladder" / "x.csv"  ->  take the rightmost operand
             return self._name(node.right)
         return None
 

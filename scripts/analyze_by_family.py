@@ -20,7 +20,7 @@ families; the three two-edge families (chain, collision, fork) come from `lex` a
 every cell.
 
 Run:  python scripts/analyze_by_family.py
-Writes: results/family_breakdown.csv
+Writes: results/cladder/family_breakdown.csv
 """
 
 from __future__ import annotations
@@ -73,7 +73,7 @@ def structure():
         "vg", str(ROOT / "scripts" / "verify_groundtruth.py"))
     vg = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(vg)
-    meta = json.loads((ROOT / "data" / "cladder-meta.json").read_text(encoding="utf-8"))
+    meta = json.loads((ROOT / "data" / "cladder" / "cladder-meta.json").read_text(encoding="utf-8"))
     out = {}
     for m in meta:
         if m["graph_id"] in out:
@@ -86,7 +86,7 @@ def structure():
 def pooled_matrix():
     """The DiD matrix (id x cell) pooled over all three samples, plus id -> family."""
     pilot = _pilot()
-    full = pd.read_csv(ROOT / "data" / "full_v1.5_default.csv")
+    full = pd.read_csv(ROOT / "data" / "cladder" / "full_v1.5_default.csv")
     per = {}
     for tag, n, kmax, drop in SAMPLES:
         imap = verify_item_map(tag, n, kmax, drop, full, pilot)
@@ -213,7 +213,7 @@ def main():
     # ett, nde, nie and det-counterfactual rung 3. Descriptive, outside the
     # correction family, like sections 6 and 7.
     print("\n8. BY RUNG OF THE CAUSAL LADDER")
-    rung_of = (pd.read_csv(ROOT / "data" / "full_v1.5_default.csv", usecols=["id", "rung"])
+    rung_of = (pd.read_csv(ROOT / "data" / "cladder" / "full_v1.5_default.csv", usecols=["id", "rung"])
                .set_index("id").rung.reindex(G.index))
     for rg in sorted(rung_of.dropna().unique()):
         idx = rung_of.index[rung_of == rg]
@@ -269,7 +269,7 @@ def main():
   sample. The per-family rows in particular carry 29 to 69 items each, which is
   not enough to rank families against one another.""")
 
-    out = ROOT / "results" / "family_breakdown.csv"
+    out = ROOT / "results" / "cladder" / "family_breakdown.csv"
     R.to_csv(out, index=False)
     print(f"\nwrote {out.relative_to(ROOT)}")
     print("\nHOW TO READ THIS. These are the POOLED n=490 numbers, not the n=86")

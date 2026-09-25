@@ -67,9 +67,9 @@ LATENT = re.compile(r"is unobserved", re.IGNORECASE)
 
 
 def main() -> int:
-    src = ROOT / "data" / "full_v1.5_default.csv"
+    src = ROOT / "data" / "cladder" / "full_v1.5_default.csv"
     if not src.exists():
-        raise SystemExit("thieu data/full_v1.5_default.csv")
+        raise SystemExit("thieu data/cladder/full_v1.5_default.csv")
     full = pd.read_csv(src, low_memory=False).set_index("id")
 
     print("=" * 78)
@@ -81,7 +81,7 @@ def main() -> int:
     rows = []
     edge_ids, latent_ids = set(), set()
     for tag in SAMPLES:
-        im = ROOT / "results" / f"_itemmap_{tag}.csv"
+        im = ROOT / "results" / "cladder" / f"_itemmap_{tag}.csv"
         if not im.exists():
             print(f"  {tag}: thieu _itemmap_{tag}.csv, bo qua")
             continue
@@ -107,7 +107,7 @@ def main() -> int:
         raise SystemExit("khong co mau nao de do")
     out = pd.DataFrame(rows)
     print(out.to_string(index=False))
-    out.to_csv(ROOT / "results" / "raw_structure_leak.csv", index=False)
+    out.to_csv(ROOT / "results" / "cladder" / "raw_structure_leak.csv", index=False)
 
     # ------------------------------------------------------------------
     # 2. Does the headline survive without the leaky items? Review item V7-16
@@ -122,7 +122,7 @@ def main() -> int:
     print("=" * 78)
     per = []
     for tag in SAMPLES:
-        im = ROOT / "results" / f"_itemmap_{tag}.csv"
+        im = ROOT / "results" / "cladder" / f"_itemmap_{tag}.csv"
         if not im.exists():
             continue
         W = did_sample(tag, pd.read_csv(im), [POOL_LEXICON], arm="ORACLE")
@@ -142,7 +142,7 @@ def main() -> int:
             sens.append({"subset": label, "n_items": len(M), "did_pp": round(est, 2),
                          "ci_lo": round(lo, 2), "ci_hi": round(hi, 2),
                          "p_boot": round(p, 4)})
-        pd.DataFrame(sens).to_csv(ROOT / "results" / "raw_leak_sensitivity.csv",
+        pd.DataFrame(sens).to_csv(ROOT / "results" / "cladder" / "raw_leak_sensitivity.csv",
                                   index=False)
 
     clean_baseline(edge_ids, latent_ids)
@@ -163,14 +163,14 @@ def main() -> int:
     print("\n  KHONG doc no la 'loi ich do duoc la CAN DUOI'. Muc 2 kiem dieu do:")
     print("  bo item noi canh bang loi, DiD GIAM chu khong tang. Va phep tach theo")
     print("  'is unobserved' khong kiem duoc gi - no trung khit voi ba ho do thi.")
-    print("\n  ghi ra results/raw_structure_leak.csv")
+    print("\n  ghi ra results/cladder/raw_structure_leak.csv")
     return 0
 
 
 def with_clean(tag, lex, imap):
     """A sample's answers plus its RAW_CLEAN run (scripts/run_clean_raw.sh)."""
     d = load(tag, lex, imap)
-    f = ROOT / "results" / "raw" / f"pilot_raw_cleanraw{tag}{lex}.csv"
+    f = ROOT / "results" / "cladder" / "raw" / f"pilot_raw_cleanraw{tag}{lex}.csv"
     if not f.exists():
         return None
     e = attach_id(pd.read_csv(f), imap, f"cleanraw{tag}{lex}")
@@ -218,8 +218,8 @@ def clean_baseline(edge_ids, latent_ids):
     print("\n" + "=" * 78)
     print("3. A LATENT-FREE BASELINE: RAW_CLEAN")
     print("=" * 78)
-    imaps = {t: pd.read_csv(ROOT / "results" / f"_itemmap_{t}.csv") for t in SAMPLES}
-    if not all((ROOT / "results" / "raw" / f"pilot_raw_cleanraw{t}KEEP.csv").exists()
+    imaps = {t: pd.read_csv(ROOT / "results" / "cladder" / f"_itemmap_{t}.csv") for t in SAMPLES}
+    if not all((ROOT / "results" / "cladder" / "raw" / f"pilot_raw_cleanraw{t}KEEP.csv").exists()
                for t in SAMPLES):
         print("  SKIPPED: run scripts/run_clean_raw.sh first.")
         return
@@ -237,7 +237,7 @@ def clean_baseline(edge_ids, latent_ids):
     print("\n  3a. Headline DiD, causal group, pooled n=490 convention\n")
     per = {b: pd.concat([did_base(t, imaps[t], b) for t in SAMPLES], axis=1)
            for b in ("RAW", "RAW_CLEAN")}
-    ref = pd.read_csv(ROOT / "results" / "raw_leak_sensitivity.csv").set_index("subset")
+    ref = pd.read_csv(ROOT / "results" / "cladder" / "raw_leak_sensitivity.csv").set_index("subset")
     for b, label, drop in (("RAW", "RAW (the published headline)", set()),
                            ("RAW_CLEAN", "RAW_CLEAN", set()),
                            ("RAW", "RAW, drop det-counterfactual", edge_ids),
@@ -258,7 +258,7 @@ def clean_baseline(edge_ids, latent_ids):
             D = with_clean(t, lex, imaps[t])
             qs = set(D.query_type.unique()) - ARITH - IDENT
             sfx = "" if t == "n600" else f"_{t}"
-            f = ROOT / "results" / f"drift_check_raw{sfx}.csv"
+            f = ROOT / "results" / "cladder" / f"drift_check_raw{sfx}.csv"
             R = pd.read_csv(f) if f.exists() else None
             for m in TIER:
                 c, r = cell(D, m, "RAW_CLEAN", qs), cell(D, m, "RAW", qs)
@@ -280,7 +280,7 @@ def clean_baseline(edge_ids, latent_ids):
 
     # 3c. The direct contrasts of analyze_vs_raw.py, per sample, on either baseline.
     print("\n  3c. Direct contrasts, causal group, per sample (analyze_vs_raw convention)\n")
-    vs = pd.read_csv(ROOT / "results" / "vs_raw.csv")
+    vs = pd.read_csv(ROOT / "results" / "cladder" / "vs_raw.csv")
     for t in SAMPLES:
         for lex in ("KEEP", POOL_LEXICON):
             D = with_clean(t, lex, imaps[t])
@@ -304,8 +304,8 @@ def clean_baseline(edge_ids, latent_ids):
                                              f"vs_raw.csv has {want}: not comparable")
                     add("3c direct contrast", t, lex, f"{arm} minus {b}", est, lo, hi, p, len(v))
 
-    pd.DataFrame(rows).to_csv(ROOT / "results" / "raw_clean.csv", index=False)
-    print("\n  wrote results/raw_clean.csv")
+    pd.DataFrame(rows).to_csv(ROOT / "results" / "cladder" / "raw_clean.csv", index=False)
+    print("\n  wrote results/cladder/raw_clean.csv")
 
 
 if __name__ == "__main__":

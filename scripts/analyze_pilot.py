@@ -1,4 +1,4 @@
-"""Turn results/raw/pilot_raw.csv into the numbers that decide whether the study runs.
+"""Turn results/cladder/raw/pilot_raw.csv into the numbers that decide whether the study runs.
 
     python scripts/analyze_pilot.py
 
@@ -43,12 +43,12 @@ def mcnemar(s, a, b):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--file", default="pilot_raw.csv",
-                    help="which results/*.csv to analyse")
+                    help="which results/cladder/*.csv to analyse")
     ap.add_argument("--tag", default="", help="suffix for the output files")
     args = ap.parse_args()
     global TAG
     TAG = args.tag
-    df = pd.read_csv(ROOT / "results" / "raw" / args.file)
+    df = pd.read_csv(ROOT / "results" / "cladder" / "raw" / args.file)
     models = [m for m in TIER if m in set(df.model)] or sorted(df.model.unique())
     kcols = sorted([c for c in df.cond.unique() if c.startswith("DR_k")])
     kmax = len(kcols)
@@ -69,7 +69,7 @@ def main():
     acc = (df.groupby(["model", "cond"]).correct.mean().unstack() * 100)
     acc = acc.reindex(columns=order).reindex(index=models).round(2)
     print(acc.to_string())
-    acc.to_csv(ROOT / "results" / f"pilot_accuracy{TAG}.csv")
+    acc.to_csv(ROOT / "results" / "cladder" / f"pilot_accuracy{TAG}.csv")
 
     # ---- deltas -----------------------------------------------------------
     print("\n" + "-" * 78)
@@ -89,7 +89,7 @@ def main():
         })
     dl = pd.DataFrame(rows)
     print(dl.to_string(index=False))
-    dl.to_csv(ROOT / "results" / f"pilot_deltas{TAG}.csv", index=False)
+    dl.to_csv(ROOT / "results" / "cladder" / f"pilot_deltas{TAG}.csv", index=False)
 
     # ---- break-even -------------------------------------------------------
     print("\n" + "-" * 78)
@@ -117,7 +117,7 @@ def main():
     if be_rows:
         bd = pd.DataFrame(be_rows)
         print(bd.to_string(index=False))
-        bd.to_csv(ROOT / "results" / f"pilot_break_even{TAG}.csv", index=False)
+        bd.to_csv(ROOT / "results" / "cladder" / f"pilot_break_even{TAG}.csv", index=False)
 
     # ---- significance -----------------------------------------------------
     print("\n" + "-" * 78)
@@ -139,7 +139,7 @@ def main():
                             "meaning": "*" if p < .05 else ""})
     sg = pd.DataFrame(sig)
     print(sg.to_string(index=False))
-    sg.to_csv(ROOT / "results" / f"pilot_mcnemar{TAG}.csv", index=False)
+    sg.to_csv(ROOT / "results" / "cladder" / f"pilot_mcnemar{TAG}.csv", index=False)
 
     # ---- tier trend -------------------------------------------------------
     print("\n" + "-" * 78)

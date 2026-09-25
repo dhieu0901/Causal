@@ -2,7 +2,7 @@
 
 Why this file exists, and why it was rewritten. REPORT sections 4.3 and 4.4
 reported six numbers (ORACLE +14.31, PROSE +13.91, DR_k1 +8.64, ...) that were in
-no results/*.csv and that no script produced. The first version of this file
+no results/cladder/*.csv and that no script produced. The first version of this file
 reproduced that computation - but on the exploratory sample n=86, the very sample
 REPORT section 4.0 RETRACTED for winner's curse.
 
@@ -22,7 +22,7 @@ exploratory sample also has PERMUTE and SYMBOL, but using them would break
 comparability across samples.
 
 Run:  python scripts/analyze_structure_arms.py
-Writes: results/structure_arms.csv (make_figures.py reads this file)
+Writes: results/cladder/structure_arms.csv (make_figures.py reads this file)
 """
 
 from __future__ import annotations
@@ -53,7 +53,7 @@ def present(arm):
     """Is condition `arm` available in ALL THREE samples?"""
     for tag, *_ in SAMPLES:
         for lex in ("KEEP", POOL_LEXICON):
-            p = ROOT / "results" / "raw" / f"pilot_raw_{tag}{lex}.csv"
+            p = ROOT / "results" / "cladder" / "raw" / f"pilot_raw_{tag}{lex}.csv"
             if not p.exists():
                 return False
             if arm not in set(pd.read_csv(p, usecols=["cond"]).cond.unique()):
@@ -63,7 +63,7 @@ def present(arm):
 
 def all_item_maps():
     pilot = _pilot()
-    full = pd.read_csv(ROOT / "data" / "full_v1.5_default.csv")
+    full = pd.read_csv(ROOT / "data" / "cladder" / "full_v1.5_default.csv")
     return {tag: verify_item_map(tag, n, kmax, drop, full, pilot)
             for tag, n, kmax, drop in SAMPLES}
 
@@ -132,7 +132,7 @@ def report(label, W, rows):
 # conditions of one run compares answers given at the same time; a contrast
 # across runs would also carry any change in the served model between
 # 2026-09-16 and 2026-09-24. Nothing in this file can see one; the test is
-# scripts/check_drift.py, which found none (results/drift_check.csv).
+# scripts/check_drift.py, which found none (results/cladder/drift_check.csv).
 N600_OLD = {"RAW", "PROSE", "ORACLE", "DR_k1"}
 N600_NEW = {"NAMES_ONLY", "SCRAMBLE", "DR_k2", "DR_k3"}
 
@@ -140,7 +140,7 @@ N600_NEW = {"NAMES_ONLY", "SCRAMBLE", "DR_k2", "DR_k3"}
 def load_n600(lex, imap):
     """n600 with the conditions scripts/run_n600_extensions.sh added."""
     d = load("n600", lex, imap)
-    extra = ROOT / "results" / "raw" / f"pilot_raw_n600arms{lex}.csv"
+    extra = ROOT / "results" / "cladder" / "raw" / f"pilot_raw_n600arms{lex}.csv"
     if extra.exists():
         e = attach_id(pd.read_csv(extra), imap, f"n600arms{lex}")
         d = pd.concat([d, e], ignore_index=True)
@@ -159,7 +159,7 @@ def matched_controls(imap, rows):
     ORACLE minus NAMES_ONLY is what the arrows are worth once the names are
     there; SCRAMBLE minus NAMES_ONLY is what WRONG arrows cost against none.
     """
-    extra = ROOT / "results" / "raw" / "pilot_raw_n600armsKEEP.csv"
+    extra = ROOT / "results" / "cladder" / "raw" / "pilot_raw_n600armsKEEP.csv"
     if not extra.exists():
         print("\n6. NAMES_ONLY / SCRAMBLE: no data (run scripts/run_n600_extensions.sh)")
         return
@@ -341,7 +341,7 @@ def main():
 
     matched_controls(imaps["n600"], rows)
 
-    out = ROOT / "results" / "structure_arms.csv"
+    out = ROOT / "results" / "cladder" / "structure_arms.csv"
     df = pd.DataFrame(rows)
     if "sample" in df.columns:
         df["sample"] = df["sample"].fillna("pooled")

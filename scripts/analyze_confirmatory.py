@@ -17,7 +17,7 @@ Two parts, both run every time.
      the six tests, Holm-adjusted across the six, at each of five bootstrap
      seeds; a verdict that changes with the seed is reported as borderline, not
      as confirmed. Then the pre-registered sensitivity analysis (unparsed
-     answers scored as wrong). Writes results/confirmatory.csv. Before the
+     answers scored as wrong). Writes results/cladder/confirmatory.csv. Before the
      records exist it says so and writes nothing.
 
 The tests, their direction and their decision rule are in prereg/CONFIRMATORY.md,
@@ -41,7 +41,7 @@ from stats import boot_cells, boot_items, boot_p
 from analyze_querygroup import ARITH, IDENT, TIER
 from pilot import read_ids
 
-RAW = ROOT / "results" / "raw"
+RAW = ROOT / "results" / "cladder" / "raw"
 NBOOT = 4000
 SEEDS = [20260907, 1, 2, 3, 4]         # the project's seed rule; the first is primary
 ALPHA = 0.05
@@ -287,10 +287,10 @@ def check_n600() -> None:
     cls = classes(600, 20260907, None)
     res = run_tests(n600_data(), TIER, cls, SEEDS[0])
 
-    ph = pd.read_csv(ROOT / "results" / "pooled_headline.csv").set_index("pooling")
-    sa = pd.read_csv(ROOT / "results" / "structure_arms.csv").set_index("quantity")
-    ld = pd.read_csv(ROOT / "results" / "ladder5_steps_n600.csv").set_index("step")
-    cs = pd.read_csv(ROOT / "results" / "perturbation_conditional_slope.csv")
+    ph = pd.read_csv(ROOT / "results" / "cladder" / "pooled_headline.csv").set_index("pooling")
+    sa = pd.read_csv(ROOT / "results" / "cladder" / "structure_arms.csv").set_index("quantity")
+    ld = pd.read_csv(ROOT / "results" / "cladder" / "ladder5_steps_n600.csv").set_index("step")
+    cs = pd.read_csv(ROOT / "results" / "cladder" / "perturbation_conditional_slope.csv")
     cs = cs[(cs["sample"] == "n600") & (cs.quantity == "slope per reversed edge")].set_index("lexicon")
     want = {
         "H1": (ph.loc["n600", ["did_pp", "ci_lo", "ci_hi", "p_boot"]], "pooled_headline.csv"),
@@ -356,7 +356,7 @@ def main() -> int:
     for family, (models, prefix, recap) in FAMILIES.items():
         S = conf_data(prefix, None)
         if S is None:
-            print(f"\n  {family}: no confirmatory records yet (results/raw/pilot_raw_{prefix}*.csv)")
+            print(f"\n  {family}: no confirmatory records yet (results/cladder/raw/pilot_raw_{prefix}*.csv)")
             continue
         print("\n" + "=" * 78)
         print(f"2. CONFIRM - {family}, the six pre-registered tests")
@@ -376,8 +376,8 @@ def main() -> int:
             print(f"\n  sensitivity: cut-off answers re-asked at {recap} tokens")
             rows += confirm(family, R, models, cls, f"re-asked at {recap}")
     if rows:
-        pd.DataFrame(rows).to_csv(ROOT / "results" / "confirmatory.csv", index=False)
-        print("\n  wrote results/confirmatory.csv")
+        pd.DataFrame(rows).to_csv(ROOT / "results" / "cladder" / "confirmatory.csv", index=False)
+        print("\n  wrote results/cladder/confirmatory.csv")
     return 0
 
 

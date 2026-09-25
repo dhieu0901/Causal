@@ -45,7 +45,7 @@ PLAUSIBLE = {"commonsense", "easy", "hard"}
 
 
 def label_items(n=200, seed=20260907, kmax=1):
-    full = pd.read_csv(ROOT / "data" / "full_v1.5_default.csv").set_index("id")
+    full = pd.read_csv(ROOT / "data" / "cladder" / "full_v1.5_default.csv").set_index("id")
     it = make_items(n, seed, kmax, "full_v1.5_default.csv",
                     drop_nonsense=True).reset_index(drop=True)
     qp = it.id.map(full.question_property)
@@ -123,13 +123,13 @@ def main():
     it = label_items()
     d = {}
     for l in LEXICONS:
-        p = ROOT / "results" / "raw" / f"pilot_raw_lex{l}.csv"
+        p = ROOT / "results" / "cladder" / "raw" / f"pilot_raw_lex{l}.csv"
         if p.exists():
             x = pd.read_csv(p)
             x["group"] = x.item.map(it.group)
             d[l] = x
     if "KEEP" not in d:
-        raise SystemExit("thieu results/raw/pilot_raw_lexKEEP.csv")
+        raise SystemExit("thieu results/cladder/raw/pilot_raw_lexKEEP.csv")
 
     models = [m for m in TIER if m in set(d["KEEP"].model)]
     print("=" * 84)
@@ -160,7 +160,7 @@ def main():
     # REPORT section 4.2 quotes this column as "CLadder's own anticommonsense
     # gap" beside the project's own PERMUTE figures. It was printed and never
     # written, so check_numbers.py had nothing to check it against.
-    floor.to_csv(ROOT / "results" / "prior_keep_floor.csv", index=False)
+    floor.to_csv(ROOT / "results" / "cladder" / "prior_keep_floor.csv", index=False)
 
     # 1b. The same gap after balancing query types. REPORT section 4.2 was
     # downgraded in review round 6 because the two strata differ in query-type
@@ -172,7 +172,7 @@ def main():
     k0 = d["KEEP"][(d["KEEP"].cond == "RAW") & (d["KEEP"].model == models[0])]
     comp = (k0.groupby("group").query_type.value_counts(normalize=True)
               .mul(100).round(1).rename("pct").reset_index())
-    comp.to_csv(ROOT / "results" / "prior_group_composition.csv", index=False)
+    comp.to_csv(ROOT / "results" / "cladder" / "prior_group_composition.csv", index=False)
     brow = []
     for m in models:
         s = d["KEEP"][(d["KEEP"].model == m) & (d["KEEP"].cond == "RAW") &
@@ -186,7 +186,7 @@ def main():
                      "balanced_gap_pp": round(bal - 100 * wp.correct.mean(), 1)})
     bal_df = pd.DataFrame(brow)
     print(bal_df.to_string(index=False))
-    bal_df.to_csv(ROOT / "results" / "prior_keep_floor_balanced.csv", index=False)
+    bal_df.to_csv(ROOT / "results" / "cladder" / "prior_keep_floor_balanced.csv", index=False)
 
     print("\n" + "=" * 84)
     print("2. THE LEXICON EFFECT, SPLIT BY HOW STRONG THE ORIGINAL PRIOR WAS")
@@ -215,7 +215,7 @@ def main():
                                 "meaning": "*" if p < .05 else ""})
     o = pd.DataFrame(out)
     print(o.to_string(index=False))
-    o.to_csv(ROOT / "results" / "prior_strength.csv", index=False)
+    o.to_csv(ROOT / "results" / "cladder" / "prior_strength.csv", index=False)
 
     print("\n" + "=" * 84)
     print("3. MEAN BY PRIOR GROUP (3 anonymised lexicons x 3 models pooled)")
@@ -236,7 +236,7 @@ def main():
                             "mean_delta_pp": round(float(t.delta_pp.mean()), 2),
                             "n_sig": n_sig, "n_cells": len(t)})
     pd.DataFrame(summary).to_csv(
-        ROOT / "results" / "prior_strength_summary.csv", index=False)
+        ROOT / "results" / "cladder" / "prior_strength_summary.csv", index=False)
     print("\n  Removing a CORRECT prior costs more than removing one that was already")
     print("  wrong. That is what the mechanism predicts, and it is a test that could")
     print("  have failed.")
@@ -297,7 +297,7 @@ def main():
                   "ci_lo": round(lo, 2), "ci_hi": round(hi, 2),
                   "p_boot": round(p, 4), "n_items": f"{len(a2)} vs {len(b2)}"})
     pd.DataFrame(inter).to_csv(
-        ROOT / "results" / "prior_strength_interaction.csv", index=False)
+        ROOT / "results" / "cladder" / "prior_strength_interaction.csv", index=False)
 
 
 if __name__ == "__main__":

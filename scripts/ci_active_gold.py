@@ -54,7 +54,7 @@ marked undetermined need a third answer ("cannot be determined") and must not be
 scored against the clean label. NoisyCausal scores its confounder injection
 against the clean SCM; this is the table that avoids that.
 
-Writes: results/ci_active_gold.csv (one row per family x query type)
+Writes: results/cladder/ci_active_gold.csv (one row per family x query type)
 """
 from __future__ import annotations
 
@@ -131,7 +131,7 @@ def mediators(edges) -> set:
 
 
 def main() -> int:
-    d = pd.read_csv(ROOT / "data" / "full_v1.5_default.csv", low_memory=False)
+    d = pd.read_csv(ROOT / "data" / "cladder" / "full_v1.5_default.csv", low_memory=False)
     lat = latent_symbols(d)
     rows = []
     for (fam, qt), s in d.groupby(["graph_id", "query_type"]):
@@ -169,14 +169,14 @@ def main() -> int:
         rows.append(dict(graph_id=fam, query_type=qt, rung=rung, n_items=n,
                          n_real_word=n_real, gold=gold, rule=rule))
     T = pd.DataFrame(rows)
-    T.to_csv(ROOT / "results" / "ci_active_gold.csv", index=False)
+    T.to_csv(ROOT / "results" / "cladder" / "ci_active_gold.csv", index=False)
     print(T.to_string(index=False))
     tot = T.n_items.sum()
     pres = T.loc[T.gold == "preserved", "n_items"].sum()
     print(f"\n  latent nodes per family: { {k: sorted(v) for k, v in lat.items() if v} }")
     print(f"  preserved {pres}/{tot} items ({100 * pres / tot:.1f}%), "
           f"undetermined {tot - pres}/{tot} ({100 * (tot - pres) / tot:.1f}%)")
-    print("  wrote results/ci_active_gold.csv")
+    print("  wrote results/cladder/ci_active_gold.csv")
     return 0
 
 

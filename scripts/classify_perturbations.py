@@ -12,13 +12,13 @@ The answer matters because the share of harmless draws is not constant across k:
     reversals that leave the estimand unchanged, price400:  24.8% at k=1, 0.0% at k=2 and k=3
     the same on n600, same seven families:                  22.1% at k=1, 0.0% at k=2 and k=3
 
-So the "dose-response curve" in results/vs_raw_trend.csv is confounded with
+So the "dose-response curve" in results/cladder/vs_raw_trend.csv is confounded with
 sample composition. Going from k=1 to k=2 does not only add a reversal, it also
 removes every harmless draw from the cell. Whether the harm grows with k once
 the estimand changes is a separate, model-dependent question. On price400 it
 does not; on n600 it does. The n600 doses were answered a week apart, but
 scripts/check_drift.py re-asked the earlier prompts and found no drift
-(results/drift_check.csv). Holding the items fixed and pooling both samples
+(results/cladder/drift_check.csv). Holding the items fixed and pooling both samples
 (section 4), the harm grows by about 1.8 pp per reversed edge under both
 lexicons, short of 0.05 in both. The flat reading once stated here is
 withdrawn.
@@ -34,7 +34,7 @@ prompt and finding it in the API cache.
 
 Where the graph comes from. Line 2 of CLadder's `reasoning` field carries the
 structure, but 67 of the 399 price400 items have no reasoning text. The
-per-family structure from data/cladder-meta.json covers all of them, and this
+per-family structure from data/cladder/cladder-meta.json covers all of them, and this
 script ASSERTS that the two agree wherever both exist (332 of 332, 0 mismatches)
 before relying on it.
 
@@ -54,7 +54,7 @@ every directed X -> Y path untouched for nde/nie/det-counterfactual); on
 price400 the answer-changing harm is -8.38 / -7.36 / -6.90 at k = 1, 2, 3.
 
 Run:  python scripts/classify_perturbations.py
-Writes: results/perturbation_classes.csv, perturbation_classes_by_query.csv,
+Writes: results/cladder/perturbation_classes.csv, perturbation_classes_by_query.csv,
         perturbation_split.csv, perturbation_split_qt.csv, and for n600
         perturbation_classes_n600.csv, perturbation_split_n600.csv,
         perturbation_shares_n600.csv
@@ -203,7 +203,7 @@ def canonical_structures() -> dict[str, list[tuple[str, str]]]:
         "vg", str(ROOT / "scripts" / "verify_groundtruth.py"))
     vg = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(vg)
-    meta = json.loads((ROOT / "data" / "cladder-meta.json").read_text(encoding="utf-8"))
+    meta = json.loads((ROOT / "data" / "cladder" / "cladder-meta.json").read_text(encoding="utf-8"))
     out = {}
     for m in meta:
         if m["graph_id"] in out:
@@ -234,7 +234,7 @@ def check_canonical(items, canon) -> tuple[int, int]:
 # ------------------------------------------------------------------- analysis
 def meta_mappings() -> dict:
     """(story_id, graph_id) -> every distinct {symbol: lower-case name} in cladder-meta."""
-    meta = json.loads((ROOT / "data" / "cladder-meta.json").read_text(encoding="utf-8"))
+    meta = json.loads((ROOT / "data" / "cladder" / "cladder-meta.json").read_text(encoding="utf-8"))
     out: dict = {}
     for m in meta:
         vm = m["variable_mapping"]
@@ -435,7 +435,7 @@ def main() -> int:
                           "harmless_strict_pct": round(100 * s.strict_unchanged.mean(), 1),
                           "harmless_but_touches_path": int((s.estimand_unchanged & s.touches_causal_path).sum())})
     Q = pd.DataFrame(qrows)
-    Q.to_csv(ROOT / "results" / "perturbation_classes_by_query.csv", index=False)
+    Q.to_csv(ROOT / "results" / "cladder" / "perturbation_classes_by_query.csv", index=False)
     show = Q[(Q.arm == "DR")]
     print(show.to_string(index=False))
     nat = K[(K.arm == "DR") & K.query_type.isin(["nde", "nie"]) & K.estimand_unchanged]
@@ -468,7 +468,7 @@ def main() -> int:
     print("=" * 78 + "\n")
     rows = []
     for lex in ("KEEP", "PSEUDO"):
-        d = pd.read_csv(ROOT / "results" / "raw" / f"pilot_raw_price400{lex}.csv")
+        d = pd.read_csv(ROOT / "results" / "cladder" / "raw" / f"pilot_raw_price400{lex}.csv")
         d = d[d.parsed == 1]
         print(f"  --- {lex} ---")
         print(f"  {'cond':8s} {'all':>22s} {'estimand UNCHANGED':>24s} {'estimand CHANGED':>24s}")
@@ -540,7 +540,7 @@ def main() -> int:
     print("=" * 78 + "\n")
     qt_rows = []
     for lex in ("KEEP", "PSEUDO"):
-        d = pd.read_csv(ROOT / "results" / "raw" / f"pilot_raw_price400{lex}.csv")
+        d = pd.read_csv(ROOT / "results" / "cladder" / "raw" / f"pilot_raw_price400{lex}.csv")
         d = d[d.parsed == 1]
         for cond in ("DR_k1", "DR_k2", "DR_k3"):
             v = paired_causal(d, cond)
@@ -569,7 +569,7 @@ def main() -> int:
             qt_rows.append(dict(lexicon=lex, cond="ORACLE, items split by DR_k1", subset=label,
                                 delta_pp=round(e, 2), ci_lo=round(lo, 2),
                                 ci_hi=round(hi, 2), p_boot=round(p, 4), n_items=len(x)))
-    pd.DataFrame(qt_rows).to_csv(ROOT / "results" / "perturbation_split_qt.csv", index=False)
+    pd.DataFrame(qt_rows).to_csv(ROOT / "results" / "cladder" / "perturbation_split_qt.csv", index=False)
 
     N = n600_dose()
     if N is not None:
@@ -578,10 +578,10 @@ def main() -> int:
     # replay_in_cache proves the replay here but is not written: the cache is
     # not in the repository, so a fresh clone would write False everywhere and
     # the file would stop reproducing byte for byte.
-    C.drop(columns="replay_in_cache").to_csv(ROOT / "results" / "perturbation_classes.csv",
+    C.drop(columns="replay_in_cache").to_csv(ROOT / "results" / "cladder" / "perturbation_classes.csv",
                                             index=False)
-    out.to_csv(ROOT / "results" / "perturbation_split.csv", index=False)
-    print(f"\n  wrote results/perturbation_classes.csv ({len(C)} rows), "
+    out.to_csv(ROOT / "results" / "cladder" / "perturbation_split.csv", index=False)
+    print(f"\n  wrote results/cladder/perturbation_classes.csv ({len(C)} rows), "
           f"perturbation_split.csv ({len(out)} rows)")
     return 0
 
@@ -601,7 +601,7 @@ def n600_dose() -> pd.DataFrame | None:
     print("\n" + "=" * 78)
     print("3. n600: THE DOSE LINE ON ALL TEN FAMILIES, SPLIT THE SAME WAY")
     print("=" * 78 + "\n")
-    arms_files = [ROOT / "results" / "raw" / f"pilot_raw_n600arms{lex}.csv" for lex in ("KEEP", "PSEUDO")]
+    arms_files = [ROOT / "results" / "cladder" / "raw" / f"pilot_raw_n600arms{lex}.csv" for lex in ("KEEP", "PSEUDO")]
     if not all(f.exists() for f in arms_files):
         print("  SKIPPED: run scripts/run_n600_extensions.sh first.")
         return None
@@ -621,8 +621,8 @@ def n600_dose() -> pd.DataFrame | None:
     seven = {"IV", "arrowhead", "confounding", "diamond", "diamondcut", "frontdoor", "mediation"}
     rows = []
     for lex in ("KEEP", "PSEUDO"):
-        base = pd.read_csv(ROOT / "results" / "raw" / f"pilot_raw_n600{lex}.csv")
-        extra = pd.read_csv(ROOT / "results" / "raw" / f"pilot_raw_n600arms{lex}.csv")
+        base = pd.read_csv(ROOT / "results" / "cladder" / "raw" / f"pilot_raw_n600{lex}.csv")
+        extra = pd.read_csv(ROOT / "results" / "cladder" / "raw" / f"pilot_raw_n600arms{lex}.csv")
         d = pd.concat([base, extra], ignore_index=True)
         d = d[d.parsed == 1]
         print(f"\n  --- {lex} ---")
@@ -660,12 +660,12 @@ def n600_dose() -> pd.DataFrame | None:
                                  subset="all", delta_pp=round(e, 2), ci_lo=round(lo, 2),
                                  ci_hi=round(hi, 2), p_boot=round(p, 4), n_items=len(slope)))
     out = pd.DataFrame(rows)
-    out.to_csv(ROOT / "results" / "perturbation_split_n600.csv", index=False)
+    out.to_csv(ROOT / "results" / "cladder" / "perturbation_split_n600.csv", index=False)
     N.drop(columns="replay_in_cache").to_csv(
-        ROOT / "results" / "perturbation_classes_n600.csv", index=False)
-    shares.round(1).reset_index().to_csv(ROOT / "results" / "perturbation_shares_n600.csv",
+        ROOT / "results" / "cladder" / "perturbation_classes_n600.csv", index=False)
+    shares.round(1).reset_index().to_csv(ROOT / "results" / "cladder" / "perturbation_shares_n600.csv",
                                          index=False)
-    print("\n  wrote results/perturbation_split_n600.csv, perturbation_classes_n600.csv,"
+    print("\n  wrote results/cladder/perturbation_split_n600.csv, perturbation_classes_n600.csv,"
           " perturbation_shares_n600.csv")
     return N
 
@@ -694,7 +694,7 @@ def conditional_slope(C: pd.DataFrame, N: pd.DataFrame) -> None:
     print("\n" + "=" * 78)
     print("4. CONDITIONAL SLOPE - items fixed, every draw changes the estimand")
     print("=" * 78 + "\n")
-    maps = {t: pd.read_csv(ROOT / "results" / f"_itemmap_{t}.csv").set_index("item").id
+    maps = {t: pd.read_csv(ROOT / "results" / "cladder" / f"_itemmap_{t}.csv").set_index("item").id
             for t in ("price400", "n600")}
     rows = []
     for lex in ("KEEP", "PSEUDO"):
@@ -702,7 +702,7 @@ def conditional_slope(C: pd.DataFrame, N: pd.DataFrame) -> None:
         for tag, cls, files in (
                 ("price400", C, [f"pilot_raw_price400{lex}.csv"]),
                 ("n600", N, [f"pilot_raw_n600{lex}.csv", f"pilot_raw_n600arms{lex}.csv"])):
-            d = pd.concat([pd.read_csv(ROOT / "results" / "raw" / f) for f in files], ignore_index=True)
+            d = pd.concat([pd.read_csv(ROOT / "results" / "cladder" / "raw" / f) for f in files], ignore_index=True)
             d = d[(d.parsed == 1) & d.graph_id.isin(SEVEN)]
             M = pd.concat({k: paired_causal(d, f"DR_k{k}") for k in (1, 2, 3)}, axis=1).dropna()
             flag = cls[(cls.cond == "DR_k1") & (cls.lexicon == lex)].set_index("item").unchanged_qt
@@ -753,8 +753,8 @@ def conditional_slope(C: pd.DataFrame, N: pd.DataFrame) -> None:
                          quantity="slope per reversed edge", delta_pp=round(e, 2),
                          ci_lo=round(lo, 2), ci_hi=round(hi, 2),
                          p_boot=round(p, 4), n_items=len(a_) + len(b_)))
-    pd.DataFrame(rows).to_csv(ROOT / "results" / "perturbation_conditional_slope.csv", index=False)
-    print("  wrote results/perturbation_conditional_slope.csv")
+    pd.DataFrame(rows).to_csv(ROOT / "results" / "cladder" / "perturbation_conditional_slope.csv", index=False)
+    print("  wrote results/cladder/perturbation_conditional_slope.csv")
     validate_against_models(C, N)
 
 
@@ -774,7 +774,7 @@ def validate_against_models(C: pd.DataFrame, N: pd.DataFrame) -> None:
     for tag, cls, files in (("price400", C, ["pilot_raw_price400{}.csv"]),
                             ("n600", N, ["pilot_raw_n600{}.csv"])):
         for lex in ("KEEP", "PSEUDO"):
-            d = pd.concat([pd.read_csv(ROOT / "results" / "raw" / f.format(lex)) for f in files])
+            d = pd.concat([pd.read_csv(ROOT / "results" / "cladder" / "raw" / f.format(lex)) for f in files])
             d = d[(d.parsed == 1) & d.graph_id.isin(SEVEN)]
             o, r_ = paired_causal(d, "ORACLE"), paired_causal(d, "DR_k1")
             flag = cls[(cls.cond == "DR_k1") & (cls.lexicon == lex)].set_index("item").unchanged_qt
@@ -793,8 +793,8 @@ def validate_against_models(C: pd.DataFrame, N: pd.DataFrame) -> None:
                     rows.append(dict(sample=tag, lexicon=lex, subset=label, quantity=what,
                                      delta_pp=round(e, 2), ci_lo=round(lo, 2),
                                      ci_hi=round(hi, 2), p_boot=round(p, 4), n_items=len(x)))
-    pd.DataFrame(rows).to_csv(ROOT / "results" / "perturbation_validation.csv", index=False)
-    print("\n  wrote results/perturbation_validation.csv")
+    pd.DataFrame(rows).to_csv(ROOT / "results" / "cladder" / "perturbation_validation.csv", index=False)
+    print("\n  wrote results/cladder/perturbation_validation.csv")
 
 
 if __name__ == "__main__":

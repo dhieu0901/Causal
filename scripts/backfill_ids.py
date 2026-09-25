@@ -37,7 +37,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 import pandas as pd
 
-RES = ROOT / "results"
+RES = ROOT / "results" / "cladder"
 SEED = 20260907
 
 # The sample each file was drawn from. lex, n600 and price400 have row-verified
@@ -80,7 +80,7 @@ def prove_pilot(ids) -> str:
 
 
 def main() -> int:
-    full = pd.read_csv(ROOT / "data" / "full_v1.5_default.csv", low_memory=False).set_index("id")
+    full = pd.read_csv(ROOT / "data" / "cladder" / "full_v1.5_default.csv", low_memory=False).set_index("id")
     maps, bad = {}, 0
     for name in sorted(SAMPLE_OF):
         f = RES / ("raw" if name.startswith(("pilot_raw", "induction_raw")) else "") / name

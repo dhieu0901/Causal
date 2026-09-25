@@ -5,7 +5,7 @@ corrupts 33% of it, but only 20% of a five-edge graph. So reporting "DR_k1" as a
 single condition pools four different doses. The objection is correct, and the
 existing k sweep has enough data to answer it.
 
-Seven families in results/raw/pilot_raw_price400KEEP.csv - 399 items, 2.7x the
+Seven families in results/cladder/raw/pilot_raw_price400KEEP.csv - 399 items, 2.7x the
 pilot_raw.csv file an earlier version of this script used - with k = 1, 2, 3:
 
     three-edge families (confounding, mediation)               33%, 67%, 100%
@@ -23,7 +23,7 @@ bootstrap over items. Then one very simple question: how much variance does a
 regression on k explain, and how much does one on k/E?
 
 Run:  python scripts/analyze_dose.py
-Writes: results/dose_response.csv
+Writes: results/cladder/dose_response.csv
 """
 
 from __future__ import annotations
@@ -53,7 +53,7 @@ def edges_per_family():
         "vg", str(ROOT / "scripts" / "verify_groundtruth.py"))
     vg = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(vg)
-    meta = json.loads((ROOT / "data" / "cladder-meta.json").read_text(encoding="utf-8"))
+    meta = json.loads((ROOT / "data" / "cladder" / "cladder-meta.json").read_text(encoding="utf-8"))
     out = {}
     for m in meta:
         if m["graph_id"] in out:
@@ -94,7 +94,7 @@ def boot(v, seed=SEED, n=NBOOT):
 
 
 def main():
-    d = pd.read_csv(ROOT / "results" / "raw" / "pilot_raw_price400KEEP.csv")
+    d = pd.read_csv(ROOT / "results" / "cladder" / "raw" / "pilot_raw_price400KEEP.csv")
     E = edges_per_family()
     families = sorted(d.graph_id.unique(), key=lambda g: (E[g], g))
 
@@ -134,7 +134,7 @@ def main():
                              "ci_hi": round(hi, 2), "n_items": len(v)})
 
     df = pd.DataFrame(rows)
-    out = ROOT / "results" / "dose_response.csv"
+    out = ROOT / "results" / "cladder" / "dose_response.csv"
     df.to_csv(out, index=False)
 
     print("\n" + "=" * 86)
@@ -188,7 +188,7 @@ def main():
                         "winner": win})
     if r2_rows:
         pd.DataFrame(r2_rows).to_csv(
-            ROOT / "results" / "dose_variance_explained.csv", index=False)
+            ROOT / "results" / "cladder" / "dose_variance_explained.csv", index=False)
 
     print("\n  HOW TO READ THIS. The seven families give only three edge counts (3, 4,")
     print("  5), and the five-edge group is the single family arrowhead - the one whose")
@@ -200,7 +200,7 @@ def main():
     print("  For ED and FE the family dummies dominate (0.36 and 0.61): what matters is")
     print("  WHICH structure is broken, not how much of it. For DR, k/E and family are")
     print("  comparable and both weak, so DR alone is unsettled.")
-    print("\n  CORRECTION. An earlier version of this block ran on results/raw/pilot_raw.csv")
+    print("\n  CORRECTION. An earlier version of this block ran on results/cladder/raw/pilot_raw.csv")
     print("  (147 items) and reported that BOTH dose variables had negative adjusted")
     print("  R-squared. On 399 items that is no longer true for DR: k/E rises to 0.11.")
     print("  The strong claim 'dose is not an explanatory variable' holds for ED and FE")

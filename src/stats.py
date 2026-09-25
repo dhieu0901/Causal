@@ -88,12 +88,12 @@ def boot_p(draws, n_draws=None) -> float:
 
       clamp   p is 2 * min(left tail, right tail), and a draw landing exactly on
               zero is counted by BOTH tails, so the product can exceed 1 near a
-              null effect. results/family_breakdown.csv shipped p = 1.0255.
+              null effect. results/cladder/family_breakdown.csv shipped p = 1.0255.
 
       floor   with B draws the smallest non-zero two-tailed p that this
               estimator can express is 2/B, so that is the floor. Two scripts
               had no floor at all and published p = 0.0 - see the headline row
-              of results/ladder5_steps.csv, +17.67 pp at "p = 0". A bootstrap
+              of results/cladder/ladder5_steps.csv, +17.67 pp at "p = 0". A bootstrap
               never licenses zero; it licenses "below 2/B". One script floored
               at 1/B instead, so the same situation printed 0.00025 there and
               0.0005 everywhere else.

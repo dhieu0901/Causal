@@ -64,7 +64,7 @@ def main() -> int:
     # The saved map is written and row-by-row verified by pool_samples.py, so
     # it is read rather than regenerated - regenerating it here would be a
     # second place for the item ordering to drift.
-    imap_path = ROOT / "results" / f"_itemmap_{SAMPLE}.csv"
+    imap_path = ROOT / "results" / "cladder" / f"_itemmap_{SAMPLE}.csv"
     if not imap_path.exists():
         raise SystemExit(f"thieu {imap_path.name}: chay pool_samples.py truoc")
     imap = pd.read_csv(imap_path)
@@ -73,7 +73,7 @@ def main() -> int:
         raise SystemExit("khong dung duoc ma tran DiD")
     per_item = W.mean(axis=1)
 
-    full = pd.read_csv(ROOT / "data" / "full_v1.5_default.csv",
+    full = pd.read_csv(ROOT / "data" / "cladder" / "full_v1.5_default.csv",
                        low_memory=False).set_index("id")
     fam = per_item.index.to_series().map(full.graph_id)
     qty = per_item.index.to_series().map(full.query_type)
@@ -122,7 +122,7 @@ def main() -> int:
                      "p_boot": round(r[3], 4)})
 
     out = pd.DataFrame(rows)
-    out.to_csv(ROOT / "results" / "moderators.csv", index=False)
+    out.to_csv(ROOT / "results" / "cladder" / "moderators.csv", index=False)
 
     print("\n" + "=" * 84)
     print("HOW TO READ THIS")
@@ -131,7 +131,7 @@ def main() -> int:
     print("  chiu duoc mot phep hieu chinh boi. Doc chung nhu HUONG, khong phai")
     print("  nhu ket qua rieng le. Dieu chung noi la hieu ung KHONG deu: no tap")
     print("  trung o do thi lon hon va o truy van ate.")
-    print("\n  ghi ra results/moderators.csv")
+    print("\n  ghi ra results/cladder/moderators.csv")
     return 0
 
 

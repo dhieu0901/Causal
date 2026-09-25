@@ -30,19 +30,19 @@ run () {
   for attempt in 1 2 3; do
     echo ">>> $log   attempt $attempt   [$(date '+%H:%M:%S')]"
     rc=0
-    python scripts/calm_run.py --models "$M" "${EXTRA[@]}" "$@" > "results/logs/$log" 2>&1 || rc=$?
+    python scripts/calm_run.py --models "$M" "${EXTRA[@]}" "$@" > "results/calm/logs/$log" 2>&1 || rc=$?
     if [ "$rc" -eq 0 ]; then
       echo "<<< $log done   [$(date '+%H:%M:%S')]"
       return 0
     fi
-    if grep -q "SPENDING CAP REACHED" "results/logs/$log"; then
+    if grep -q "SPENDING CAP REACHED" "results/calm/logs/$log"; then
       echo "!!! $log reached its spending cap. Stopping; nothing more is sent." >&2
       exit "$rc"
     fi
     echo "... $log stopped, exit=$rc; trying again in 60 s" >&2
     sleep 60
   done
-  echo "!!! $log FAILED, exit=$rc. See results/logs/$log" >&2
+  echo "!!! $log FAILED, exit=$rc. See results/calm/logs/$log" >&2
   exit "$rc"
 }
 

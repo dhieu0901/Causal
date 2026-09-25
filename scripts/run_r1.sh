@@ -14,7 +14,7 @@
 # unlike every GPT-4.1 and Llama number this one carries sampling noise. Output
 # capped at 8,000 tokens, which covers the reasoning in 7 of 8 smoke-test
 # calls; an answer cut off is kept, scored unparsed, and counted in
-# results/second_family_runs.csv. The 2,000-token cap first proposed would have
+# results/cladder/second_family_runs.csv. The 2,000-token cap first proposed would have
 # cut off every one of those 8 calls before it answered.
 #
 # Staged on 2026-09-24: RAW,ORACLE first (1.76 USD, 0.010 per call), then
@@ -38,5 +38,5 @@ MAXUSD="${2:-3.8}"
 python scripts/pilot.py --models "deepseek/deepseek-r1" --n 200 --kmax 1 --types DR \
     --drop-nonsense --lexicon PSEUDO --causal-only --conds "$CONDS" \
     --temperature 0.6 --max-tokens 8000 --max-usd "$MAXUSD" --workers 8 --recap 16000 --tag "_r1PSEUDO" \
-    > results/logs/r1_PSEUDO_log.txt 2>&1
+    > results/cladder/logs/r1_PSEUDO_log.txt 2>&1
 echo "HOAN TAT $(date '+%Y-%m-%d %H:%M:%S')"

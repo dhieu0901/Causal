@@ -197,7 +197,7 @@ def main():
                            "ORACLE_theo_do_thi": "noi_chieu_NGUOC_khong_ai_cap"})
           .to_string(index=False))
 
-    out = ROOT / "results" / "chain_graph_use.csv"
+    out = ROOT / "results" / "cladder" / "chain_graph_use.csv"
     d.to_csv(out, index=False)
     if miss:
         print(f"\n  ({miss} calls not in the cache, skipped)")
@@ -316,12 +316,12 @@ def main():
     same = per.answer_same_as_ORACLE_pct
     print(f"  Chains that state the WRONG direction still give ORACLE's answer "
           f"{same.min():.1f}-{same.max():.1f}% of the time.")
-    out2 = ROOT / "results" / "chain_graph_use_detail.csv"
+    out2 = ROOT / "results" / "cladder" / "chain_graph_use_detail.csv"
     dd.to_csv(out2, index=False)
     print(f"  Da ghi: {out2.name}")
 
     if a.dump:
-        f = ROOT / "results" / "chain_sample_for_hand_coding.md"
+        f = ROOT / "results" / "cladder" / "chain_sample_for_hand_coding.md"
         with f.open("w", encoding="utf-8") as fh:
             fh.write("# Sample reasoning chains under DR_k1, for hand coding\n\n")
             fh.write("For each chain: the true graph says `true_edge`, but the prompt "

@@ -37,7 +37,7 @@ TYPES = ["ED", "FE", "DR"]
 
 
 def load(tag):
-    p = ROOT / "results" / f"types_price_price400{tag}.csv"
+    p = ROOT / "results" / "cladder" / f"types_price_price400{tag}.csv"
     if not p.exists():
         raise SystemExit(f"thieu {p.name}: chay analyze_types.py --tag _price400{tag}")
     return pd.read_csv(p)
@@ -70,7 +70,7 @@ def main():
     print(g.to_string(index=False))
     n_ov = (g.CI_overlap == "yes").sum()
     print(f"\n  {n_ov}/{len(g)} CI pairs overlap -> no pair separates.")
-    g.to_csv(ROOT / "results" / "price_by_lexicon.csv", index=False)
+    g.to_csv(ROOT / "results" / "cladder" / "price_by_lexicon.csv", index=False)
 
     print("\n" + "=" * 84)
     print("2. BUDGET AND BREAK-EVEN - this is where things change")
@@ -94,7 +94,7 @@ def main():
                                 "section 8.3"})
     o = pd.DataFrame(out)
     print(o.to_string(index=False))
-    o.to_csv(ROOT / "results" / "breakeven_by_lexicon.csv", index=False)
+    o.to_csv(ROOT / "results" / "cladder" / "breakeven_by_lexicon.csv", index=False)
 
     print("""
   HOW TO READ THIS, per REPORT.md section 8.3.
@@ -104,7 +104,7 @@ def main():
   the comparison was never made. Until 2026-09-23 this block printed a paired
   difference of -0.11 [-1.62 ; 1.42] pp as though it were a result, while no
   function in this repository resampled that difference. It is now computed by
-  scripts/analyze_price_paired.py, which writes results/price_paired_difference.csv.
+  scripts/analyze_price_paired.py, which writes results/cladder/price_paired_difference.csv.
 
   What that file says: 0 of 9 cells separate from zero, so the price cannot be
   told apart between lexical regimes. But the equivalence bound is only tight

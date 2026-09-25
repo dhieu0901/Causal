@@ -23,7 +23,7 @@ then comparing the published value with 0.5, and flipping for questions that
 ask "less likely", must reproduce the label. It is run here so that errors 3
 and 4 are not mistaken for label errors.
 
-Writes results/explanation_errors.csv.
+Writes results/cladder/explanation_errors.csv.
 """
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ CONCL = re.compile(r"^\s*(-?[\d.]+)\s*([<>])\s*([\d.]+)\s*$")
 
 
 def main() -> int:
-    d = pd.read_csv(ROOT / "data" / "full_v1.5_default.csv", low_memory=False)
+    d = pd.read_csv(ROOT / "data" / "cladder" / "full_v1.5_default.csv", low_memory=False)
     m = d[d.query_type == "marginal"].copy()
     rows = []
     for r in m.itertuples():
@@ -115,8 +115,8 @@ def main() -> int:
         {"check": "printed result equals the plus computation", "count": int(plus_ok), "n": n},
         {"check": "printed result equals the minus computation", "count": int(minus_ok), "n": n},
     ])
-    summary.to_csv(ROOT / "results" / "explanation_errors.csv", index=False)
-    print("\n  wrote results/explanation_errors.csv")
+    summary.to_csv(ROOT / "results" / "cladder" / "explanation_errors.csv", index=False)
+    print("\n  wrote results/cladder/explanation_errors.csv")
     return 0
 
 

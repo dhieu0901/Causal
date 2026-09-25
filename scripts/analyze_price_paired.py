@@ -102,8 +102,8 @@ def paired_difference(wk, wp, t, seed=SEED, n=NBOOT):
 
 
 def main():
-    k_raw = ROOT / "results" / "raw" / "pilot_raw_price400KEEP.csv"
-    p_raw = ROOT / "results" / "raw" / "pilot_raw_price400PSEUDO.csv"
+    k_raw = ROOT / "results" / "cladder" / "raw" / "pilot_raw_price400KEEP.csv"
+    p_raw = ROOT / "results" / "cladder" / "raw" / "pilot_raw_price400PSEUDO.csv"
     for f in (k_raw, p_raw):
         if not f.exists():
             raise SystemExit(f"thieu {f.name}")
@@ -149,7 +149,7 @@ def main():
     if not rows:
         raise SystemExit("khong tinh duoc o nao")
     out = pd.DataFrame(rows)
-    out.to_csv(ROOT / "results" / "price_paired_difference.csv", index=False)
+    out.to_csv(ROOT / "results" / "cladder" / "price_paired_difference.csv", index=False)
 
     n_sep = int(out.separates_from_zero.sum())
     widest = out.assign(w=out.ci_hi - out.ci_lo).sort_values("w").iloc[-1]
@@ -167,7 +167,7 @@ def main():
     print("  at this sample size. It does NOT say they are equal, and the widest")
     print("  interval above is the honest bound on how large a real difference")
     print("  could be hiding here. Quote that bound, not the word 'unchanged'.")
-    print("\n  Ghi ra results/price_paired_difference.csv")
+    print("\n  Ghi ra results/cladder/price_paired_difference.csv")
 
 
 if __name__ == "__main__":

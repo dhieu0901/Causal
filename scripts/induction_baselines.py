@@ -87,11 +87,11 @@ def main():
          "f1": round(b.rnd_f1.mean(), 3), "n_items": len(b)},
         {"agent": "world knowledge only (emit KEEP graph)", "reversed": round(b.wk_rev.mean(), 3),
          "f1": round(b.wk_f1.mean(), 3), "n_items": len(b)},
-    ]).to_csv(ROOT / "results" / "induction_agent_floors.csv", index=False)
+    ]).to_csv(ROOT / "results" / "cladder" / "induction_agent_floors.csv", index=False)
 
-    ind = {l: pd.read_csv(ROOT / "results" / "raw" / f"induction_raw_lex{l}.csv")
+    ind = {l: pd.read_csv(ROOT / "results" / "cladder" / "raw" / f"induction_raw_lex{l}.csv")
            for l in LEXICONS
-           if (ROOT / "results" / "raw" / f"induction_raw_lex{l}.csv").exists()}
+           if (ROOT / "results" / "cladder" / "raw" / f"induction_raw_lex{l}.csv").exists()}
     if not ind:
         return
 
@@ -121,7 +121,7 @@ def main():
             })
     o = pd.DataFrame(out)
     print(o.to_string(index=False))
-    o.to_csv(ROOT / "results" / "induction_baselines.csv", index=False)
+    o.to_csv(ROOT / "results" / "cladder" / "induction_baselines.csv", index=False)
 
     print("\n  f1_over_random_floor at or below 0 means the self-built graph is no")
     print("  better than guessing, however respectable the raw F1 looks.")

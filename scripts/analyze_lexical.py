@@ -48,7 +48,7 @@ TIER = ["gpt-4.1-nano", "gpt-4.1-mini", "gpt-4.1"]
 def load(tagfmt="pilot_raw_lex{}.csv"):
     out = {}
     for lex in LEXICONS:
-        p = ROOT / "results" / "raw" / tagfmt.format(lex)
+        p = ROOT / "results" / "cladder" / "raw" / tagfmt.format(lex)
         if p.exists():
             out[lex] = pd.read_csv(p)
     return out
@@ -97,7 +97,7 @@ def main():
             rows.append(r)
     acc = pd.DataFrame(rows)
     print(acc.to_string(index=False))
-    acc.to_csv(ROOT / "results" / f"lexical_accuracy{a.tag}.csv", index=False)
+    acc.to_csv(ROOT / "results" / "cladder" / f"lexical_accuracy{a.tag}.csv", index=False)
 
     print("\n" + "=" * 88)
     print("2. PAIRED McNEMAR: does swapping the lexicon on the SAME item cost accuracy?")
@@ -120,7 +120,7 @@ def main():
                             "meaning": "*" if pd.notna(p) and p < .05 else ""})
     mc = pd.DataFrame(out)
     print(mc.to_string(index=False))
-    mc.to_csv(ROOT / "results" / f"lexical_mcnemar{a.tag}.csv", index=False)
+    mc.to_csv(ROOT / "results" / "cladder" / f"lexical_mcnemar{a.tag}.csv", index=False)
     # REPORT section 4.0 quotes the mean harm per lexicon across the three
     # models (e.g. PERMUTE under ORACLE -6.61, 2/3 significant). Those means
     # were computed from this table by hand and never written down.
@@ -129,7 +129,7 @@ def main():
               .agg(mean_delta_pp=("delta_pp", "mean"), n_sig=("sig", "sum"),
                    n_models=("delta_pp", "size"))
               .round({"mean_delta_pp": 2}).reset_index())
-    summ.to_csv(ROOT / "results" / f"lexical_mcnemar_summary{a.tag}.csv", index=False)
+    summ.to_csv(ROOT / "results" / "cladder" / f"lexical_mcnemar_summary{a.tag}.csv", index=False)
 
     print("\n" + "=" * 88)
     print("3. PHAN RA THEO query_type  (dieu kien ORACLE: do thi dung 100%)")
@@ -159,7 +159,7 @@ def main():
     keep = ["model", "query_type", "n_KEEP", "KEEP", "PERMUTE", "SYMBOL", "PSEUDO",
             "roi_PERMUTE", "roi_SYMBOL", "roi_PSEUDO"]
     print(qd[keep].to_string(index=False))
-    qd.to_csv(ROOT / "results" / f"lexical_by_querytype{a.tag}.csv", index=False)
+    qd.to_csv(ROOT / "results" / "cladder" / f"lexical_by_querytype{a.tag}.csv", index=False)
 
     print("\n" + "=" * 88)
     print("4. THE PRICE OF ONE REVERSED EDGE, BY LEXICON")
@@ -180,7 +180,7 @@ def main():
                        "price_one_reversed_edge": round(g["ORACLE"] - g["DR_k1"], 2)})
     pd_ = pd.DataFrame(pr)
     print(pd_.to_string(index=False))
-    pd_.to_csv(ROOT / "results" / f"lexical_price{a.tag}.csv", index=False)
+    pd_.to_csv(ROOT / "results" / "cladder" / f"lexical_price{a.tag}.csv", index=False)
 
     # ---- 4b. PROSE minus RAW, per lexicon ---------------------------------
     # REPORT section 10 leans on these four numbers for its contamination
@@ -210,7 +210,7 @@ def main():
         pvd = pd.DataFrame(pv)
         print("\n  4b. PROSE - RAW, ghep cap trong tung item, gop ba model:")
         print(pvd.to_string(index=False))
-        pvd.to_csv(ROOT / "results" / f"prose_gain_by_lexicon{a.tag}.csv", index=False)
+        pvd.to_csv(ROOT / "results" / "cladder" / f"prose_gain_by_lexicon{a.tag}.csv", index=False)
 
     # ---- 4c. clustering by story ------------------------------------------
     # REPORT section 10b argues against story-level memorisation from an ICC
@@ -237,12 +237,12 @@ def main():
         icd = pd.DataFrame(ic)
         print("\n  4c. ICC of correctness by story_id, KEEP / RAW:")
         print(icd.to_string(index=False))
-        icd.to_csv(ROOT / "results" / f"story_icc{a.tag}.csv", index=False)
+        icd.to_csv(ROOT / "results" / "cladder" / f"story_icc{a.tag}.csv", index=False)
 
     # ---- 5. does the lexicon change the graph the model BUILDS? ------------
     ind = {}
     for lex in LEXICONS:
-        f = ROOT / "results" / "raw" / f"induction_raw_lex{lex}.csv"
+        f = ROOT / "results" / "cladder" / "raw" / f"induction_raw_lex{lex}.csv"
         if f.exists():
             ind[lex] = pd.read_csv(f)
     if len(ind) < 2:
@@ -295,7 +295,7 @@ def main():
     idf["survives_BH"] = False
     idf.loc[order.index[:cut], "survives_BH"] = True
     print(idf.to_string(index=False))
-    idf.to_csv(ROOT / "results" / f"lexical_induction{a.tag}.csv", index=False)
+    idf.to_csv(ROOT / "results" / "cladder" / f"lexical_induction{a.tag}.csv", index=False)
     print("\n  Prior SAI (PERMUTE) gay dao chieu nhieu gap may lan prior VANG MAT")
     print("  (SYMBOL/PSEUDO) is the key dissociation: if edge direction is read off the")
     print("  text, the two cases have to look the same.")

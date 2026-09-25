@@ -42,7 +42,7 @@ printed equation is wrong - the opposite way round from issue #15, where the val
 was wrong and the labelling rule was right.
 
 Run:  python scripts/verify_counterfactual.py
-Writes: results/counterfactual_verification.csv
+Writes: results/cladder/counterfactual_verification.csv
 """
 
 from __future__ import annotations
@@ -260,8 +260,8 @@ def coverage_in_sample():
 
 def main():
     vg = load_solver()
-    meta = json.loads((ROOT / "data" / "cladder-meta.json").read_text(encoding="utf-8"))
-    qs = json.loads((ROOT / "data" / "cladder-questions.json").read_text(encoding="utf-8"))
+    meta = json.loads((ROOT / "data" / "cladder" / "cladder-meta.json").read_text(encoding="utf-8"))
+    qs = json.loads((ROOT / "data" / "cladder" / "cladder-questions.json").read_text(encoding="utf-8"))
 
     rows = []
     check_deterministic(qs, rows)
@@ -269,7 +269,7 @@ def main():
     coverage_in_sample()
 
     df = pd.DataFrame(rows)
-    out = ROOT / "results" / "counterfactual_verification.csv"
+    out = ROOT / "results" / "cladder" / "counterfactual_verification.csv"
     df.to_csv(out, index=False)
 
     total = int(df.n.sum())

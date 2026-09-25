@@ -10,7 +10,7 @@ way the GPT-4.1 number was, on the same items:
                 [(KEEP - PSEUDO) | ORACLE], causal group, de-duplicated by
                 CLadder id, convention B (src/stats.py); then Llama minus the
                 GPT-4.1 family, paired by item. The GPT-4.1 rows must reproduce
-                results/pooled_headline.csv exactly, or the script stops
+                results/cladder/pooled_headline.csv exactly, or the script stops
   2. ARMS       ORACLE, DR_k1, PROSE minus RAW, and ORACLE minus DR_k1, per
                 lexicon, pooled over the three samples
   3. R1         DeepSeek-R1 (scripts/run_r1.sh) on the lex causal items: does a
@@ -29,7 +29,7 @@ cut off only when handed a graph. Every cut-off was asked again with a larger
 cap (pilot.py --recap: 1,500 for Llama, 16,000 for R1) and each headline
 contrast is reported both ways.
 
-Writes: results/second_family.csv, results/second_family_runs.csv
+Writes: results/cladder/second_family.csv, results/cladder/second_family_runs.csv
 """
 from __future__ import annotations
 
@@ -46,12 +46,12 @@ from stats import boot_cells, boot_items
 from analyze_querygroup import ARITH, IDENT, TIER
 from pool_samples import attach_id, cell
 
-RES = ROOT / "results"
+RES = ROOT / "results" / "cladder"
 SEED, NBOOT = 20260907, 4000
 LLAMA = "meta-llama/llama-3.3-70b-instruct"
 R1 = "deepseek/deepseek-r1"
 SAMPLES = ("lex", "n600", "price400")
-# results/raw/pilot_raw_{prefix}{lexicon}.csv
+# results/cladder/raw/pilot_raw_{prefix}{lexicon}.csv
 PREFIX = {"gpt": {"lex": "lex", "n600": "n600", "price400": "price400"},
           "llama": {"lex": "llama70b", "n600": "llama70b_n600",
                     "price400": "llama70b_price400"},
@@ -393,7 +393,7 @@ def main():
     ladder(rows)
     runs()
     pd.DataFrame(rows).to_csv(RES / "second_family.csv", index=False)
-    print("\n  wrote results/second_family.csv, results/second_family_runs.csv")
+    print("\n  wrote results/cladder/second_family.csv, results/cladder/second_family_runs.csv")
 
 
 if __name__ == "__main__":

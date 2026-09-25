@@ -16,7 +16,7 @@ import pandas as pd
 from perturb import FAMILY_STRUCTURE, feasibility, max_k
 from stats import mcnemar_power, resolution, bootstrap_break_even
 
-OUT = ROOT / "results"
+OUT = ROOT / "results" / "cladder"
 OUT.mkdir(exist_ok=True)
 
 # Anchors read from NoisyCausal arXiv:2605.04313v1
@@ -106,7 +106,7 @@ def main():
 
     # ---- 7. corpus + cost -------------------------------------------------
     section("7. DATA SUPPLY AND COST")
-    d = pd.read_csv(ROOT / "data" / "full_v1.5_default.csv")
+    d = pd.read_csv(ROOT / "data" / "cladder" / "full_v1.5_default.csv")
     ok3 = [f for f in FAMILY_STRUCTURE if max_k(f, "DR") >= 3]
     pool = d[d.graph_id.isin(ok3)]
     print(f"CLadder v1.5      : {len(d):,} questions, 10 graph families")

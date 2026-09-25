@@ -103,9 +103,9 @@ def test_prompt_length(d, rows):
 def test_residue(d, rows):
     """Split items by whether anonymisation left real words behind."""
     print("\n2. RESIDUE TU THAT CON SOT")
-    flag = ROOT / "results" / "residue_by_item.csv"
+    flag = ROOT / "results" / "cladder" / "residue_by_item.csv"
     if not flag.exists():
-        print("   thieu results/residue_by_item.csv - chay analyze_anomaly_residue.py")
+        print("   thieu results/cladder/residue_by_item.csv - chay analyze_anomaly_residue.py")
         return
     lab = pd.read_csv(flag).set_index("item")
     qs = causal_qs(d)
@@ -129,9 +129,9 @@ def test_residue(d, rows):
 
     # The split cannot be run, and the reason is worth more than the test would
     # have been. Residue is almost perfectly confounded with query group.
-    full = pd.read_csv(ROOT / "data" / "full_v1.5_default.csv",
+    full = pd.read_csv(ROOT / "data" / "cladder" / "full_v1.5_default.csv",
                        low_memory=False).set_index("id")
-    imap = ROOT / "results" / "_itemmap_lex.csv"
+    imap = ROOT / "results" / "cladder" / "_itemmap_lex.csv"
     if imap.exists():
         ids = pd.read_csv(imap).set_index("item").id
         qt = pd.Series(lab.index, index=lab.index).map(ids).map(full.query_type)
@@ -258,8 +258,8 @@ def main() -> int:
     test_lucky_slice(d, rows)
     test_scoring(d, rows)
     test_p_floor(d, rows)
-    pd.DataFrame(rows).to_csv(ROOT / "results" / "falsification.csv", index=False)
-    print("\n  ghi ra results/falsification.csv")
+    pd.DataFrame(rows).to_csv(ROOT / "results" / "cladder" / "falsification.csv", index=False)
+    print("\n  ghi ra results/cladder/falsification.csv")
     return 0
 
 

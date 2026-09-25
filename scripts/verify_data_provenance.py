@@ -23,7 +23,7 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 ROOT = Path(__file__).resolve().parent.parent
-DATA = ROOT / "data"
+DATA = ROOT / "data" / "cladder"
 
 GH = "github causalNLP/cladder@main:data"
 HF = "huggingface causal-nlp/CLadder@main:data"

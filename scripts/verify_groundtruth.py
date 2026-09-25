@@ -309,7 +309,7 @@ def main():
     ap.add_argument("--quantity", default="", help="filter by quantity name")
     a = ap.parse_args()
 
-    models = json.loads((ROOT / "data" / "cladder-meta.json").read_text(encoding="utf-8"))
+    models = json.loads((ROOT / "data" / "cladder" / "cladder-meta.json").read_text(encoding="utf-8"))
     W = 92
     print("=" * W)
     print("VERIFYING CLADDER GROUND TRUTH - exhaustive enumeration over every SCM")
@@ -399,7 +399,7 @@ def main():
     piv = df.pivot_table(index="family", columns="quantity", values="match", aggfunc="all")
     print("  exact match by (family x quantity):\n")
     print(piv.replace({True: "OK", False: "FAIL"}).fillna("-").to_string())
-    out = ROOT / "results" / "groundtruth_verification.csv"
+    out = ROOT / "results" / "cladder" / "groundtruth_verification.csv"
     out.parent.mkdir(exist_ok=True)
     df.to_csv(out, index=False)
 

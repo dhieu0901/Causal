@@ -25,9 +25,9 @@ run () {
   local log="$1"; shift
   echo ">>> $log   [$(date '+%H:%M:%S')]"
   local rc=0
-  python scripts/pilot.py "$@" > "results/logs/$log" 2>&1 || rc=$?
+  python scripts/pilot.py "$@" > "results/cladder/logs/$log" 2>&1 || rc=$?
   if [ "$rc" -ne 0 ]; then
-    echo "!!! $log FAILED, exit=$rc. See results/logs/$log" >&2
+    echo "!!! $log FAILED, exit=$rc. See results/cladder/logs/$log" >&2
     exit "$rc"
   fi
   echo "<<< $log done   [$(date '+%H:%M:%S')]"

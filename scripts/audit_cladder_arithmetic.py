@@ -23,7 +23,7 @@ only if the previous one holds:
   4. SCALE. How many questions end up with a flipped label, out of the whole set.
 
 Run:  python scripts/audit_cladder_arithmetic.py
-Writes: results/cladder_arithmetic_audit.csv
+Writes: results/cladder/cladder_arithmetic_audit.csv
 """
 
 from __future__ import annotations
@@ -412,8 +412,8 @@ def step4_scale(qs):
 
 def main():
     vg = load_solver()
-    meta = json.loads((ROOT / "data" / "cladder-meta.json").read_text(encoding="utf-8"))
-    qs = json.loads((ROOT / "data" / "cladder-questions.json").read_text(encoding="utf-8"))
+    meta = json.loads((ROOT / "data" / "cladder" / "cladder-meta.json").read_text(encoding="utf-8"))
+    qs = json.loads((ROOT / "data" / "cladder" / "cladder-questions.json").read_text(encoding="utf-8"))
 
     pred = step1_predict(vg, meta)
     rows = step2_compare(vg, meta, pred)
@@ -421,7 +421,7 @@ def main():
     step3b_arrowhead(vg, meta, qs)
     brk, tot = step4_scale(qs)
 
-    out = ROOT / "results" / "cladder_arithmetic_audit.csv"
+    out = ROOT / "results" / "cladder" / "cladder_arithmetic_audit.csv"
     pd.DataFrame(rows).to_csv(out, index=False)
 
     print("\n" + "=" * 88)

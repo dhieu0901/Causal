@@ -76,7 +76,7 @@ VAR_RE = re.compile(r"^(X|Y|V\d+)(name|0|1)$")
 @lru_cache(maxsize=1)
 def _background_index() -> dict[str, dict]:
     """background -> variable_mapping. One entry per distinct background."""
-    meta = json.loads((ROOT / "data" / "cladder-meta.json").read_text(encoding="utf-8"))
+    meta = json.loads((ROOT / "data" / "cladder" / "cladder-meta.json").read_text(encoding="utf-8"))
     idx = {}
     for m in meta:
         idx.setdefault(m["background"].strip(), m["variable_mapping"])
@@ -258,7 +258,7 @@ def story_vocab(max_stories: int = 3, data: str = "full_v1.5_default.csv") -> fr
     """Words confined to at most `max_stories` distinct stories."""
     import csv
     seen: dict[str, set] = {}
-    with (ROOT / "data" / data).open(encoding="utf-8", newline="") as fh:
+    with (ROOT / "data" / "cladder" / data).open(encoding="utf-8", newline="") as fh:
         for row in csv.DictReader(fh):
             sid = row.get("story_id", "")
             for w in set(WORD_RE.findall(row.get("prompt", "").lower())):

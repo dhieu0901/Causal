@@ -31,7 +31,7 @@ from zero. But 15.0% of answers flipped on re-asking (22.4% nano, 12.6% mini,
 single run's per-item correctness carries noise that paired designs average
 out and that no cache can reveal.
 
-Writes: results/drift_check.csv, results/drift_check_raw.csv
+Writes: results/cladder/drift_check.csv, results/cladder/drift_check_raw.csv
 """
 from __future__ import annotations
 
@@ -73,7 +73,7 @@ def jobs_for(sample, lexicon, conds):
 
 
 def old_rows(sample, lexicon):
-    d = pd.read_csv(ROOT / "results" / "raw" / f"pilot_raw_{sample}{lexicon}.csv")
+    d = pd.read_csv(ROOT / "results" / "cladder" / "raw" / f"pilot_raw_{sample}{lexicon}.csv")
     return d.set_index(["model", "cond", "item"])
 
 
@@ -135,7 +135,7 @@ def main() -> int:
                              old_correct=int(o.correct),
                              new_correct=int(pred == r["gold"]) if pred else 0))
     R = pd.DataFrame(rows)
-    R.to_csv(ROOT / "results" / f"drift_check_raw{sfx}.csv", index=False)
+    R.to_csv(ROOT / "results" / "cladder" / f"drift_check_raw{sfx}.csv", index=False)
 
     out = []
     groups = [(lx, c) for lx in lexes for c in sorted(conds)] + [("all", "all")]
@@ -156,7 +156,7 @@ def main() -> int:
                             ci_hi=round(hi, 2), p_boot=round(p, 4),
                             flip_pct=round(100 * flips, 1)))
     D = pd.DataFrame(out)
-    D.to_csv(ROOT / "results" / f"drift_check{sfx}.csv", index=False)
+    D.to_csv(ROOT / "results" / "cladder" / f"drift_check{sfx}.csv", index=False)
     print("\n" + D.to_string(index=False))
     print("\n  drift_pp = accuracy now minus accuracy then, same prompt, same item.")
     print("  flip_pct counts answers that changed in either direction.")

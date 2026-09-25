@@ -1,7 +1,7 @@
 """Generate every figure used by slides.tex.
 
 Rule: every number drawn on a figure must declare where it came from.
-  - Read it straight from results/*.csv wherever possible
+  - Read it straight from results/cladder/*.csv wherever possible
   - If it exists only in REPORT.md, declare it in FROM_REPORT with its section
 
 Run:  python scripts/make_figures.py
@@ -17,7 +17,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RESULTS = os.path.join(HERE, "results")
+RESULTS = os.path.join(HERE, "results", "cladder")
 FIGDIR = os.path.join(HERE, "figures")
 
 # colours kept in sync with slides.tex
@@ -42,7 +42,7 @@ plt.rcParams.update({
 # ---------------------------------------------------------------------
 FROM_REPORT = {
     # The six values from sections 4.3 and 4.4 HAVE been moved to
-    # scripts/analyze_structure_arms.py -> results/structure_arms.csv.
+    # scripts/analyze_structure_arms.py -> results/cladder/structure_arms.csv.
     # This table is kept as a record; nothing is drawn from it any more.
 }
 
@@ -71,7 +71,7 @@ def save(fig, name):
 # Figure 1. Forest plot: does the graph have to be CORRECT?
 # ---------------------------------------------------------------------
 def fig_forest():
-    """Read straight from results/structure_arms.csv, written by analyze_structure_arms.py."""
+    """Read straight from results/cladder/structure_arms.csv, written by analyze_structure_arms.py."""
     arms = {r["quantity"]: r for r in read_csv("structure_arms.csv")}
     want = [
         ("DiD | ORACLE",    "true graph, as arrows",    C_UP),
@@ -89,7 +89,7 @@ def fig_forest():
         pv = float(r["p_boot"])
         ptxt = "<0.001" if pv < 0.001 else f"{pv:.3f}".rstrip("0").rstrip(".")
         rows.append((lab, est, lo, hi, ptxt, col))
-        note(lab, f"{est:+.2f} [{lo:+.2f}, {hi:+.2f}]", "results/structure_arms.csv")
+        note(lab, f"{est:+.2f} [{lo:+.2f}, {hi:+.2f}]", "results/cladder/structure_arms.csv")
 
     fig, ax = plt.subplots(figsize=(4.45, 1.85))
     ys = [3, 2, 1, 0]
@@ -127,12 +127,12 @@ def fig_forest():
 # Figure 2. Lifting the weak branch, or lowering the strong one
 # ---------------------------------------------------------------------
 def fig_lift_drag():
-    """Read straight from results/structure_arms.csv."""
+    """Read straight from results/cladder/structure_arms.csv."""
     arms = {r["quantity"]: r for r in read_csv("structure_arms.csv")}
     lift = float(arms["lift, anonymised branch"]["estimate_pp"])
     drag = float(arms["drag, KEEP branch"]["estimate_pp"])
-    note("anonymised branch lifted", f"{lift:+.2f}", "results/structure_arms.csv")
-    note("original-words branch lowered", f"{drag:+.2f}", "results/structure_arms.csv")
+    note("anonymised branch lifted", f"{lift:+.2f}", "results/cladder/structure_arms.csv")
+    note("original-words branch lowered", f"{drag:+.2f}", "results/cladder/structure_arms.csv")
 
     fig, ax = plt.subplots(figsize=(4.45, 1.12))
     ax.barh([1], [lift], height=0.52, color=C_UP, zorder=3)
@@ -170,7 +170,7 @@ def fig_ladder():
             sys.exit("step %r missing from ladder5_steps.csv" % key)
         cum.append(cum[-1] - float(steps[key]["delta_pp"]))
         note(key, f"{-float(steps[key]['delta_pp']):+.2f} pp",
-             "results/ladder5_steps.csv")
+             "results/cladder/ladder5_steps.csv")
 
     first = steps[chain[0]]
     lo, hi = -float(first["ci_hi"]), -float(first["ci_lo"])
@@ -223,7 +223,7 @@ def count_calls():
                 with open(f, encoding="utf-8", errors="ignore") as fh:
                     total[prefix] += sum(1 for _ in fh) - 1
     n = sum(total.values())
-    note("scored model responses", f"{n:,}", "results/raw/*_raw*.csv (counted directly)")
+    note("scored model responses", f"{n:,}", "results/cladder/raw/*_raw*.csv (counted directly)")
     return n
 
 

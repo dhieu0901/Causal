@@ -148,7 +148,7 @@ def main():
     a = ap.parse_args()
     base = a.baseline
 
-    df = pd.read_csv(ROOT / "results" / "raw" / a.pilot)
+    df = pd.read_csv(ROOT / "results" / "cladder" / "raw" / a.pilot)
     models = [m for m in TIER if m in set(df.model)] or sorted(df.model.unique())
 
     # Scoring an unparseable reply as wrong conflates "would not answer" with
@@ -172,9 +172,9 @@ def main():
     print("\n-- for contrast: unparseable answers scored as wrong --")
     print(acc_all.reindex(index=models, columns=order).to_string())
     acc.reindex(index=models, columns=order).to_csv(
-        ROOT / "results" / f"types_accuracy{a.tag}.csv")
+        ROOT / "results" / "cladder" / f"types_accuracy{a.tag}.csv")
     prate.reindex(index=models, columns=order).to_csv(
-        ROOT / "results" / f"types_parserate{a.tag}.csv")
+        ROOT / "results" / "cladder" / f"types_parserate{a.tag}.csv")
 
     print("\n" + "=" * 80)
     print("2. PRICE PER WRONG EDGE, AND THE BREAK-EVEN POINT AGAINST THE RAW FLOOR")
@@ -232,7 +232,7 @@ def main():
     print("  A warning is raised when the slope CI still contains 0: no price per edge")
     print("  is established, so break-even k is left blank rather than reporting a")
     print("  number with nothing behind it.")
-    pr.to_csv(ROOT / "results" / f"types_price{a.tag}.csv", index=False)
+    pr.to_csv(ROOT / "results" / "cladder" / f"types_price{a.tag}.csv", index=False)
 
     print("\n" + "=" * 80)
     print("3. McNEMAR: tung dieu kien so voi RAW")
@@ -254,10 +254,10 @@ def main():
                         "p": round(p, 4), "meaning": "*" if p < .05 else ""})
     sg = pd.DataFrame(sig)
     print(sg.to_string(index=False))
-    sg.to_csv(ROOT / "results" / f"types_mcnemar{a.tag}.csv", index=False)
+    sg.to_csv(ROOT / "results" / "cladder" / f"types_mcnemar{a.tag}.csv", index=False)
 
     # ---- 4. do the prices explain what induction actually costs? -----------
-    ipath = ROOT / "results" / "raw" / a.induction
+    ipath = ROOT / "results" / "cladder" / "raw" / a.induction
     if not ipath.exists():
         print(f"\n({ipath.name} not present - skipping section 4)")
         return
@@ -316,7 +316,7 @@ def main():
         })
     od = pd.DataFrame(out)
     print(od.to_string(index=False))
-    od.to_csv(ROOT / "results" / f"types_prediction{a.tag}.csv", index=False)
+    od.to_csv(ROOT / "results" / "cladder" / f"types_prediction{a.tag}.csv", index=False)
 
     print("\n  predicted_loss_pp = sum(price per edge x count of that error type) on the induced graph")
     print("  thuc_te_mat_pp = ORACLE - INDUCED")

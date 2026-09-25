@@ -15,8 +15,8 @@ CLadder:
             item with random.Random(f"{seed}:{item}:DR:1") as in pilot.py
 
 The gold answer is the true world's under every condition. Writes
-results/raw/calm_raw{tag}.csv, and with --recap a re-ask of every answer cut off
-at the token cap to results/raw/calm_raw{tag}_recap{N}.csv. SPENDS CREDIT unless
+results/calm/raw/calm_raw{tag}.csv, and with --recap a re-ask of every answer cut off
+at the token cap to results/calm/raw/calm_raw{tag}_recap{N}.csv. SPENDS CREDIT unless
 --dry-run.
 """
 from __future__ import annotations
@@ -88,7 +88,7 @@ def mean_out_tokens(model) -> float | None:
     """This model's mean output tokens over every CLadder record on disk: the price
     of an answer depends on the model far more than on the benchmark."""
     vals = []
-    for f in (ROOT / "results" / "raw").glob("pilot_raw*.csv"):
+    for f in (ROOT / "results" / "cladder" / "raw").glob("pilot_raw*.csv"):
         d = pd.read_csv(f, usecols=lambda c: c in {"model", "out_tok"})
         if "out_tok" in d:
             vals.append(d.loc[d.model == model, "out_tok"])
@@ -181,7 +181,7 @@ def main() -> int:
                 guard_errors(rec2, label=f"{model} recap")
                 recaprows += rows_of(rec2, model, a.recap)
 
-    out = ROOT / "results" / "raw" / f"calm_raw{a.tag}.csv"
+    out = ROOT / "results" / "calm" / "raw" / f"calm_raw{a.tag}.csv"
     pd.DataFrame(allrows).sort_values(["model", "item", "cond"]).to_csv(out, index=False)
     print(f"\nwrote {out.relative_to(ROOT)}  ({len(allrows)} rows, {spent[0]:.2f} USD)")
     if a.recap:

@@ -123,7 +123,7 @@ def main():
                                                "exact_match", "n_true")}})
 
     df = pd.DataFrame(rows)
-    df.to_csv(ROOT / "results" / "raw" / f"induction_raw{a.tag}.csv", index=False)
+    df.to_csv(ROOT / "results" / "cladder" / "raw" / f"induction_raw{a.tag}.csv", index=False)
 
     print("\n" + "=" * 78)
     print("CHAT LUONG DO THI TU DUNG (doi chieu Table 3 cua NoisyCausal)")
@@ -137,15 +137,15 @@ def main():
                 thua=("n_spurious", "mean"), thieu=("n_missing", "mean"))
            .round(3))
     print(q.to_string())
-    q.to_csv(ROOT / "results" / f"induction_quality{a.tag}.csv")
+    q.to_csv(ROOT / "results" / "cladder" / f"induction_quality{a.tag}.csv")
 
     print("\n" + "=" * 78)
     print("INDUCED ROI VAO DAU TREN DUONG CONG?")
     print("=" * 78)
     try:
-        pilot = pd.read_csv(ROOT / "results" / "raw" / f"pilot_raw{a.tag}.csv")
+        pilot = pd.read_csv(ROOT / "results" / "cladder" / "raw" / f"pilot_raw{a.tag}.csv")
     except FileNotFoundError:
-        print("  chua co results/raw/pilot_raw.csv - chay scripts/pilot.py truoc")
+        print("  chua co results/cladder/raw/pilot_raw.csv - chay scripts/pilot.py truoc")
         return
 
     acc_ind = df.groupby("model").correct.mean() * 100
@@ -154,7 +154,7 @@ def main():
     comp = acc_pil[cols].copy()
     comp["INDUCED"] = acc_ind
     print(comp.round(2).to_string())
-    comp.round(2).to_csv(ROOT / "results" / f"induction_vs_curve{a.tag}.csv")
+    comp.round(2).to_csv(ROOT / "results" / "cladder" / f"induction_vs_curve{a.tag}.csv")
 
     print("\n  INDUCED against the reference points:")
     for m in comp.index:

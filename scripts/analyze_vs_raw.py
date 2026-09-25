@@ -7,7 +7,7 @@ differences:
 
 A DiD is an INTERACTION, and an interaction is blind to anything that moves both
 of its branches by the same amount. That blindness produced the misleading
-reading in results/structure_arms.csv, where
+reading in results/cladder/structure_arms.csv, where
 
     ORACLE minus DR_k1 = +1.49  CI [-1.86 ; +5.01]  p=0.41
 
@@ -45,10 +45,10 @@ Benjamini-Hochberg, and the estimates are reported separately for all three
 samples so a reader can see which effects reproduce across samples.
 
 Run:  python scripts/analyze_vs_raw.py
-Writes: results/vs_raw.csv
-        results/vs_raw_rq2.csv
-        results/vs_raw_trend.csv
-        results/vs_raw_moderator.csv
+Writes: results/cladder/vs_raw.csv
+        results/cladder/vs_raw_rq2.csv
+        results/cladder/vs_raw_trend.csv
+        results/cladder/vs_raw_moderator.csv
 """
 
 from __future__ import annotations
@@ -64,7 +64,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "src"))
 
 from stats import boot_interval, boot_items, boot_p, cluster_boot
-RESULTS = ROOT / "results"
+RESULTS = ROOT / "results" / "cladder"
 
 from analyze_querygroup import ARITH, IDENT
 
@@ -230,7 +230,7 @@ def rq2_table() -> pd.DataFrame:
     """ORACLE minus DR_k1, paired within item, on the causal group.
 
     This is the DIRECT test of RQ2 - must the structure block be CORRECT? - and
-    for a long time the project answered it from results/structure_arms.csv,
+    for a long time the project answered it from results/cladder/structure_arms.csv,
     where the same contrast reads +1.49, CI [-1.86 ; +5.01], p=0.41, i.e. "not
     distinguishable". That row is a difference of two DIFFERENCES-IN-DIFFERENCES.
     An interaction cannot see a shift that moves both lexical branches, and
@@ -341,7 +341,7 @@ def main() -> None:
   correction in {int(Q.survives_BH.sum())}. The correct graph beats a graph with
   one reversed edge across three independently drawn samples.
 
-  Compare results/structure_arms.csv, which puts the same contrast at +1.49,
+  Compare results/cladder/structure_arms.csv, which puts the same contrast at +1.49,
   CI [-1.86 ; +5.01], p=0.41 - "not distinguishable". That row is a difference of
   two INTERACTIONS and cannot see a shift that moves both lexical branches.
   Reversing an edge moves both. Taken directly, item by item, the answer flips.
@@ -403,7 +403,7 @@ def main() -> None:
     T.to_csv(RESULTS / "vs_raw_trend.csv", index=False)
     Q.to_csv(RESULTS / "vs_raw_rq2.csv", index=False)
     M.to_csv(RESULTS / "vs_raw_moderator.csv", index=False)
-    print(f"\n  wrote results/vs_raw.csv ({len(R)} rows), "
+    print(f"\n  wrote results/cladder/vs_raw.csv ({len(R)} rows), "
           f"vs_raw_trend.csv ({len(T)}), vs_raw_rq2.csv ({len(Q)}), vs_raw_moderator.csv ({len(M)})")
 
 
