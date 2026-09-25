@@ -167,6 +167,18 @@ Dữ liệu CLadder không nằm trong repo, và phải tải từ **cả hai** 
 
 Hai file JSON **chỉ có trên GitHub**, các file CSV **chỉ có trên HuggingFace**. Dự án đổi tên hai file JSON khi tải về.
 
+Benchmark thứ hai (CaLM, Apache-2.0) nằm ở `data/calm/`, ghim theo commit `1c1e93a` của [OpenCausaLab/CaLM](https://github.com/OpenCausaLab/CaLM). Tên file thay `/` bằng `__`:
+
+```bash
+C=1c1e93a80c3f9b3250bd79faf4dee8f8bc3479dd
+for f in calm_dataset/intervention/average_treatment_effect/ATE-B_ATE-natural_EN.json \
+         calm_lite_dataset/intervention/average_treatment_effect/ATE-B_ATE-natural_EN.json; do
+  curl -sL -o "data/calm/$(echo $f | sed 's#/#__#g')" "https://raw.githubusercontent.com/OpenCausaLab/CaLM/$C/$f"
+done
+```
+
+`scripts/analyze_calm.py` kiểm SHA-256 của cả hai file trước khi dùng.
+
 Chạy `python scripts/verify_data_provenance.py` để đối chiếu từng byte với bản phát hành gốc - script so git blob SHA-1 của cả 9 file, và đo lại tỷ lệ prompt có dấu hỏi thay vì trích lại con số. Thoát mã 1 nếu lệch.
 
 ## Việc chưa xong
@@ -186,6 +198,7 @@ Chạy `python scripts/verify_data_provenance.py` để đối chiếu từng by
 ```
 src/                 thư viện dùng chung
   cladder.py           nạp CLadder v1.5
+  calm.py              benchmark thứ hai: câu ATE của CaLM, tính lại đáp án và mode
   lexical.py           đổi từ vựng (KEEP, PSEUDO, PERMUTE, SYMBOL, IRRELEVANT)
   perturb.py           làm hỏng DAG (đảo, xoá, thêm cạnh, xáo), loại mọi phép tạo chu trình
   noise.py             chèn câu nhiễu theo phân loại của NoisyCausal
@@ -194,9 +207,9 @@ src/                 thư viện dùng chung
   runner.py            gọi API có cache, chặn trần chi phí, dừng khi lỗi quá 1%
   stats.py             McNemar, bootstrap theo item và theo ô
 
-scripts/             43 script Python và 7 script shell, nhóm theo tiền tố
-  pilot.py, induction.py, check_drift.py
-                       3 script GỌI API (tốn credit nếu chưa có trong cache)
+scripts/             45 script Python và 8 script shell, nhóm theo tiền tố
+  pilot.py, induction.py, check_drift.py, calm_run.py
+                       4 script GỌI API (tốn credit nếu chưa có trong cache)
   verify_*, audit_cladder_arithmetic, ci_active_gold
                        7 script kiểm chứng dữ liệu và nhãn CLadder
   analyze_* (19), pool_samples, classify_perturbations, compare_price_lexicon,
@@ -204,20 +217,24 @@ scripts/             43 script Python và 7 script shell, nhóm theo tiền tố
                        26 script phân tích, mỗi script ghi một nhóm bảng trong results/
   analyze_confirmatory 6 phép kiểm của giai đoạn xác nhận (prereg/); tự kiểm
                        trên n600 trước, phải ra đúng các dòng đã công bố
+  analyze_calm         3 phép kiểm trên CaLM (prereg/CALM.md); tự kiểm đáp án và
+                       mode với 100 nhãn CaLM công bố trước
   check_consistency, check_numbers, check_pipeline_order, verify_determinism
                        4 cổng: số khớp giữa các script và qua 5 seed, mọi con số
                        trong tài liệu truy được về một dòng CSV, không script nào
                        đọc file trước khi nó được ghi, chạy lại ra đúng từng byte
   audit_cache_agreement, backfill_ids
                        2 script chạy tay (cần cache API không phát hành)
-  run_analysis.sh      chạy lại toàn bộ phân tích, 39 bước, 0 USD
+  run_analysis.sh      chạy lại toàn bộ phân tích, 40 bước, 0 USD
   run_clean_raw.sh, run_n600_extensions.sh, run_llama70b.sh, run_r1.sh
                        lệnh đúng của các đợt chạy tốn credit đã làm
   run_confirmatory.sh  giai đoạn xác nhận trên mẫu mới (khoảng 19 USD, trần 20,20)
+  run_calm.sh          benchmark CaLM: llama (khoảng 0,41 USD) hoặc gpt (khoảng 8 USD)
   run_full.sh          kế hoạch chạy đủ n=800 (khoảng 70 USD), chưa chạy
 
 prereg/              đăng ký trước giai đoạn xác nhận, commit trước lượt gọi đầu tiên
   CONFIRMATORY.md      mẫu, điều kiện, 6 phép kiểm, quy tắc quyết định
+  CALM.md              benchmark thứ hai: câu CaLM, điều kiện, 3 phép kiểm
   excluded_ids.txt     1.121 id CLadder đã dùng ở giai đoạn thăm dò, bị loại khỏi mẫu mới
 
 results/             ~120 bảng kết quả (CSV), mỗi bảng do một script trong scripts/ ghi
