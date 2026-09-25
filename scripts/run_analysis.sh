@@ -6,7 +6,7 @@
 # This is the analysis half of the project; scripts/run_full.sh is the
 # experiment half and spends API credit on anything not already cached. Every
 # number in docs and in the manuscript comes from a results/*.csv that one of
-# these scripts writes, from the per-response records in results/*_raw*.csv.
+# these scripts writes, from the per-response records in results/raw/*_raw*.csv.
 #
 # The order is NOT kept here. It is read from ORDER in check_pipeline_order.py,
 # the one canonical list, so this script, the order gate and

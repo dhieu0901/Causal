@@ -51,7 +51,7 @@ SEED, NBOOT = 20260907, 4000
 LLAMA = "meta-llama/llama-3.3-70b-instruct"
 R1 = "deepseek/deepseek-r1"
 SAMPLES = ("lex", "n600", "price400")
-# results/pilot_raw_{prefix}{lexicon}.csv
+# results/raw/pilot_raw_{prefix}{lexicon}.csv
 PREFIX = {"gpt": {"lex": "lex", "n600": "n600", "price400": "price400"},
           "llama": {"lex": "llama70b", "n600": "llama70b_n600",
                     "price400": "llama70b_price400"},
@@ -63,17 +63,17 @@ RECAP = {"llama": 1500, "r1": 16000, "llama ladder": 1500}   # pilot.py --recap
 
 def exists(fam, sample, lex, recap=False):
     f = f"pilot_raw_{PREFIX[fam][sample]}{lex}"
-    return ((RES / f"{f}.csv").exists()
-            and (not recap or (RES / f"{f}_recap{RECAP[fam]}.csv").exists()))
+    return ((RES / "raw" / f"{f}.csv").exists()
+            and (not recap or (RES / "raw" / f"{f}_recap{RECAP[fam]}.csv").exists()))
 
 
 def load(fam, sample, lex, recap=False):
     """One results file; with `recap`, every cut-off row replaced by its re-ask."""
     imap = pd.read_csv(RES / f"_itemmap_{sample}.csv")     # written by pool_samples.py
     f = f"pilot_raw_{PREFIX[fam][sample]}{lex}"
-    d = pd.read_csv(RES / f"{f}.csv")
+    d = pd.read_csv(RES / "raw" / f"{f}.csv")
     if recap:
-        r = pd.read_csv(RES / f"{f}_recap{RECAP[fam]}.csv")
+        r = pd.read_csv(RES / "raw" / f"{f}_recap{RECAP[fam]}.csv")
         key = ["model", "item", "cond"]
         if len(r):
             cut = set(map(tuple, d.loc[d.finish == "length", key].values))
@@ -362,8 +362,8 @@ def runs():
             for lex in ("KEEP", "PSEUDO", "PERMUTE", "IRRELEVANT", "SYMBOL"):
                 if not exists(fam, s, lex):
                     continue
-                d = pd.read_csv(RES / f"pilot_raw_{PREFIX[fam][s]}{lex}.csv")
-                rf = RES / f"pilot_raw_{PREFIX[fam][s]}{lex}_recap{RECAP.get(fam, 0)}.csv"
+                d = pd.read_csv(RES / "raw" / f"pilot_raw_{PREFIX[fam][s]}{lex}.csv")
+                rf = RES / "raw" / f"pilot_raw_{PREFIX[fam][s]}{lex}_recap{RECAP.get(fam, 0)}.csv"
                 r = pd.read_csv(rf) if rf.exists() else pd.DataFrame()
                 rec = {"model": d.model.iloc[0], "sample": s, "lexicon": lex,
                        "rows": len(d), "parsed_pct": round(100 * d.parsed.mean(), 2),

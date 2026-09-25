@@ -47,7 +47,7 @@ run () {
     echo ">>> $log   attempt $attempt   [$(date '+%H:%M:%S')]"
     rc=0
     python scripts/pilot.py --models "$M" --workers 8 --recap 1500 "$@" \
-        > "results/$log" 2>&1 || rc=$?
+        > "results/logs/$log" 2>&1 || rc=$?
     if [ "$rc" -eq 0 ]; then
       echo "<<< $log done   [$(date '+%H:%M:%S')]"
       return 0
@@ -55,7 +55,7 @@ run () {
     echo "... $log stopped, exit=$rc; trying again in 60 s" >&2
     sleep 60
   done
-  echo "!!! $log FAILED, exit=$rc. See results/$log" >&2
+  echo "!!! $log FAILED, exit=$rc. See results/logs/$log" >&2
   exit "$rc"
 }
 

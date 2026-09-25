@@ -89,9 +89,9 @@ def main():
          "f1": round(b.wk_f1.mean(), 3), "n_items": len(b)},
     ]).to_csv(ROOT / "results" / "induction_agent_floors.csv", index=False)
 
-    ind = {l: pd.read_csv(ROOT / "results" / f"induction_raw_lex{l}.csv")
+    ind = {l: pd.read_csv(ROOT / "results" / "raw" / f"induction_raw_lex{l}.csv")
            for l in LEXICONS
-           if (ROOT / "results" / f"induction_raw_lex{l}.csv").exists()}
+           if (ROOT / "results" / "raw" / f"induction_raw_lex{l}.csv").exists()}
     if not ind:
         return
 

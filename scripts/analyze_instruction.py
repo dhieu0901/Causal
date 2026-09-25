@@ -64,7 +64,7 @@ GROUPS = {"rung1_arith": ARITH, "identify": IDENT, "causal": None}
 
 
 def load(tag):
-    p = ROOT / "results" / f"pilot_raw_instr{tag}.csv"
+    p = ROOT / "results" / "raw" / f"pilot_raw_instr{tag}.csv"
     if not p.exists():
         raise SystemExit(
             f"thieu {p.name}. Chay:\n"

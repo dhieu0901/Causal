@@ -1,4 +1,4 @@
-"""Does every answer in results/pilot_raw_*.csv equal the answer in the API cache?
+"""Does every answer in results/raw/pilot_raw_*.csv equal the answer in the API cache?
 
     python scripts/audit_cache_agreement.py      # about 10 minutes, reads ~91k files
 
@@ -65,7 +65,7 @@ def main() -> int:
         return 0
     tot = Counter()
     for tag, (n, kmax, skmax, types, lex, flags) in RUNS.items():
-        f = ROOT / "results" / f"pilot_raw_{tag}.csv"
+        f = ROOT / "results" / "raw" / f"pilot_raw_{tag}.csv"
         if not f.exists():
             continue
         items = pilot.make_items(n, SEED, skmax, "full_v1.5_default.csv", None, True)

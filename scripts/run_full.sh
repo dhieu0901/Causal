@@ -17,7 +17,7 @@ export PYTHONIOENCODING=utf-8
 
 N=800
 MODELS="gpt-4.1-nano,gpt-4.1-mini,gpt-4.1"
-LOG=results/full_run.log
+LOG=results/logs/full_run.log
 
 # A stage that fails must stop the run. The 2026-09-07 log shows all six stages
 # exiting 127 (python not on PATH) while the script still printed HOAN TAT after

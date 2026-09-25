@@ -5,7 +5,7 @@ corrupts 33% of it, but only 20% of a five-edge graph. So reporting "DR_k1" as a
 single condition pools four different doses. The objection is correct, and the
 existing k sweep has enough data to answer it.
 
-Seven families in results/pilot_raw_price400KEEP.csv - 399 items, 2.7x the
+Seven families in results/raw/pilot_raw_price400KEEP.csv - 399 items, 2.7x the
 pilot_raw.csv file an earlier version of this script used - with k = 1, 2, 3:
 
     three-edge families (confounding, mediation)               33%, 67%, 100%
@@ -94,7 +94,7 @@ def boot(v, seed=SEED, n=NBOOT):
 
 
 def main():
-    d = pd.read_csv(ROOT / "results" / "pilot_raw_price400KEEP.csv")
+    d = pd.read_csv(ROOT / "results" / "raw" / "pilot_raw_price400KEEP.csv")
     E = edges_per_family()
     families = sorted(d.graph_id.unique(), key=lambda g: (E[g], g))
 
@@ -200,7 +200,7 @@ def main():
     print("  For ED and FE the family dummies dominate (0.36 and 0.61): what matters is")
     print("  WHICH structure is broken, not how much of it. For DR, k/E and family are")
     print("  comparable and both weak, so DR alone is unsettled.")
-    print("\n  CORRECTION. An earlier version of this block ran on results/pilot_raw.csv")
+    print("\n  CORRECTION. An earlier version of this block ran on results/raw/pilot_raw.csv")
     print("  (147 items) and reported that BOTH dose variables had negative adjusted")
     print("  R-squared. On 399 items that is no longer true for DR: k/E rises to 0.11.")
     print("  The strong claim 'dose is not an explanatory variable' holds for ED and FE")

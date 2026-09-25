@@ -123,13 +123,13 @@ def main():
     it = label_items()
     d = {}
     for l in LEXICONS:
-        p = ROOT / "results" / f"pilot_raw_lex{l}.csv"
+        p = ROOT / "results" / "raw" / f"pilot_raw_lex{l}.csv"
         if p.exists():
             x = pd.read_csv(p)
             x["group"] = x.item.map(it.group)
             d[l] = x
     if "KEEP" not in d:
-        raise SystemExit("thieu results/pilot_raw_lexKEEP.csv")
+        raise SystemExit("thieu results/raw/pilot_raw_lexKEEP.csv")
 
     models = [m for m in TIER if m in set(d["KEEP"].model)]
     print("=" * 84)

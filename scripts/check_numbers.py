@@ -65,7 +65,7 @@ SELF = Path(__file__).name
 def number_pool() -> set[float]:
     """Every numeric cell in every results CSV, rounded to 2 dp."""
     pool: set[float] = set()
-    for f in sorted(RESULTS.glob("*.csv")):
+    for f in sorted(RESULTS.rglob("*.csv")):
         try:
             d = pd.read_csv(f)
         except Exception:
@@ -287,7 +287,7 @@ def row_index() -> tuple[dict[float, set[int]], dict[int, str]]:
     idx: dict[float, set[int]] = {}
     where: dict[int, str] = {}
     rid = 0
-    for f in sorted(RESULTS.glob("*.csv")):
+    for f in sorted(RESULTS.rglob("*.csv")):
         try:
             d = pd.read_csv(f, low_memory=False)
         except Exception:
@@ -389,7 +389,7 @@ def out_of_range_probabilities() -> list[str]:
     tells a reviewer the table was never read.
     """
     bad = []
-    for f in sorted(RESULTS.glob("*.csv")):
+    for f in sorted(RESULTS.rglob("*.csv")):
         try:
             d = pd.read_csv(f)
         except Exception:
@@ -407,7 +407,7 @@ def out_of_range_probabilities() -> list[str]:
 
 def main() -> int:
     pool = number_pool()
-    n_csv = len(list(RESULTS.glob("*.csv")))
+    n_csv = len(list(RESULTS.rglob("*.csv")))
     print("=" * 78)
     print("NUMBER CHECK - quantities in pp, against every results CSV")
     print("=" * 78)

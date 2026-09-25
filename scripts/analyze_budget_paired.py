@@ -49,7 +49,7 @@ TIER = ["gpt-4.1", "gpt-4.1-mini", "gpt-4.1-nano"]
 
 
 def load(tag, prefix="price400"):
-    p = ROOT / "results" / f"pilot_raw_{prefix}{tag}.csv"
+    p = ROOT / "results" / "raw" / f"pilot_raw_{prefix}{tag}.csv"
     if not p.exists():
         raise SystemExit(f"thieu {p.name}: chay pilot.py --lexicon {tag} --tag _{prefix}{tag}")
     return pd.read_csv(p)
@@ -142,7 +142,7 @@ def main():
     pooled_rows = []
     tags = [("price400", ""), ("n600", "_n600")]
     have = [(pfx, sfx2) for pfx, sfx2 in tags
-            if (ROOT / "results" / f"pilot_raw_{pfx}KEEP.csv").exists()
+            if (ROOT / "results" / "raw" / f"pilot_raw_{pfx}KEEP.csv").exists()
             and (ROOT / "results" / f"_itemmap_{pfx}.csv").exists()]
     if len(have) == 2 and a.prefix == "price400":
         print("\n" + "=" * W)

@@ -79,7 +79,7 @@ NHAN = {"rung1_arith": "rung-1 so hoc", "identify": "backadj identification",
 def load():
     out = {}
     for lex in LEXICONS:
-        p = ROOT / "results" / f"pilot_raw_lex{lex}.csv"
+        p = ROOT / "results" / "raw" / f"pilot_raw_lex{lex}.csv"
         if not p.exists():
             raise SystemExit(f"{p.name} missing: run pilot.py --lexicon {lex}")
         out[lex] = pd.read_csv(p)

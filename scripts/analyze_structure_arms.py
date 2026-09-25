@@ -53,7 +53,7 @@ def present(arm):
     """Is condition `arm` available in ALL THREE samples?"""
     for tag, *_ in SAMPLES:
         for lex in ("KEEP", POOL_LEXICON):
-            p = ROOT / "results" / f"pilot_raw_{tag}{lex}.csv"
+            p = ROOT / "results" / "raw" / f"pilot_raw_{tag}{lex}.csv"
             if not p.exists():
                 return False
             if arm not in set(pd.read_csv(p, usecols=["cond"]).cond.unique()):
@@ -140,7 +140,7 @@ N600_NEW = {"NAMES_ONLY", "SCRAMBLE", "DR_k2", "DR_k3"}
 def load_n600(lex, imap):
     """n600 with the conditions scripts/run_n600_extensions.sh added."""
     d = load("n600", lex, imap)
-    extra = ROOT / "results" / f"pilot_raw_n600arms{lex}.csv"
+    extra = ROOT / "results" / "raw" / f"pilot_raw_n600arms{lex}.csv"
     if extra.exists():
         e = attach_id(pd.read_csv(extra), imap, f"n600arms{lex}")
         d = pd.concat([d, e], ignore_index=True)
@@ -159,7 +159,7 @@ def matched_controls(imap, rows):
     ORACLE minus NAMES_ONLY is what the arrows are worth once the names are
     there; SCRAMBLE minus NAMES_ONLY is what WRONG arrows cost against none.
     """
-    extra = ROOT / "results" / "pilot_raw_n600armsKEEP.csv"
+    extra = ROOT / "results" / "raw" / "pilot_raw_n600armsKEEP.csv"
     if not extra.exists():
         print("\n6. NAMES_ONLY / SCRAMBLE: no data (run scripts/run_n600_extensions.sh)")
         return

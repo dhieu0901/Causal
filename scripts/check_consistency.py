@@ -80,7 +80,7 @@ def triple(r, est):
 
 
 def raw(tag):
-    return pd.read_csv(RES / f"pilot_raw_{tag}.csv")
+    return pd.read_csv(RES / "raw" / f"pilot_raw_{tag}.csv")
 
 
 def itemmap(sample):
@@ -409,7 +409,7 @@ def seeds():
     # The second model family and the reasoning model, rebuilt here from the
     # records with the item map, not imported from analyze_second_family.py.
     LL = {"lex": "llama70b", "n600": "llama70b_n600", "price400": "llama70b_price400"}
-    if all((RES / f"pilot_raw_{LL[t]}{x}.csv").exists() for t in LL for x in ("KEEP", "PSEUDO")):
+    if all((RES / "raw" / f"pilot_raw_{LL[t]}{x}.csv").exists() for t in LL for x in ("KEEP", "PSEUDO")):
         cols = []
         for t, pre in LL.items():
             ck = causal_cells(raw(f"{pre}KEEP"), "RAW"), causal_cells(raw(f"{pre}KEEP"), "ORACLE")
@@ -432,7 +432,7 @@ def seeds():
                 cols.append(pd.Series((o_[i] - r_[i]).values, index=i.map(itemmap(t)), name=t))
             Wh = pd.concat(cols, axis=1).groupby(level=0).mean()
             q[f"Llama {half}, {lex} ORACLE minus RAW"] = lambda s, W=Wh: pool_boot(W, seed=s)
-    if (RES / "pilot_raw_r1PSEUDO.csv").exists():
+    if (RES / "raw" / "pilot_raw_r1PSEUDO.csv").exists():
         R = raw("r1PSEUDO")
         # the 12 answers cut off at 8,000 tokens replaced by their re-asks
         rr = raw("r1PSEUDO_recap16000")

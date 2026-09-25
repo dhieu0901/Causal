@@ -170,7 +170,7 @@ def main() -> int:
 def with_clean(tag, lex, imap):
     """A sample's answers plus its RAW_CLEAN run (scripts/run_clean_raw.sh)."""
     d = load(tag, lex, imap)
-    f = ROOT / "results" / f"pilot_raw_cleanraw{tag}{lex}.csv"
+    f = ROOT / "results" / "raw" / f"pilot_raw_cleanraw{tag}{lex}.csv"
     if not f.exists():
         return None
     e = attach_id(pd.read_csv(f), imap, f"cleanraw{tag}{lex}")
@@ -219,7 +219,7 @@ def clean_baseline(edge_ids, latent_ids):
     print("3. A LATENT-FREE BASELINE: RAW_CLEAN")
     print("=" * 78)
     imaps = {t: pd.read_csv(ROOT / "results" / f"_itemmap_{t}.csv") for t in SAMPLES}
-    if not all((ROOT / "results" / f"pilot_raw_cleanraw{t}KEEP.csv").exists()
+    if not all((ROOT / "results" / "raw" / f"pilot_raw_cleanraw{t}KEEP.csv").exists()
                for t in SAMPLES):
         print("  SKIPPED: run scripts/run_clean_raw.sh first.")
         return

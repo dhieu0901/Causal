@@ -1,4 +1,4 @@
-"""Turn results/pilot_raw.csv into the numbers that decide whether the study runs.
+"""Turn results/raw/pilot_raw.csv into the numbers that decide whether the study runs.
 
     python scripts/analyze_pilot.py
 
@@ -48,7 +48,7 @@ def main():
     args = ap.parse_args()
     global TAG
     TAG = args.tag
-    df = pd.read_csv(ROOT / "results" / args.file)
+    df = pd.read_csv(ROOT / "results" / "raw" / args.file)
     models = [m for m in TIER if m in set(df.model)] or sorted(df.model.unique())
     kcols = sorted([c for c in df.cond.unique() if c.startswith("DR_k")])
     kmax = len(kcols)

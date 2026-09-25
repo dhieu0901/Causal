@@ -38,5 +38,5 @@ MAXUSD="${2:-3.8}"
 python scripts/pilot.py --models "deepseek/deepseek-r1" --n 200 --kmax 1 --types DR \
     --drop-nonsense --lexicon PSEUDO --causal-only --conds "$CONDS" \
     --temperature 0.6 --max-tokens 8000 --max-usd "$MAXUSD" --workers 8 --recap 16000 --tag "_r1PSEUDO" \
-    > results/r1_PSEUDO_log.txt 2>&1
+    > results/logs/r1_PSEUDO_log.txt 2>&1
 echo "HOAN TAT $(date '+%Y-%m-%d %H:%M:%S')"

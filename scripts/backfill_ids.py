@@ -47,12 +47,12 @@ SEED = 20260907
 SAMPLE_OF = {"pilot_raw.csv": "pilot", "induction_raw.csv": "pilot",
              "drift_check_raw.csv": "n600", "drift_check_raw_lex.csv": "lex",
              "drift_check_raw_price400.csv": "price400"}
-for f in RES.glob("pilot_raw_*.csv"):
+for f in (RES / "raw").glob("pilot_raw_*.csv"):
     t = f.name.removeprefix("pilot_raw_").removesuffix(".csv")
     SAMPLE_OF[f.name] = ("n600" if t.startswith(("n600", "cleanrawn600")) else
                          "price400" if t.startswith(("price400", "cleanrawprice400")) else
                          "lex")
-for f in RES.glob("induction_raw_lex*.csv"):
+for f in (RES / "raw").glob("induction_raw_lex*.csv"):
     SAMPLE_OF[f.name] = "lex"
 
 
@@ -83,7 +83,7 @@ def main() -> int:
     full = pd.read_csv(ROOT / "data" / "full_v1.5_default.csv", low_memory=False).set_index("id")
     maps, bad = {}, 0
     for name in sorted(SAMPLE_OF):
-        f = RES / name
+        f = RES / ("raw" if name.startswith(("pilot_raw", "induction_raw")) else "") / name
         if not f.exists():
             continue
         sample = SAMPLE_OF[name]

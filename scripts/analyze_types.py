@@ -148,7 +148,7 @@ def main():
     a = ap.parse_args()
     base = a.baseline
 
-    df = pd.read_csv(ROOT / "results" / a.pilot)
+    df = pd.read_csv(ROOT / "results" / "raw" / a.pilot)
     models = [m for m in TIER if m in set(df.model)] or sorted(df.model.unique())
 
     # Scoring an unparseable reply as wrong conflates "would not answer" with
@@ -257,7 +257,7 @@ def main():
     sg.to_csv(ROOT / "results" / f"types_mcnemar{a.tag}.csv", index=False)
 
     # ---- 4. do the prices explain what induction actually costs? -----------
-    ipath = ROOT / "results" / a.induction
+    ipath = ROOT / "results" / "raw" / a.induction
     if not ipath.exists():
         print(f"\n({ipath.name} not present - skipping section 4)")
         return

@@ -39,7 +39,7 @@ ROOT = Path(__file__).resolve().parent.parent
 RESULTS = ROOT / "results"
 
 # ORDER MATTERS, and getting it wrong is what this script caught on its first
-# run. `analyze_types.py` defaults to reading results/induction_raw.csv, which
+# run. `analyze_types.py` defaults to reading results/raw/induction_raw.csv, which
 # `induction.py` WRITES. Run them alphabetically and analyze_types reads a stale
 # file, so the comparison reports a spurious difference. Any list here must put
 # a writer before its readers.
@@ -70,8 +70,10 @@ def _canonical_order() -> list[str]:
 
 
 def snapshot(dst: Path) -> list[str]:
-    names = sorted(p.name for p in RESULTS.glob("*.csv"))
+    # rglob: results/raw/ holds induction_raw*.csv, which induction.py rewrites
+    names = sorted(p.relative_to(RESULTS).as_posix() for p in RESULTS.rglob("*.csv"))
     for n in names:
+        (dst / n).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(RESULTS / n, dst / n)
     return names
 
@@ -102,7 +104,7 @@ def main() -> int:
             if r.returncode != 0:
                 print("      " + (r.stderr.strip().splitlines() or ["(no stderr)"])[-1][:100])
 
-        after = sorted(p.name for p in RESULTS.glob("*.csv"))
+        after = sorted(p.relative_to(RESULTS).as_posix() for p in RESULTS.rglob("*.csv"))
         changed, new = [], [n for n in after if n not in before]
         for n in before:
             if n not in after:

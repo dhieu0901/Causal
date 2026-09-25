@@ -247,7 +247,7 @@ def main():
                          "what the rest would cost")
     ap.add_argument("--cost-ref", default="", dest="cost_ref",
                     help="FILE:COND, with --dry-run. Price each new call at the SAME "
-                         "item's output tokens under COND in results/FILE, which must "
+                         "item's output tokens under COND in results/raw/FILE, which must "
                          "be a run of this very sample, e.g. "
                          "pilot_raw_n600PSEUDO.csv:DR_k1")
     ap.add_argument("--temperature", type=float, default=0.0,
@@ -298,7 +298,7 @@ def main():
         ref = None
         if a.cost_ref:
             fname, cond = a.cost_ref.rsplit(":", 1)
-            ref = pd.read_csv(ROOT / "results" / fname)
+            ref = pd.read_csv(ROOT / "results" / "raw" / fname)
             # `item` is a row index into THIS sample, so a file from another
             # sample would price every call at an unrelated question.
             meta = {j["item"]: (j["graph_id"], j["gold"]) for j in jobs}
@@ -397,11 +397,11 @@ def main():
                 recaprows += rows_of(rec2, model, a.recap)
 
     df = pd.DataFrame(allrows)
-    out = ROOT / "results" / f"pilot_raw{a.tag}.csv"
+    out = ROOT / "results" / "raw" / f"pilot_raw{a.tag}.csv"
     df.to_csv(out, index=False)
     print(f"\nsaved {out}  ({len(df)} rows)")
     if a.recap:
-        out2 = ROOT / "results" / f"pilot_raw{a.tag}_recap{a.recap}.csv"
+        out2 = ROOT / "results" / "raw" / f"pilot_raw{a.tag}_recap{a.recap}.csv"
         pd.DataFrame(recaprows).to_csv(out2, index=False)
         print(f"saved {out2}  ({len(recaprows)} rows)")
 

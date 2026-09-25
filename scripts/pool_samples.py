@@ -113,7 +113,7 @@ def draw_items(full, pilot, n, kmax, drop):
 def verify_item_map(tag, n, kmax, drop, full, pilot):
     """Recover item -> id, and PROVE it by matching the saved CSV row by row."""
     it = draw_items(full, pilot, n, kmax, drop)
-    saved = pd.read_csv(ROOT / "results" / f"pilot_raw_{tag}KEEP.csv")
+    saved = pd.read_csv(ROOT / "results" / "raw" / f"pilot_raw_{tag}KEEP.csv")
     want = (saved[["item"] + KEY].drop_duplicates()
             .sort_values("item")[KEY].reset_index(drop=True))
     got = it[KEY].reset_index(drop=True)
@@ -146,7 +146,7 @@ def attach_id(d, imap, label):
 
 
 def load(tag, lex, imap):
-    d = pd.read_csv(ROOT / "results" / f"pilot_raw_{tag}{lex}.csv")
+    d = pd.read_csv(ROOT / "results" / "raw" / f"pilot_raw_{tag}{lex}.csv")
     return attach_id(d, imap, f"{tag}/{lex}")
 
 

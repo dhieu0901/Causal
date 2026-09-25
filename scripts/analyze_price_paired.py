@@ -102,8 +102,8 @@ def paired_difference(wk, wp, t, seed=SEED, n=NBOOT):
 
 
 def main():
-    k_raw = ROOT / "results" / "pilot_raw_price400KEEP.csv"
-    p_raw = ROOT / "results" / "pilot_raw_price400PSEUDO.csv"
+    k_raw = ROOT / "results" / "raw" / "pilot_raw_price400KEEP.csv"
+    p_raw = ROOT / "results" / "raw" / "pilot_raw_price400PSEUDO.csv"
     for f in (k_raw, p_raw):
         if not f.exists():
             raise SystemExit(f"thieu {f.name}")

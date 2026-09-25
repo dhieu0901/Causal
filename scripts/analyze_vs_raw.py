@@ -151,7 +151,7 @@ def benjamini_hochberg(p: np.ndarray, alpha: float = ALPHA) -> np.ndarray:
 
 
 def load(tag: str, lexicon: str) -> pd.DataFrame:
-    d = pd.read_csv(RESULTS / f"pilot_raw_{tag}{lexicon}.csv")
+    d = pd.read_csv(RESULTS / "raw" / f"pilot_raw_{tag}{lexicon}.csv")
     return d[d.parsed == 1]
 
 

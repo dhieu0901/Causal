@@ -73,7 +73,7 @@ def jobs_for(sample, lexicon, conds):
 
 
 def old_rows(sample, lexicon):
-    d = pd.read_csv(ROOT / "results" / f"pilot_raw_{sample}{lexicon}.csv")
+    d = pd.read_csv(ROOT / "results" / "raw" / f"pilot_raw_{sample}{lexicon}.csv")
     return d.set_index(["model", "cond", "item"])
 
 

@@ -80,12 +80,12 @@ N600_NEW = {"PERMUTE", "IRRELEVANT", "SYMBOL"}
 def load(lex, sample="lex"):
     if sample == "n600":
         tag = f"_n600ladder{lex}" if lex in N600_NEW else f"_n600{lex}"
-        p = ROOT / "results" / f"pilot_raw{tag}.csv"
+        p = ROOT / "results" / "raw" / f"pilot_raw{tag}.csv"
         if not p.exists():
             raise SystemExit(f"thieu {p.name}: chay bash scripts/run_n600_extensions.sh")
         return pd.read_csv(p)
     for tag in (f"_lex{lex}", f"_instr{lex}"):
-        p = ROOT / "results" / f"pilot_raw{tag}.csv"
+        p = ROOT / "results" / "raw" / f"pilot_raw{tag}.csv"
         if p.exists():
             return pd.read_csv(p)
     raise SystemExit(
@@ -128,7 +128,7 @@ def main():
                     help="use the whole sample instead of the genuinely-causal group only")
     a = ap.parse_args()
     samples = [a.sample] if a.sample != "both" else (
-        ["lex", "n600"] if (ROOT / "results" / "pilot_raw_n600ladderSYMBOL.csv").exists()
+        ["lex", "n600"] if (ROOT / "results" / "raw" / "pilot_raw_n600ladderSYMBOL.csv").exists()
         else ["lex"])
     for sample in samples:
         run(a, sample)

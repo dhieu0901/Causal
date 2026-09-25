@@ -48,7 +48,7 @@ TIER = ["gpt-4.1-nano", "gpt-4.1-mini", "gpt-4.1"]
 def load(tagfmt="pilot_raw_lex{}.csv"):
     out = {}
     for lex in LEXICONS:
-        p = ROOT / "results" / tagfmt.format(lex)
+        p = ROOT / "results" / "raw" / tagfmt.format(lex)
         if p.exists():
             out[lex] = pd.read_csv(p)
     return out
@@ -242,7 +242,7 @@ def main():
     # ---- 5. does the lexicon change the graph the model BUILDS? ------------
     ind = {}
     for lex in LEXICONS:
-        f = ROOT / "results" / f"induction_raw_lex{lex}.csv"
+        f = ROOT / "results" / "raw" / f"induction_raw_lex{lex}.csv"
         if f.exists():
             ind[lex] = pd.read_csv(f)
     if len(ind) < 2:

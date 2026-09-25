@@ -464,7 +464,7 @@ def main() -> int:
     print("=" * 78 + "\n")
     rows = []
     for lex in ("KEEP", "PSEUDO"):
-        d = pd.read_csv(ROOT / "results" / f"pilot_raw_price400{lex}.csv")
+        d = pd.read_csv(ROOT / "results" / "raw" / f"pilot_raw_price400{lex}.csv")
         d = d[d.parsed == 1]
         print(f"  --- {lex} ---")
         print(f"  {'cond':8s} {'all':>22s} {'estimand UNCHANGED':>24s} {'estimand CHANGED':>24s}")
@@ -536,7 +536,7 @@ def main() -> int:
     print("=" * 78 + "\n")
     qt_rows = []
     for lex in ("KEEP", "PSEUDO"):
-        d = pd.read_csv(ROOT / "results" / f"pilot_raw_price400{lex}.csv")
+        d = pd.read_csv(ROOT / "results" / "raw" / f"pilot_raw_price400{lex}.csv")
         d = d[d.parsed == 1]
         for cond in ("DR_k1", "DR_k2", "DR_k3"):
             v = paired_causal(d, cond)
@@ -597,7 +597,7 @@ def n600_dose() -> pd.DataFrame | None:
     print("\n" + "=" * 78)
     print("3. n600: THE DOSE LINE ON ALL TEN FAMILIES, SPLIT THE SAME WAY")
     print("=" * 78 + "\n")
-    arms_files = [ROOT / "results" / f"pilot_raw_n600arms{lex}.csv" for lex in ("KEEP", "PSEUDO")]
+    arms_files = [ROOT / "results" / "raw" / f"pilot_raw_n600arms{lex}.csv" for lex in ("KEEP", "PSEUDO")]
     if not all(f.exists() for f in arms_files):
         print("  SKIPPED: run scripts/run_n600_extensions.sh first.")
         return None
@@ -617,8 +617,8 @@ def n600_dose() -> pd.DataFrame | None:
     seven = {"IV", "arrowhead", "confounding", "diamond", "diamondcut", "frontdoor", "mediation"}
     rows = []
     for lex in ("KEEP", "PSEUDO"):
-        base = pd.read_csv(ROOT / "results" / f"pilot_raw_n600{lex}.csv")
-        extra = pd.read_csv(ROOT / "results" / f"pilot_raw_n600arms{lex}.csv")
+        base = pd.read_csv(ROOT / "results" / "raw" / f"pilot_raw_n600{lex}.csv")
+        extra = pd.read_csv(ROOT / "results" / "raw" / f"pilot_raw_n600arms{lex}.csv")
         d = pd.concat([base, extra], ignore_index=True)
         d = d[d.parsed == 1]
         print(f"\n  --- {lex} ---")
@@ -698,7 +698,7 @@ def conditional_slope(C: pd.DataFrame, N: pd.DataFrame) -> None:
         for tag, cls, files in (
                 ("price400", C, [f"pilot_raw_price400{lex}.csv"]),
                 ("n600", N, [f"pilot_raw_n600{lex}.csv", f"pilot_raw_n600arms{lex}.csv"])):
-            d = pd.concat([pd.read_csv(ROOT / "results" / f) for f in files], ignore_index=True)
+            d = pd.concat([pd.read_csv(ROOT / "results" / "raw" / f) for f in files], ignore_index=True)
             d = d[(d.parsed == 1) & d.graph_id.isin(SEVEN)]
             M = pd.concat({k: paired_causal(d, f"DR_k{k}") for k in (1, 2, 3)}, axis=1).dropna()
             flag = cls[(cls.cond == "DR_k1") & (cls.lexicon == lex)].set_index("item").unchanged_qt
@@ -770,7 +770,7 @@ def validate_against_models(C: pd.DataFrame, N: pd.DataFrame) -> None:
     for tag, cls, files in (("price400", C, ["pilot_raw_price400{}.csv"]),
                             ("n600", N, ["pilot_raw_n600{}.csv"])):
         for lex in ("KEEP", "PSEUDO"):
-            d = pd.concat([pd.read_csv(ROOT / "results" / f.format(lex)) for f in files])
+            d = pd.concat([pd.read_csv(ROOT / "results" / "raw" / f.format(lex)) for f in files])
             d = d[(d.parsed == 1) & d.graph_id.isin(SEVEN)]
             o, r_ = paired_causal(d, "ORACLE"), paired_causal(d, "DR_k1")
             flag = cls[(cls.cond == "DR_k1") & (cls.lexicon == lex)].set_index("item").unchanged_qt

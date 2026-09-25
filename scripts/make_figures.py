@@ -214,7 +214,7 @@ def count_calls():
     """Count the responses actually scored, skipping quarantined data."""
     import glob
     total = {"pilot_raw": 0, "induction_raw": 0}
-    for f in glob.glob(os.path.join(RESULTS, "*.csv")):
+    for f in glob.glob(os.path.join(RESULTS, "raw", "*.csv")):
         b = os.path.basename(f)
         if "INVALID" in b or "BUGGY" in b:
             continue
@@ -223,7 +223,7 @@ def count_calls():
                 with open(f, encoding="utf-8", errors="ignore") as fh:
                     total[prefix] += sum(1 for _ in fh) - 1
     n = sum(total.values())
-    note("scored model responses", f"{n:,}", "results/*_raw*.csv (counted directly)")
+    note("scored model responses", f"{n:,}", "results/raw/*_raw*.csv (counted directly)")
     return n
 
 

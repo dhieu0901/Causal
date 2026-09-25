@@ -64,7 +64,7 @@ Trên `n600` (chạy 24/09/2026, `results/ladder5_steps_n600.csv`), bị gán pr
 
 **Mọi nhãn dự án chấm điểm đều đã tính lại độc lập.** Ba loại truy vấn từng bỏ trống - `det-counterfactual`, `collider_bias`, `exp_away`, cộng 1.812 câu và 28 trong 86 item của nhóm nhân quả - nay đã kiểm: **1.812/1.812 nhãn tái lập chính xác**. Chạy `scripts/verify_counterfactual.py`.
 
-n = 490 item ghép cặp qua ba mẫu, 3 model của **một họ** (giới hạn duy nhất đủ nghiêm trọng để chặn công bố), **98.463** lượt chấm điểm (đếm từ `results/*_raw*.csv`, đã trừ dữ liệu cách ly).
+n = 490 item ghép cặp qua ba mẫu, 3 model của **một họ** (giới hạn duy nhất đủ nghiêm trọng để chặn công bố), **98.463** lượt chấm điểm (đếm từ `results/raw/*_raw*.csv`, đã trừ dữ liệu cách ly).
 
 ## Thiết kế
 
@@ -184,19 +184,41 @@ Chạy `python scripts/verify_data_provenance.py` để đối chiếu từng by
 ## Cấu trúc
 
 ```
-src/       lexical.py (đổi từ vựng, 5 bộ), perturb.py (làm hỏng DAG),
-           prompts.py (RAW / RAW_INSTR / NAMES_ONLY / ORACLE / PERTURB / PROSE), induce.py,
-           noise.py, runner.py (có guard lỗi API), stats.py
-scripts/   pilot.py, induction.py, check_drift.py (ba script gọi API, tốn tiền;
-           cả ba có --dry-run hoặc cache), 18 script analyze_*,
-           6 script kiểm chứng nhãn và dữ liệu (verify_*, audit_*), 4 cổng
-           (check_consistency, check_numbers, check_pipeline_order,
-           verify_determinism), audit_cache_agreement.py (so mọi dòng CSV với
-           cache; cần cache nên chạy tay), backfill_ids.py (ghi và kiểm cột id
-           CLadder trong file thô), ci_active_gold.py (đáp án cho CI_ACTIVE), và
-           7 script phụ trợ - tổng 41, mọi script trừ ba cái đầu chạy 0 USD.
-           run_analysis.sh chạy lại toàn bộ phần phân tích, không gọi API;
-           run_n600_extensions.sh và run_clean_raw.sh là hai đợt tốn credit
-           ngày 24/09/2026
-results/   các bảng CSV kết quả và log chạy thật
+src/                 thư viện dùng chung
+  cladder.py           nạp CLadder v1.5
+  lexical.py           đổi từ vựng (KEEP, PSEUDO, PERMUTE, SYMBOL, IRRELEVANT)
+  perturb.py           làm hỏng DAG (đảo, xoá, thêm cạnh, xáo), loại mọi phép tạo chu trình
+  noise.py             chèn câu nhiễu theo phân loại của NoisyCausal
+  prompts.py           các điều kiện RAW, RAW_INSTR, NAMES_ONLY, ORACLE, PERTURB, PROSE, ...
+  induce.py            cho model tự trích đồ thị
+  runner.py            gọi API có cache, chặn trần chi phí, dừng khi lỗi quá 1%
+  stats.py             McNemar, bootstrap theo item và theo ô
+
+scripts/             42 script Python và 6 script shell, nhóm theo tiền tố
+  pilot.py, induction.py, check_drift.py
+                       3 script GỌI API (tốn credit nếu chưa có trong cache)
+  verify_*, audit_cladder_arithmetic, ci_active_gold
+                       7 script kiểm chứng dữ liệu và nhãn CLadder
+  analyze_* (19), pool_samples, classify_perturbations, compare_price_lexicon,
+  induction_baselines, measure_raw_leak, feasibility, make_figures
+                       26 script phân tích, mỗi script ghi một nhóm bảng trong results/
+  check_consistency, check_numbers, check_pipeline_order, verify_determinism
+                       4 cổng: số khớp giữa các script và qua 5 seed, mọi con số
+                       trong tài liệu truy được về một dòng CSV, không script nào
+                       đọc file trước khi nó được ghi, chạy lại ra đúng từng byte
+  audit_cache_agreement, backfill_ids
+                       2 script chạy tay (cần cache API không phát hành)
+  run_analysis.sh      chạy lại toàn bộ phân tích, 38 bước, 0 USD
+  run_clean_raw.sh, run_n600_extensions.sh, run_llama70b.sh, run_r1.sh
+                       lệnh đúng của các đợt chạy tốn credit đã làm
+  run_full.sh          kế hoạch chạy đủ n=800 (khoảng 70 USD), chưa chạy
+
+results/             ~120 bảng kết quả (CSV), mỗi bảng do một script trong scripts/ ghi
+  raw/                 52 file bản ghi từng câu trả lời của model: pilot_raw_* từ
+                       các lần gọi API, induction_raw_* do induction.py dựng từ cache.
+                       Mọi bảng ở trên tính từ đây
+  logs/                40 log của các lần chạy tốn credit (chi phí, lỗi API)
+  _itemmap_*.csv       ánh xạ item của từng mẫu sang id gốc CLadder
 ```
+
+Không có trong repo (xem `.gitignore`): `data/` (CLadder v1.5, tải theo bảng ở mục Chạy lại), `cache/` (cache câu trả lời API, khoảng 320 MB), `figures/*.pdf` (sinh lại bằng `make_figures.py`), `docs/` (tài liệu nội bộ), `.env` (key API).

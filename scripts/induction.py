@@ -123,7 +123,7 @@ def main():
                                                "exact_match", "n_true")}})
 
     df = pd.DataFrame(rows)
-    df.to_csv(ROOT / "results" / f"induction_raw{a.tag}.csv", index=False)
+    df.to_csv(ROOT / "results" / "raw" / f"induction_raw{a.tag}.csv", index=False)
 
     print("\n" + "=" * 78)
     print("CHAT LUONG DO THI TU DUNG (doi chieu Table 3 cua NoisyCausal)")
@@ -143,9 +143,9 @@ def main():
     print("INDUCED ROI VAO DAU TREN DUONG CONG?")
     print("=" * 78)
     try:
-        pilot = pd.read_csv(ROOT / "results" / f"pilot_raw{a.tag}.csv")
+        pilot = pd.read_csv(ROOT / "results" / "raw" / f"pilot_raw{a.tag}.csv")
     except FileNotFoundError:
-        print("  chua co results/pilot_raw.csv - chay scripts/pilot.py truoc")
+        print("  chua co results/raw/pilot_raw.csv - chay scripts/pilot.py truoc")
         return
 
     acc_ind = df.groupby("model").correct.mean() * 100

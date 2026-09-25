@@ -55,7 +55,7 @@ IDENT = {"backadj"}
 
 
 def load(lex):
-    p = ROOT / "results" / f"pilot_raw_edfe{lex}.csv"
+    p = ROOT / "results" / "raw" / f"pilot_raw_edfe{lex}.csv"
     if not p.exists():
         raise SystemExit(
             f"thieu {p.name}. Chay:\n"
