@@ -257,13 +257,14 @@ def answer(value, polarity):
 
 
 # ------------------------------------------------------------ per sample
-def draws_for(tag, M, kw=None, lexicons=("KEEP", "PSEUDO")):
-    """One row per DR draw on an ate/ett item. `kw` defaults to the sample's
-    entry in SAMPLES; analyze_r1_chains.py passes the lex sample's."""
+def draws_for(tag, M, kw=None, lexicons=("KEEP", "PSEUDO"), arms=("DR",)):
+    """One row per draw on an ate/ett item, reversals by default. `kw` defaults
+    to the sample's entry in SAMPLES; analyze_r1_chains.py passes the lex
+    sample's. analyze_edge_types.py passes arms=("DR", "ED", "FE")."""
     kw = kw or SAMPLES[tag][0]
     items = make_items(kw["n_items"], kw["seed"], kw["sample_kmax"], "full_v1.5_default.csv",
                        None, True, kw["exclude_ids"], kw.get("query_types"))
-    C = classify(kw["n_items"], kw["sample_kmax"], kw["kmax"], arms=("DR",), seed=kw["seed"],
+    C = classify(kw["n_items"], kw["sample_kmax"], kw["kmax"], arms=arms, seed=kw["seed"],
                  exclude_ids=kw["exclude_ids"], lexicons=lexicons, keep_shown=True,
                  query_types=kw.get("query_types"))
     C = C[C.query_type.isin(TYPES)].reset_index(drop=True)

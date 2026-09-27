@@ -1,0 +1,25 @@
+arm,k,group,harm_pp,ci_lo,ci_hi,p_boot,p_min_seeds,p_max_seeds,n_draws,n_items
+DR,all,estimand kept,4.72,-0.0,9.73,0.0645,0.055,0.0735,60,30
+DR,all,"estimand changed, answer kept",0.95,-2.25,4.12,0.5565,0.5565,0.5715,384,94
+DR,all,"answer changed, path cut",-22.53,-31.15,-14.36,0.0005,0.0005,0.0005,196,56
+DR,all,"answer changed, path kept",-2.78,-8.48,3.09,0.3335,0.3235,0.35,54,22
+DR,all,all draws,-5.56,-8.99,-2.15,0.0005,0.0005,0.0015,698,117
+DR,k1,estimand kept,4.72,-0.0,9.73,0.0645,0.055,0.0735,60,30
+DR,k1,"estimand changed, answer kept",-0.85,-5.1,3.23,0.703,0.6975,0.7385,98,49
+DR,k1,"answer changed, path cut",-23.05,-36.11,-9.72,0.0005,0.0005,0.0005,47,24
+DR,k1,"answer changed, path kept",1.45,-4.55,7.58,0.792,0.792,0.842,23,12
+DR,k1,all draws,-3.52,-7.48,0.43,0.078,0.0735,0.085,232,117
+ED,all,estimand kept,-0.98,-4.67,2.56,0.606,0.605,0.6255,102,40
+ED,all,"estimand changed, answer kept",1.43,-2.35,5.06,0.4635,0.452,0.4635,337,86
+ED,all,"answer changed, path cut",-13.74,-22.22,-5.63,0.0005,0.0005,0.0015,205,57
+ED,all,all draws,-3.8,-7.32,-0.36,0.0315,0.0225,0.0315,698,117
+ED,k1,estimand kept,-1.39,-6.02,3.24,0.583,0.5665,0.6025,72,36
+ED,k1,"estimand changed, answer kept",-1.24,-5.32,2.66,0.5755,0.5585,0.5805,94,47
+ED,k1,"answer changed, path cut",-7.29,-24.19,9.09,0.388,0.3755,0.4085,32,17
+ED,k1,all draws,-1.87,-5.41,1.65,0.277,0.277,0.3,232,117
+FE,all,estimand kept,3.01,-0.83,7.07,0.139,0.139,0.1455,166,48
+FE,all,"estimand changed, answer kept",-0.2,-6.14,5.8,0.95,0.93,0.9635,83,28
+FE,all,all draws,0.67,-2.32,3.86,0.676,0.658,0.6995,298,84
+FE,k1,estimand kept,1.85,-2.52,5.99,0.399,0.38,0.4055,90,48
+FE,k1,"estimand changed, answer kept",-2.08,-8.33,5.1,0.5545,0.5375,0.5735,48,28
+FE,k1,all draws,-0.2,-3.42,3.13,0.9,0.8795,0.94,165,84
