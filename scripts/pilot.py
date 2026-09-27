@@ -115,7 +115,8 @@ def read_ids(path) -> set[int]:
 
 def build_jobs(items, kmax=3, seed=0, types=("DR",), lexicon="KEEP",
                drop_residue=False, with_instr=False, with_names=False,
-               with_scramble=False, with_clean_raw=False, with_noinstr=False):
+               with_scramble=False, with_clean_raw=False, with_noinstr=False,
+               with_uncertain=False):
     """Every graph is built over the story's own variable names.
 
     Using the symbol DAG (X -> V2 -> Y) beside a body about husbands and wives
@@ -183,6 +184,12 @@ def build_jobs(items, kmax=3, seed=0, types=("DR",), lexicon="KEEP",
             # very draw their instructed version uses.
             jobs.append(dict(cond="ORACLE_NI", prompt=build(prompt, "ORACLE_NI", edges),
                              **meta))
+        if with_uncertain:
+            # B8: the same graph offered as a proposal that may contain errors,
+            # without the instruction; differs from ORACLE_NI in the opening
+            # sentence only. The perturbed twins below reuse the same draw.
+            jobs.append(dict(cond="ORACLE_U", prompt=build(prompt, "ORACLE_U", edges),
+                             **meta))
         if with_instr:
             # Opt-in: it adds a paid call per item and no existing analysis
             # reads it. See src/prompts.py for what the condition separates.
@@ -216,6 +223,9 @@ def build_jobs(items, kmax=3, seed=0, types=("DR",), lexicon="KEEP",
                 if with_noinstr:
                     jobs.append(dict(cond=f"{t}_k{k}_NI",
                                      prompt=build(prompt, "PERTURB_NI", bad), **meta))
+                if with_uncertain:
+                    jobs.append(dict(cond=f"{t}_k{k}_U",
+                                     prompt=build(prompt, "PERTURB_U", bad), **meta))
     if unrelabelled:
         print(f"    [lexicon {lexicon}] dropped {unrelabelled} items that could not be "
               f"fully relabelled")
@@ -224,8 +234,7 @@ def build_jobs(items, kmax=3, seed=0, types=("DR",), lexicon="KEEP",
         print(f"    [lexicon {lexicon}] {dirty} items carry residue outside variable_mapping"
               f" - {verb}")
         if not drop_residue:
-            print(f"    [lexicon {lexicon}] residue biases this condition TOWARDS KEEP;"
-                  f" see REPORT.md section 7.2")
+            print(f"    [lexicon {lexicon}] residue biases this condition TOWARDS KEEP")
     return jobs
 
 
@@ -304,6 +313,10 @@ def main():
     ap.add_argument("--no-instr", action="store_true", dest="with_noinstr",
                     help="also send ORACLE and every perturbation without the line "
                          "'Use this causal structure when reasoning.' (B6)")
+    ap.add_argument("--uncertain", action="store_true", dest="with_uncertain",
+                    help="also send ORACLE and every perturbation as 'A proposed causal "
+                         "structure of this world, which may contain errors, is:' with no "
+                         "instruction line (B8)")
     ap.add_argument("--workers", type=int, default=16,
                     help="concurrent calls. Lower it when two runs share one "
                          "OpenRouter provider, which rate-limits (429) under load")
@@ -321,7 +334,8 @@ def main():
                       tuple(t.strip() for t in a.types.split(",")), a.lexicon,
                       drop_residue=a.drop_residue, with_instr=a.with_instr,
                       with_names=a.with_names, with_scramble=a.with_scramble,
-                      with_clean_raw=a.with_clean_raw, with_noinstr=a.with_noinstr)
+                      with_clean_raw=a.with_clean_raw, with_noinstr=a.with_noinstr,
+                      with_uncertain=a.with_uncertain)
     if a.conds:
         keep = {c.strip() for c in a.conds.split(",") if c.strip()}
         unknown = keep - {j["cond"] for j in jobs}

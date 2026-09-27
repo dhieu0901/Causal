@@ -266,7 +266,8 @@ def draws_for(tag, M, kw=None, lexicons=("KEEP", "PSEUDO"), arms=("DR",)):
                        None, True, kw["exclude_ids"], kw.get("query_types"))
     C = classify(kw["n_items"], kw["sample_kmax"], kw["kmax"], arms=arms, seed=kw["seed"],
                  exclude_ids=kw["exclude_ids"], lexicons=lexicons, keep_shown=True,
-                 query_types=kw.get("query_types"))
+                 query_types=kw.get("query_types"),
+                 replay_condition=kw.get("replay_condition", "PERTURB"))
     C = C[C.query_type.isin(TYPES)].reset_index(drop=True)
     check_replay(C)
     canon = __import__("classify_perturbations").canonical_structures()

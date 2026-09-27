@@ -18,3 +18,5 @@ cache_probe_pilot/
 .vscode/
 *.ttf
 figures/
+prereg/
+CITATION.cff

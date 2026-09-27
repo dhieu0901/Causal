@@ -175,11 +175,18 @@ def build(prompt: str, condition: str, edges=None, var_names=None) -> str:
     if condition == "NAMES_ONLY":
         body = list_nodes(edges, var_names)
         head = "The variables of this world are:"
+    elif condition in ("ORACLE_U", "PERTURB_U"):
+        # B8: the graph offered as a proposal that may be wrong, and no
+        # instruction. Paired with ORACLE_NI / PERTURB_NI, the pair differs in
+        # this opening sentence only: trust in an asserted graph against a
+        # graph whose correctness is left open.
+        body = describe_graph(edges, var_names)
+        head = "A proposed causal structure of this world, which may contain errors, is:"
     else:
         body = describe_graph(edges, var_names)
         head = "The causal structure of this world is:"
     block = f"\n\n{head}\n{body}"
-    if condition not in ("ORACLE_NI", "PERTURB_NI"):
+    if condition not in ("ORACLE_NI", "PERTURB_NI", "ORACLE_U", "PERTURB_U"):
         block += "\nUse this causal structure when reasoning."
     return stripped + block + ANSWER_RULE
 
