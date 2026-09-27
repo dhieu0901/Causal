@@ -2,7 +2,7 @@
 # B2: a model that reasons at length, DeepSeek-R1 through OpenRouter, pinned to
 # one provider (runner.OPENROUTER). Run 2026-09-24. SPENDS CREDIT.
 #
-#   bash scripts/run_r1.sh [CONDS] [MAX_USD]      default RAW,ORACLE,DR_k1 3.8
+#   bash scripts/run_r1.sh [CONDS] [MAX_USD] [LEX]    default RAW,ORACLE,DR_k1 3.8 PSEUDO
 #
 # The 86 causal items of the lex sample, anonymised (PSEUDO): the setting where
 # the names say nothing, so any gain from ORACLE is the graph's own. KEEP is not
@@ -28,15 +28,20 @@
 # one side of every contrast. --recap 16000 (Novita's own maximum) asks exactly
 # those 12 again and writes pilot_raw_r1PSEUDO_recap16000.csv beside the main
 # file, which stays as it was.
+#
+# 2026-09-27, prereg/R1_KEEP.md: the same items and conditions under KEEP, so
+# R1 gets its DiD (bash scripts/run_r1.sh RAW,ORACLE,DR_k1 3.80 KEEP). The
+# default stays PSEUDO, which reproduces the B2 command exactly.
 
 set -euo pipefail
 cd "$(dirname "$0")/.."
 export PYTHONIOENCODING=utf-8
 CONDS="${1:-RAW,ORACLE,DR_k1}"
 MAXUSD="${2:-3.8}"
+LEX="${3:-PSEUDO}"
 
 python scripts/pilot.py --models "deepseek/deepseek-r1" --n 200 --kmax 1 --types DR \
-    --drop-nonsense --lexicon PSEUDO --causal-only --conds "$CONDS" \
-    --temperature 0.6 --max-tokens 8000 --max-usd "$MAXUSD" --workers 8 --recap 16000 --tag "_r1PSEUDO" \
-    > results/cladder/logs/r1_PSEUDO_log.txt 2>&1
+    --drop-nonsense --lexicon "$LEX" --causal-only --conds "$CONDS" \
+    --temperature 0.6 --max-tokens 8000 --max-usd "$MAXUSD" --workers 8 --recap 16000 --tag "_r1$LEX" \
+    > "results/cladder/logs/r1_${LEX}_log.txt" 2>&1
 echo "HOAN TAT $(date '+%Y-%m-%d %H:%M:%S')"
