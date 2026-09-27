@@ -15,3 +15,5 @@ results/cladder/chain_sample_for_hand_coding.md
 cache_drift/
 slides.*
 cache_probe_pilot/
+.vscode/
+*.ttf

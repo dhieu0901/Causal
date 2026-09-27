@@ -1,0 +1,6 @@
+  replay check: all 2520 graphs rebuild a B6 prompt found in the API cache; 0 (item, lexicon) pairs left out
+  2520 (item, lexicon, graph) rows, 1786 distinct prompts per model; path present in 1318
+  gpt-4.1-nano: {'calls': 2520, 'cached': 0, 'errors': 0, 'err_rate': 0.0, 'in_tok': 293626, 'out_tok': 288059}  spent so far 0.11 USD
+  gpt-4.1-mini: {'calls': 2520, 'cached': 0, 'errors': 0, 'err_rate': 0.0, 'in_tok': 293626, 'out_tok': 274878}  spent so far 0.51 USD
+  gpt-4.1: {'calls': 2520, 'cached': 0, 'errors': 0, 'err_rate': 0.0, 'in_tok': 293626, 'out_tok': 295184}  spent so far 2.63 USD
+  wrote results\cladder\raw\probe_path_raw.csv  (7560 rows, 2.63 USD)

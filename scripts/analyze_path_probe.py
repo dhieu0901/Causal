@@ -28,6 +28,7 @@ Writes: results/cladder/path_probe.csv, results/cladder/path_probe_reading.csv
 """
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -46,6 +47,7 @@ RAW = RESULTS / "raw"
 SEEDS = [20260907, 1, 2, 3, 4]
 ALPHA = 0.05
 MIN_MISREAD, MIN_ITEMS = 20, 10
+OPENING = re.compile(r"^\W*(yes|no)\b", re.IGNORECASE)
 
 
 def cells() -> pd.DataFrame:
@@ -92,6 +94,29 @@ def reading(C: pd.DataFrame, P: pd.DataFrame) -> pd.DataFrame:
     return C.join(orc.rename("read_oracle"), on=["model", "item", "lexicon"])
 
 
+def lenient(P: pd.DataFrame) -> pd.DataFrame:
+    """P with every unparsed answer read by its opening yes/no (text from the cache)."""
+    from probe_path import jobs
+    from runner import read_cached
+    J = pd.DataFrame(jobs())[["item", "lexicon", "cond", "prompt"]]
+    U = P[P.parsed == 0].merge(J, on=["item", "lexicon", "cond"])
+    fix = {}
+    for r in U.itertuples():
+        rec = read_cached(r.model, 0.0, r.prompt) or {}
+        m = OPENING.search(rec.get("text", "") or "")
+        if m:
+            fix[(r.model, r.item, r.lexicon, r.cond)] = m.group(1).lower()
+    P = P.copy()
+    key = list(zip(P.model, P.item, P.lexicon, P.cond))
+    new = [fix.get(k) for k in key]
+    hit = pd.Series([v is not None for v in new], index=P.index)
+    P.loc[hit, "pred"] = [v for v in new if v is not None]
+    P.loc[hit, "parsed"] = 1
+    P.loc[hit, "correct"] = ((P.loc[hit, "pred"] == "yes") == P.loc[hit, "path_true"].astype(bool)).astype(int)
+    print(f"  lenient reading: {int(hit.sum())} of {len(U)} unparsed answers read by their opening word")
+    return P
+
+
 def tests(C, seed):
     cut = C[(C.group == "answer changed") & (C.route == "no path")]
     ok = cut[(cut.read_oracle == "yes")]
@@ -100,11 +125,13 @@ def tests(C, seed):
     e, d = boot_mean(right, "h", seed)
     out["PP2"] = summary(e, d) | dict(n_cells=len(right), n_items=right.item.nunique(),
                                       predicted="negative")
-    if len(wrong) >= MIN_MISREAD and wrong.item.nunique() >= MIN_ITEMS:
-        e, d = boot_diff(wrong, right, "h", seed)
-        out["PP3"] = summary(e, d) | dict(n_cells=len(wrong) + len(right),
-                                          n_items=pd.concat([wrong, right]).item.nunique(),
-                                          predicted="positive")
+    # PP3 is a test only with enough misread cells; below that, the registration
+    # asks for the same number as a description with no verdict
+    e, d = boot_diff(wrong, right, "h", seed)
+    enough = len(wrong) >= MIN_MISREAD and wrong.item.nunique() >= MIN_ITEMS
+    out["PP3" if enough else "PP3 (too few misread cells, descriptive)"] = summary(e, d) | dict(
+        n_cells=len(wrong) + len(right), n_items=pd.concat([wrong, right]).item.nunique(),
+        predicted="positive" if enough else "descriptive")
     # sensitivity, no verdict: PP2 without the instruction line
     r_ni = ok[ok.read_shown == "no"].dropna(subset=["h_ni"])
     e, d = boot_mean(r_ni, "h_ni", seed)
@@ -115,8 +142,8 @@ def tests(C, seed):
 
 
 def main() -> int:
-    C = cells()
-    check(C)
+    C0 = cells()
+    check(C0)
     f = RAW / "probe_path_raw.csv"
     if not f.exists():
         print("  no probe records yet (scripts/probe_path.py)")
@@ -135,7 +162,7 @@ def main() -> int:
                            read_correctly_pct=round(100 * x[x.parsed == 1].correct.mean(), 2)))
     RD = pd.DataFrame(rd)
 
-    C = reading(C, P)
+    C = reading(C0, P)
     cut = C[(C.group == "answer changed") & (C.route == "no path")]
     for m, g in cut.groupby("model"):
         g = g.dropna(subset=["read_shown"])
@@ -147,6 +174,13 @@ def main() -> int:
     print(RD.to_string(index=False))
 
     per = {s: tests(C, s) for s in SEEDS}
+    # Not registered: gpt-4.1-nano often skips the ANSWER line when the graph has
+    # a direct X -> Y edge and opens with "Yes, there is a directed path ...".
+    # Read every unparsed answer by its opening yes/no instead, and redo PP2.
+    PL = lenient(P)
+    L = reading(C0, PL)
+    lp = tests(L, SEEDS[0])[0]["PP2"]
+    per_l = [tests(L, s)[0]["PP2"]["p_boot"] for s in SEEDS]
     names = [t for t in per[SEEDS[0]][0] if t in ("PP2", "PP3")]
     rows = []
     for t in per[SEEDS[0]][0]:
@@ -173,6 +207,20 @@ def main() -> int:
     if "PP3" not in names:
         print(f"\n  PP3 not run: {n_wrong} misread cells on {i_wrong} items "
               f"(needs {MIN_MISREAD} on {MIN_ITEMS})")
+    ps = per_l
+    rows.append(dict(test="PP2, unparsed probe answers read by their opening yes/no (not registered)",
+                     predicted="descriptive", estimate_pp=round(lp["estimate_pp"], 2),
+                     ci_lo=round(lp["ci_lo"], 2), ci_hi=round(lp["ci_hi"], 2),
+                     p_boot=round(lp["p_boot"], 4), p_holm=None,
+                     p_min_seeds=round(min(ps), 4), p_max_seeds=round(max(ps), 4),
+                     n_cells=lp["n_cells"], n_items=lp["n_items"], verdict="no verdict"))
+    for m, g in PL[PL.model == "gpt-4.1-nano"].groupby(PL.cond.eq("ORACLE")):
+        x = g[g.parsed == 1]
+        rd.append(dict(model="gpt-4.1-nano", graphs=("correct graph" if m else "reversals")
+                       + ", unparsed read by opening word (not registered)", n=len(g),
+                       parsed_pct=round(100 * g.parsed.mean(), 2),
+                       read_correctly_pct=round(100 * x.correct.mean(), 2)))
+    pd.DataFrame(rd).to_csv(RESULTS / "path_probe_reading.csv", index=False)
     R = pd.DataFrame(rows)
     R.to_csv(RESULTS / "path_probe.csv", index=False)
     print("\n  tests:")

@@ -1,0 +1,15 @@
+model,graphs,n,parsed_pct,read_correctly_pct
+gpt-4.1,correct graph,670,100.0,100.0
+gpt-4.1,"reversal, path present",648,100.0,100.0
+gpt-4.1,"reversal, no path",1202,100.0,100.0
+gpt-4.1-mini,correct graph,670,100.0,100.0
+gpt-4.1-mini,"reversal, path present",648,100.0,100.0
+gpt-4.1-mini,"reversal, no path",1202,99.92,100.0
+gpt-4.1-nano,correct graph,670,50.0,94.03
+gpt-4.1-nano,"reversal, path present",648,77.31,97.01
+gpt-4.1-nano,"reversal, no path",1202,97.34,97.26
+gpt-4.1,path-cut draws of B6,603,,100.0
+gpt-4.1-mini,path-cut draws of B6,606,,100.0
+gpt-4.1-nano,path-cut draws of B6,581,,97.25
+gpt-4.1-nano,"reversals, unparsed read by opening word (not registered)",1850,98.38,97.25
+gpt-4.1-nano,"correct graph, unparsed read by opening word (not registered)",670,99.85,97.01
