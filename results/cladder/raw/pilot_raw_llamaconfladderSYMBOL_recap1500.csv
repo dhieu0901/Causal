@@ -1,0 +1,7 @@
+model,item,id,cond,graph_id,rung,query_type,story_id,question_property,lexicon,gold,pred,correct,parsed,in_tok,out_tok,error,provider,finish,reason_tok,usd,answer_from,temperature,max_tokens
+meta-llama/llama-3.3-70b-instruct,36,13899,RAW,IV,2,ate,price,anticommonsense,SYMBOL,no,no,1,1,136,465,,Novita,stop,0,0.00020436,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,447,8684,RAW,confounding,3,ett,simpson_vaccine,hard,SYMBOL,no,yes,0,1,158,699,,Novita,stop,0,0.00030093,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,452,3998,RAW,confounding,3,ett,simpson_vaccine,easy,SYMBOL,no,yes,0,1,158,614,,Novita,stop,0,0.00026693,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,453,8747,RAW,confounding,3,ett,simpson_vaccine,hard,SYMBOL,yes,no,0,1,158,499,,Novita,stop,0,0.00022093,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,472,8648,RAW,confounding,3,ett,simpson_vaccine,hard,SYMBOL,yes,no,0,1,158,627,,Novita,stop,0,0.00027213,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,651,10773,RAW,diamondcut,3,ett,firing_employee,anticommonsense,SYMBOL,no,no,1,1,206,652,,Novita,stop,0,0.00028861,content,0.0,1500

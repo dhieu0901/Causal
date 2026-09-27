@@ -1,0 +1,129 @@
+items=986  jobs/model=2292  lexicon=KEEP  paired_to=None  families=['IV', 'arrowhead', 'chain', 'collision', 'confounding', 'diamond', 'diamondcut', 'fork', 'frontdoor', 'mediation']
+
+>>> meta-llama/llama-3.3-70b-instruct: 2292 calls
+    25/2292
+    50/2292
+    75/2292
+    100/2292
+    125/2292
+    150/2292
+    175/2292
+    200/2292
+    225/2292
+    250/2292
+    275/2292
+    300/2292
+    325/2292
+    350/2292
+    375/2292
+    400/2292
+    425/2292
+    450/2292
+    475/2292
+    500/2292
+    525/2292
+    550/2292
+    575/2292
+    600/2292
+    625/2292
+    650/2292
+    675/2292
+    700/2292
+    725/2292
+    750/2292
+    775/2292
+    800/2292
+    825/2292
+    850/2292
+    875/2292
+    900/2292
+    925/2292
+    950/2292
+    975/2292
+    1000/2292
+    1025/2292
+    1050/2292
+    1075/2292
+    1100/2292
+    1125/2292
+    1150/2292
+    1175/2292
+    1200/2292
+    1225/2292
+    1250/2292
+    1275/2292
+    1300/2292
+    1325/2292
+    1350/2292
+    1375/2292
+    1400/2292
+    1425/2292
+    1450/2292
+    1475/2292
+    1500/2292
+    1525/2292
+    1550/2292
+    1575/2292
+    1600/2292
+    1625/2292
+    1650/2292
+    1675/2292
+    1700/2292
+    1725/2292
+    1750/2292
+    1775/2292
+    1800/2292
+    1825/2292
+    1850/2292
+    1875/2292
+    1900/2292
+    1925/2292
+    1950/2292
+    1975/2292
+    2000/2292
+    2025/2292
+    2050/2292
+    2075/2292
+    2100/2292
+    2125/2292
+    2150/2292
+    2175/2292
+    2200/2292
+    2225/2292
+    2250/2292
+    2275/2292
+    done: {'calls': 2292, 'cached': 0, 'errors': 0, 'err_rate': 0.0, 'in_tok': 405394, 'out_tok': 764310}   spent so far 0.36 USD
+
+>>> meta-llama/llama-3.3-70b-instruct: re-asking the 109 answers cut off at 700 tokens, with 1500
+    done: {'calls': 109, 'cached': 0, 'errors': 0, 'err_rate': 0.0, 'in_tok': 25508, 'out_tok': 67606}
+
+saved D:\code\Noisy Causal\results\cladder\raw\pilot_raw_llamaconfKEEP.csv  (2292 rows)
+saved D:\code\Noisy Causal\results\cladder\raw\pilot_raw_llamaconfKEEP_recap1500.csv  (109 rows)
+
+======================================================================
+PILOT: DO CHINH XAC THEO DIEU KIEN
+======================================================================
+
+--- meta-llama/llama-3.3-70b-instruct ---
+            n    acc  parse
+cond                       
+PROSE     NaN    NaN    NaN
+RAW     484.0  79.13   98.3
+ORACLE  484.0  79.75   97.5
+DR_k1   484.0  78.10   97.5
+DR_k2   484.0  72.52   97.9
+DR_k3   356.0  75.00   98.3
+  Delta_struct = ORACLE - RAW = +0.62 pp
+  Cost of stripping prose (PROSE - RAW) = +nan pp
+  DR_k1: 78.10  (vs RAW -1.03 pp)
+  DR_k2: 72.52  (vs RAW -6.61 pp)
+  DR_k3: 75.00  (vs RAW -4.13 pp)
+
+======================================================================
+McNEMAR EXACT (paired, on the same items)
+======================================================================
+  meta-llama/llama-3.3-70b-instruct ORACLE   vs RAW       b= 38 c= 35  p=0.8151
+  meta-llama/llama-3.3-70b-instruct DR_k1    vs RAW       b= 38 c= 43  p=0.6570
+  meta-llama/llama-3.3-70b-instruct DR_k2    vs RAW       b= 34 c= 66  p=0.0018
+  meta-llama/llama-3.3-70b-instruct DR_k3    vs RAW       b= 29 c= 35  p=0.5323
+  meta-llama/llama-3.3-70b-instruct ORACLE   vs DR_k1     b= 36 c= 28  p=0.3817

@@ -1,0 +1,8 @@
+model,item,id,cond,graph_id,rung,query_type,story_id,question_property,lexicon,gold,pred,correct,parsed,in_tok,out_tok,error,provider,finish,reason_tok,usd,answer_from,temperature,max_tokens
+deepseek/deepseek-r1,11,9410,DR_k1,IV,2,ate,tax_smoke_birthWeight,hard,KEEP,no,no,1,1,192,11747,,Novita,stop,9078,0.0295019,content,0.6,16000
+deepseek/deepseek-r1,32,17732,DR_k1,arrowhead,3,nie,gender_pay,anticommonsense,KEEP,no,no,1,1,300,10351,,Novita,stop,7848,0.0260875,content,0.6,16000
+deepseek/deepseek-r1,110,5106,DR_k1,diamondcut,2,ate,firing_employee,hard,KEEP,yes,yes,1,1,216,5995,,Novita,stop,5734,0.0151387,reasoning,0.6,16000
+deepseek/deepseek-r1,112,15509,DR_k1,diamondcut,2,ate,firing_employee,anticommonsense,KEEP,yes,yes,1,1,213,5800,,Novita,stop,5778,0.0146491,content,0.6,16000
+deepseek/deepseek-r1,146,14651,ORACLE,frontdoor,2,ate,smoking_frontdoor,anticommonsense,KEEP,yes,yes,1,1,230,6490,,Novita,stop,4079,0.016386,content,0.6,16000
+deepseek/deepseek-r1,155,4167,ORACLE,frontdoor,3,ett,smoking_frontdoor,easy,KEEP,no,no,1,1,224,8567,,Novita,stop,6057,0.0215743,reasoning,0.6,16000
+deepseek/deepseek-r1,168,15266,DR_k1,mediation,3,ett,alarm,anticommonsense,KEEP,no,no,1,1,150,3586,,Novita,stop,3377,0.00907,reasoning,0.6,16000

@@ -5,6 +5,7 @@ meta-llama/llama-3.3-70b-instruct,n600,KEEP,1168,97.52,47,0,308.6,0.0,Novita,0.1
 meta-llama/llama-3.3-70b-instruct,n600,PSEUDO,1168,97.52,40,0,332.5,0.0,Novita,0.1833,40,0,0.0115
 meta-llama/llama-3.3-70b-instruct,price400,KEEP,796,96.61,52,0,352.6,0.0,Novita,0.1319,52,0,0.0153
 meta-llama/llama-3.3-70b-instruct,price400,PSEUDO,796,97.49,33,0,353.6,0.0,Novita,0.1329,33,0,0.009
+deepseek/deepseek-r1,lex,KEEP,258,97.67,7,125,3607.4,3471.0,Novita,2.3557,7,0,0.1324
 deepseek/deepseek-r1,lex,PSEUDO,258,95.35,12,84,4398.7,3968.5,Novita,2.8668,12,0,0.2318
 meta-llama/llama-3.3-70b-instruct,n600,PERMUTE,292,98.63,7,0,281.6,0.0,Novita,0.0386,7,0,0.0017
 meta-llama/llama-3.3-70b-instruct,n600,IRRELEVANT,292,99.32,2,0,238.5,0.0,Novita,0.033,2,2,0.0006

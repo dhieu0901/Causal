@@ -1,0 +1,16 @@
+model,item,id,cond,graph_id,rung,query_type,story_id,question_property,lexicon,gold,pred,correct,parsed,in_tok,out_tok,error,provider,finish,reason_tok,usd,answer_from,temperature,max_tokens
+meta-llama/llama-3.3-70b-instruct,37,9467,RAW,IV,2,ate,water_cholera,hard,PERMUTE,no,no,1,1,151,871,,Novita,stop,0,0.000368785,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,189,14556,RAW,arrowhead,3,nde,smoke_birthWeight,anticommonsense,PERMUTE,no,no,1,1,275,951,,Novita,stop,0,0.000417525,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,196,2460,RAW,arrowhead,3,nde,gender_admission_state,easy,PERMUTE,no,no,1,1,266,634,,Novita,stop,0,0.00028951,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,449,14298,RAW,confounding,3,ett,simpson_vaccine,anticommonsense,PERMUTE,no,yes,0,1,194,499,,Novita,stop,0,0.00022579,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,612,10777,RAW,diamondcut,2,ate,firing_employee,anticommonsense,PERMUTE,yes,yes,1,1,193,648,,Novita,stop,0,0.000285255,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,613,10731,RAW,diamondcut,2,ate,firing_employee,anticommonsense,PERMUTE,yes,no,0,1,189,564,,Novita,stop,0,0.000251115,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,646,5138,RAW,diamondcut,3,ett,firing_employee,hard,PERMUTE,yes,no,0,1,248,766,,Novita,stop,0,0.00033988,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,661,381,RAW,diamondcut,3,ett,firing_employee,easy,PERMUTE,no,yes,0,1,238,535,,Novita,stop,0,0.00024613,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,666,19950,RAW,diamondcut,3,det-counterfactual,firing_employee,anticommonsense,PERMUTE,yes,no,0,1,135,431,,Novita,stop,0,0.000190625,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,676,15473,RAW,diamondcut,3,ett,firing_employee,anticommonsense,PERMUTE,yes,no,0,1,246,735,,Novita,stop,0,0.00032721,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,863,9008,RAW,frontdoor,3,ett,smoking_frontdoor,hard,PERMUTE,yes,yes,1,1,176,441,,Novita,stop,0,0.00020016,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,874,14633,RAW,frontdoor,3,ett,smoking_frontdoor,anticommonsense,PERMUTE,yes,yes,1,1,199,756,,Novita,stop,0,0.000329265,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,876,9018,RAW,frontdoor,3,ett,smoking_frontdoor,hard,PERMUTE,yes,no,0,1,176,661,,Novita,stop,0,0.00028816,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,958,2237,RAW,mediation,3,nde,gender_admission,easy,PERMUTE,yes,no,0,1,200,842,,Novita,stop,0,0.0003638,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,979,6176,RAW,mediation,3,nde,blood_pressure,hard,PERMUTE,yes,yes,1,1,191,846,,Novita,stop,0,0.000364185,content,0.0,1500

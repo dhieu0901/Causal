@@ -16,6 +16,8 @@ way the GPT-4.1 number was, on the same items:
   3. R1         DeepSeek-R1 (scripts/run_r1.sh) on the lex causal items: does a
                 model that reasons at length still gain from being handed the
                 graph? Against GPT-4.1 and Llama on the same items
+  3b. R1 NAMES  prereg/R1_KEEP.md, exploratory: R1's DiD and what the names are
+                worth to it at RAW, once the KEEP run exists
   4. LADDER     the five-rung lexical ladder of analyze_ladder5.py on n600, RAW,
                 causal items, for Llama: is what anonymisation takes away
                 mostly the correct prior in this family too?
@@ -309,6 +311,72 @@ def reasoning_model(rows):
             print()
 
 
+def names_W(fam, models, cond, recap=False):
+    """Per-id (KEEP - PSEUDO) under `cond` on the lex sample, averaged over models."""
+    K, P = load(fam, "lex", "KEEP", recap), load(fam, "lex", "PSEUDO", recap)
+    qs = causal(K)
+    cols = []
+    for m in models:
+        k, p = cell(K, m, cond, qs), cell(P, m, cond, qs)
+        i = k.index.intersection(p.index)
+        cols.append((k[i] - p[i]).rename(m))
+    return pd.concat(cols, axis=1).groupby(level=0).mean().iloc[:, 0]
+
+
+def r1_names(rows):
+    """prereg/R1_KEEP.md, exploratory. E1: the DiD of pool_samples.py for R1 on the
+    86 lex causal items; E2: what the real names are worth at RAW; E4: both for
+    gpt-4.1 and Llama on the same items, and R1 minus gpt-4.1 paired by item.
+    E3, each arm against RAW under KEEP, is section 3 above. Every row carries
+    its p range over the project's five bootstrap seeds (the seed rule): E1
+    sits on the 0.05 line."""
+    def add(model, tag, q, v):
+        r = boot_items(v, SEED, NBOOT)
+        ps = [r[3]] + [boot_items(v, s, NBOOT)[3] for s in (1, 2, 3, 4)]
+        print(f"    {q:28s} {model:34s} {r[0]:+7.2f} [{r[1]:+7.2f} ; {r[2]:+7.2f}]  "
+              f"p={r[3]:.4f} ({min(ps):.4f}-{max(ps):.4f})  n={len(v)}")
+        rows.append(row("3 reasoning model", model, "lex causal", tag, q, r, len(v))
+                    | {"p_min_seeds": round(min(ps), 4), "p_max_seeds": round(max(ps), 4)})
+
+    print("\n" + "=" * 78)
+    print("3b. DEEPSEEK-R1: DOES A CORRECT GRAPH OFFSET ANONYMISED NAMES? (prereg/R1_KEEP.md)")
+    print("=" * 78 + "\n")
+    if not (exists("r1", "lex", "KEEP") and exists("r1", "lex", "PSEUDO")):
+        print("  no R1 run under KEEP yet")
+        return
+    for recap in (False, True):
+        if recap and not (exists("r1", "lex", "KEEP", True)
+                          and exists("r1", "lex", "PSEUDO", True)):
+            continue
+        tag = (f"KEEP vs PSEUDO, cut-offs re-asked at {RECAP['r1']} tokens" if recap
+               else "KEEP vs PSEUDO")
+        lrec = recap and exists("llama", "lex", "KEEP", True) and exists("llama", "lex", "PSEUDO", True)
+        print(f"  {tag}")
+        for q, fn in (("DiD", lambda f, ms, rc: did_W(f, "lex", ms, rc).iloc[:, 0]),
+                      ("KEEP minus PSEUDO at RAW", lambda f, ms, rc: names_W(f, ms, "RAW", rc)),
+                      ("KEEP minus PSEUDO at ORACLE", lambda f, ms, rc: names_W(f, ms, "ORACLE", rc))):
+            x = fn("r1", [R1], recap)
+            for label, v in ((R1, x),
+                             ("gpt-4.1", fn("gpt", ["gpt-4.1"], False).reindex(x.index)),
+                             (LLAMA, fn("llama", [LLAMA], lrec).reindex(x.index))):
+                add(label, tag, q, v.dropna().values)
+            g = fn("gpt", ["gpt-4.1"], False)
+            add("R1 minus gpt-4.1", tag, q, (x - g.reindex(x.index)).dropna().values)
+        # An answer the cap cut off, or left unparsed, scored as wrong instead of dropped.
+        if not recap:
+            piv = {}
+            for lex in ("KEEP", "PSEUDO"):
+                D = load("r1", "lex", lex)
+                D = D[(D.model == R1) & D.query_type.isin(causal(D))]
+                piv[lex] = D.pivot_table(index="id", columns="cond", values="correct")
+            e1 = ((piv["KEEP"].RAW - piv["PSEUDO"].RAW)
+                  - (piv["KEEP"].ORACLE - piv["PSEUDO"].ORACLE)).dropna()
+            e2 = (piv["KEEP"].RAW - piv["PSEUDO"].RAW).dropna()
+            for q, v in (("DiD", e1), ("KEEP minus PSEUDO at RAW", e2)):
+                add("R1, unparsed scored as wrong", tag, q, v.values)
+        print()
+
+
 STEPS = [("KEEP", "IRRELEVANT"), ("IRRELEVANT", "PERMUTE"), ("IRRELEVANT", "SYMBOL"),
          ("SYMBOL", "PSEUDO"), ("KEEP", "SYMBOL"), ("KEEP", "PSEUDO")]
 
@@ -390,6 +458,7 @@ def main():
     headline(rows)
     arms(rows)
     reasoning_model(rows)
+    r1_names(rows)
     ladder(rows)
     runs()
     pd.DataFrame(rows).to_csv(RES / "second_family.csv", index=False)

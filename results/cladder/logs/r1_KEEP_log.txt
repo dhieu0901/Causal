@@ -1,0 +1,42 @@
+items=174  jobs/model=258  lexicon=KEEP  paired_to=None  families=['IV', 'arrowhead', 'chain', 'collision', 'confounding', 'diamond', 'diamondcut', 'fork', 'frontdoor', 'mediation']
+
+>>> deepseek/deepseek-r1: 258 calls
+    25/258
+    50/258
+    75/258
+    100/258
+    125/258
+    150/258
+    175/258
+    200/258
+    225/258
+    250/258
+    done: {'calls': 258, 'cached': 3, 'errors': 0, 'err_rate': 0.0, 'in_tok': 41387, 'out_tok': 930707}   spent so far 2.32 USD
+
+>>> deepseek/deepseek-r1: re-asking the 7 answers cut off at 8000 tokens, with 16000
+    done: {'calls': 7, 'cached': 0, 'errors': 0, 'err_rate': 0.0, 'in_tok': 1525, 'out_tok': 52536}
+
+saved D:\code\Noisy Causal\results\cladder\raw\pilot_raw_r1KEEP.csv  (258 rows)
+saved D:\code\Noisy Causal\results\cladder\raw\pilot_raw_r1KEEP_recap16000.csv  (7 rows)
+
+======================================================================
+PILOT: DO CHINH XAC THEO DIEU KIEN
+======================================================================
+
+--- deepseek/deepseek-r1 ---
+           n    acc  parse
+cond                      
+PROSE    NaN    NaN    NaN
+RAW     86.0  89.53  100.0
+ORACLE  86.0  88.37   97.7
+DR_k1   86.0  70.93   95.3
+  Delta_struct = ORACLE - RAW = -1.16 pp
+  Cost of stripping prose (PROSE - RAW) = +nan pp
+  DR_k1: 70.93  (vs RAW -18.60 pp)
+
+======================================================================
+McNEMAR EXACT (paired, on the same items)
+======================================================================
+  deepseek/deepseek-r1 ORACLE   vs RAW       b=  5 c=  6  p=1.0000
+  deepseek/deepseek-r1 DR_k1    vs RAW       b=  3 c= 19  p=0.0009
+  deepseek/deepseek-r1 ORACLE   vs DR_k1     b= 21 c=  6  p=0.0059

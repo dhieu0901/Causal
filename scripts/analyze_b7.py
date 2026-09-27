@@ -1,4 +1,6 @@
 """B7, exploratory: what gpt-5.6-luna does with the graph, beside GPT-4.1.
+Also Llama 3.3 70B, whose B5 run (prereg/CONFIRMATORY.md section 3, the
+second model family) answered the same items and prompts.
 
     python scripts/analyze_b7.py
 
@@ -11,7 +13,8 @@ prompts. GPT-4.1 appears twice: as its three models averaged per item, as in
 every B5 table, and as each model on its own. The average mixes a model that
 barely reacts to the direction of an edge (gpt-4.1-nano) with two that do, so
 a comparison with one model is read against each of the three as well
-(review round 13).
+(review round 13). Llama is read the same way (added 2026-09-27); its six
+tests are analyze_confirmatory.py's, family "llama".
 
   1. accuracy per lexicon and condition, and each condition against RAW:
      analyze_b5_vs_raw's contrasts with its estimator
@@ -21,6 +24,9 @@ a comparison with one model is read against each of the three as well
      analyze_answer_change.py, DR minus ORACLE, one value per draw averaged
      over the two lexicons (the unit of the B6 tests), with analyze_b6's test
      functions, read here without verdicts
+  4. det-counterfactual items, familiar names, each reversal against RAW:
+     the split of part 3 covers ate and ett only, and Llama's harm outside
+     them sits here (review round 14)
 
 Each part first recomputes, with the functions it uses, rows that are already
 published for GPT-4.1 (b5_vs_raw.csv, confirmatory.csv, answer_change.csv) and
@@ -52,8 +58,9 @@ from analyze_b6 import run_tests
 RESULTS = ROOT / "results" / "cladder"
 NBOOT = 4000
 SEEDS = [20260907, 1, 2, 3, 4]
-FAMS = ("gpt", "luna")
+FAMS = ("gpt", "luna", "llama")
 LUNA = FAMILIES["luna"][0]
+LLAMA = FAMILIES["llama"][0]
 CONDS = ("RAW", "ORACLE", "DR_k1", "DR_k2", "DR_k3")
 # (high, low) under RAW; the row reads "high minus low", as in REPORT section 4.3.
 STEPS = [("KEEP", "IRRELEVANT"), ("IRRELEVANT", "PERMUTE"), ("IRRELEVANT", "SYMBOL"),
@@ -186,22 +193,42 @@ def harm_rows(X, family):
     return rows
 
 
+# ------------------------------------------------------------ 4. det-counterfactual
+def detcf(S, family):
+    """Each reversal against RAW on det-counterfactual items only, familiar
+    names, with part 1's estimator. The 114 items are the one causal type
+    outside ate and ett large enough to read alone; part 3's split by path
+    does not cover them."""
+    d = S["main"]["KEEP"]
+    d = d[(d.parsed == 1) & d.query_type.eq("det-counterfactual")]
+    rows = []
+    for cond in ("DR_k1", "DR_k2"):
+        v = paired_vs(d, cond, "RAW")
+        rows.append(dict(part="4 det-counterfactual", family=family, lexicon="KEEP",
+                         quantity=f"{cond} minus RAW", n_items=len(v), n_draws=None)
+                    | seeds_row([boot_items(v.values, s, NBOOT) for s in SEEDS]))
+    return rows
+
+
 def main() -> int:
     data = {f: conf_data(FAMILIES[f][1], None) for f in FAMS}
     if any(S is None for S in data.values()):
         raise SystemExit("  B7 or B5 records missing (results/cladder/raw/pilot_raw_*conf*.csv)")
-    for lex in data["gpt"]["ladder"]:
-        a = data["gpt"]["ladder"][lex][["item", "id", "cond"]].drop_duplicates()
-        b = data["luna"]["ladder"][lex][["item", "id", "cond"]].drop_duplicates()
-        if not a.sort_values(list(a.columns)).reset_index(drop=True).equals(
-                b.sort_values(list(b.columns)).reset_index(drop=True)):
-            raise SystemExit(f"  {lex}: gpt and luna were not asked the same (item, condition) cells")
+    for other in FAMS[1:]:
+        for lex in data["gpt"]["ladder"]:
+            a = data["gpt"]["ladder"][lex][["item", "id", "cond"]].drop_duplicates()
+            b = data[other]["ladder"][lex][["item", "id", "cond"]].drop_duplicates()
+            if not a.sort_values(list(a.columns)).reset_index(drop=True).equals(
+                    b.sort_values(list(b.columns)).reset_index(drop=True)):
+                raise SystemExit(f"  {lex}: gpt and {other} were not asked the same "
+                                 f"(item, condition) cells")
 
-    # every family this file reports: the GPT-4.1 average, each of its models, luna
+    # every family this file reports: the GPT-4.1 average, each of its models, luna, Llama
     only = lambda S, m: {k: {lex: d[d.model == m] for lex, d in v.items()} for k, v in S.items()}
     fams = {"gpt": (data["gpt"], TIER, "conf")}
     fams |= {m: (only(data["gpt"], m), [m], "conf") for m in TIER}
     fams["luna"] = (data["luna"], LUNA, "lunaconf")
+    fams["llama"] = (data["llama"], LLAMA, "llamaconf")
 
     print("=" * 92)
     print("1. CHECK - the functions of this file on GPT-4.1 against the published rows")
@@ -233,14 +260,14 @@ def main() -> int:
 
     out = []
     for f in fams:
-        out += rows[f] + harm_rows(X[f], f)
+        out += rows[f] + harm_rows(X[f], f) + detcf(fams[f][0], f)
     R = pd.DataFrame(out)
     R.to_csv(RESULTS / "b7_descriptive.csv", index=False)
     A = pd.DataFrame([r for f, (S, _, _) in fams.items() for r in accuracy(S, f)])
     A.to_csv(RESULTS / "b7_accuracy.csv", index=False)
 
     print("\n" + "=" * 92)
-    print("2. gpt-5.6-luna beside GPT-4.1 on the 484 confirmatory causal items (descriptive)")
+    print("2. gpt-5.6-luna and Llama beside GPT-4.1 on the 484 confirmatory causal items (descriptive)")
     print("=" * 92)
     print("\n  accuracy, %:")
     print(A.pivot_table(index=["lexicon", "cond"], columns="family", values="accuracy_pct",

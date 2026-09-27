@@ -1,0 +1,47 @@
+    [lexicon SYMBOL] 463 items carry residue outside variable_mapping - KEPT (reported only)
+    [lexicon SYMBOL] residue biases this condition TOWARDS KEEP; see REPORT.md section 7.2
+items=986  jobs/model=484  lexicon=SYMBOL  paired_to=None  families=['IV', 'arrowhead', 'chain', 'collision', 'confounding', 'diamond', 'diamondcut', 'fork', 'frontdoor', 'mediation']
+
+>>> meta-llama/llama-3.3-70b-instruct: 484 calls
+    25/470
+    50/470
+    75/470
+    100/470
+    125/470
+    150/470
+    175/470
+    200/470
+    225/470
+    250/470
+    275/470
+    300/470
+    325/470
+    350/470
+    375/470
+    400/470
+    425/470
+    450/470
+    done: {'calls': 484, 'cached': 9, 'errors': 0, 'err_rate': 0.0, 'in_tok': 62476, 'out_tok': 125176}   spent so far 0.06 USD
+
+>>> meta-llama/llama-3.3-70b-instruct: re-asking the 6 answers cut off at 700 tokens, with 1500
+    done: {'calls': 6, 'cached': 0, 'errors': 0, 'err_rate': 0.0, 'in_tok': 974, 'out_tok': 3556}
+
+saved D:\code\Noisy Causal\results\cladder\raw\pilot_raw_llamaconfladderSYMBOL.csv  (484 rows)
+saved D:\code\Noisy Causal\results\cladder\raw\pilot_raw_llamaconfladderSYMBOL_recap1500.csv  (6 rows)
+
+======================================================================
+PILOT: DO CHINH XAC THEO DIEU KIEN
+======================================================================
+
+--- meta-llama/llama-3.3-70b-instruct ---
+            n    acc  parse
+cond                       
+PROSE     NaN    NaN    NaN
+RAW     484.0  68.18   99.2
+ORACLE    NaN    NaN    NaN
+  Delta_struct = ORACLE - RAW = +nan pp
+  Cost of stripping prose (PROSE - RAW) = +nan pp
+
+======================================================================
+McNEMAR EXACT (paired, on the same items)
+======================================================================
