@@ -71,3 +71,33 @@ llama,descriptive,KEEP - SYMBOL,commonsense,,9.31,2.54,16.52,,,0.005,,,,247,37,,
 llama,descriptive,KEEP - SYMBOL,"commonsense, says yes",,10.93,3.19,19.48,,,0.006,,,,247,37,,family
 llama,descriptive,KEEP - SYMBOL,anticommonsense,,13.33,6.53,20.0,,,0.0005,,,,225,37,,family
 llama,descriptive,KEEP - SYMBOL,"anticommonsense, says yes",,15.11,9.42,20.53,,,0.0005,,,,225,37,,family
+luna,primary,S1,NEWSTORY - SYMBOL under RAW,positive,10.54,5.94,15.02,,,0.0005,0.0015,0.0005,0.0005,484,37,confirmed,
+luna,primary,S2,"NEWSTORY - KEEP under RAW, within +-5",within +-5,-2.48,-5.45,0.54,-5.0,0.2,0.0505,0.101,0.0488,0.0553,484,37,not confirmed,
+luna,primary,S3,"balanced (NEWSTORY - SYMBOL), commonsense minus anticommonsense, within +-5",within +-5,-1.39,-7.83,5.66,-6.85,4.31,0.1427,0.1427,0.142,0.1527,484,37,not confirmed,
+luna,questions resampled,S1,NEWSTORY - SYMBOL under RAW,positive,10.54,7.02,14.05,,,0.0005,0.0015,0.0005,0.0005,484,37,confirmed,
+luna,questions resampled,S2,"NEWSTORY - KEEP under RAW, within +-5",within +-5,-2.48,-4.96,0.0,-4.75,-0.41,0.0248,0.0495,0.0245,0.0267,484,37,borderline (changes with the bootstrap seed),
+luna,questions resampled,S3,"balanced (NEWSTORY - SYMBOL), commonsense minus anticommonsense, within +-5",within +-5,-1.39,-8.69,5.62,-7.58,4.53,0.1678,0.1678,0.1565,0.1678,484,37,not confirmed,
+luna,unparsed as wrong,S1,NEWSTORY - SYMBOL under RAW,positive,10.54,5.94,15.02,,,0.0005,0.0015,0.0005,0.0005,484,37,confirmed,
+luna,unparsed as wrong,S2,"NEWSTORY - KEEP under RAW, within +-5",within +-5,-2.48,-5.45,0.54,-5.0,0.2,0.0505,0.101,0.0488,0.0553,484,37,not confirmed,
+luna,unparsed as wrong,S3,"balanced (NEWSTORY - SYMBOL), commonsense minus anticommonsense, within +-5",within +-5,-1.39,-7.83,5.66,-6.85,4.31,0.1427,0.1427,0.142,0.1527,484,37,not confirmed,
+luna,descriptive,NEWSTORY - SYMBOL,gold yes,,15.1,7.83,23.04,,,0.0005,,,,245,36,,family
+luna,descriptive,NEWSTORY - SYMBOL,gold no,,5.86,1.1,12.03,,,0.015,,,,239,36,,family
+luna,descriptive,NEWSTORY - SYMBOL,says yes,,4.75,-0.22,9.48,,,0.068,,,,484,37,,family
+luna,descriptive,NEWSTORY - SYMBOL,commonsense,,9.45,4.27,14.86,,,0.0005,,,,254,37,,family
+luna,descriptive,NEWSTORY - SYMBOL,"commonsense, says yes",,3.15,-4.26,8.55,,,0.346,,,,254,37,,family
+luna,descriptive,NEWSTORY - SYMBOL,anticommonsense,,11.74,5.78,17.35,,,0.0005,,,,230,37,,family
+luna,descriptive,NEWSTORY - SYMBOL,"anticommonsense, says yes",,6.52,0.37,12.15,,,0.0485,,,,230,37,,family
+luna,descriptive,NEWSTORY - KEEP,gold yes,,-3.67,-8.44,1.67,,,0.207,,,,245,36,,family
+luna,descriptive,NEWSTORY - KEEP,gold no,,-1.26,-3.3,0.93,,,0.344,,,,239,36,,family
+luna,descriptive,NEWSTORY - KEEP,says yes,,-1.24,-3.56,1.08,,,0.3385,,,,484,37,,family
+luna,descriptive,NEWSTORY - KEEP,commonsense,,-1.97,-5.69,1.96,,,0.3705,,,,254,37,,family
+luna,descriptive,NEWSTORY - KEEP,"commonsense, says yes",,-1.18,-4.6,2.14,,,0.56,,,,254,37,,family
+luna,descriptive,NEWSTORY - KEEP,anticommonsense,,-3.04,-7.53,1.26,,,0.2015,,,,230,37,,family
+luna,descriptive,NEWSTORY - KEEP,"anticommonsense, says yes",,-1.3,-5.56,3.02,,,0.6295,,,,230,37,,family
+luna,descriptive,KEEP - SYMBOL,gold yes,,18.78,10.97,26.64,,,0.0005,,,,245,36,,family
+luna,descriptive,KEEP - SYMBOL,gold no,,7.11,2.47,12.85,,,0.0025,,,,239,36,,family
+luna,descriptive,KEEP - SYMBOL,says yes,,5.99,1.22,10.62,,,0.017,,,,484,37,,family
+luna,descriptive,KEEP - SYMBOL,commonsense,,11.42,5.66,17.27,,,0.0005,,,,254,37,,family
+luna,descriptive,KEEP - SYMBOL,"commonsense, says yes",,4.33,-3.45,10.85,,,0.261,,,,254,37,,family
+luna,descriptive,KEEP - SYMBOL,anticommonsense,,14.78,8.2,21.46,,,0.0005,,,,230,37,,family
+luna,descriptive,KEEP - SYMBOL,"anticommonsense, says yes",,7.83,1.0,14.29,,,0.0265,,,,230,37,,family

@@ -1,0 +1,25 @@
+>>> fam_luna_NEWSTORY   attempt 1   cap left 0.40 USD   [23:32:03]
+<<< fam_luna_NEWSTORY done, this attempt spent 0.17 USD   [23:34:27]
+>>> fam_luna_KEEP   attempt 1   cap left 0.30 USD   [23:34:27]
+<<< fam_luna_KEEP done, this attempt spent 0.16 USD   [23:36:45]
+>>> fam_luna_PSEUDO   attempt 1   cap left 0.30 USD   [23:36:45]
+<<< fam_luna_PSEUDO done, this attempt spent 0.25 USD   [23:39:45]
+>>> fam_luna_PSEUDO_XY   attempt 1   cap left 0.30 USD   [23:39:45]
+<<< fam_luna_PSEUDO_XY done, this attempt spent 0.16 USD   [23:41:48]
+>>> fam_luna_PSEUDO_THIRD   attempt 1   cap left 0.30 USD   [23:41:48]
+<<< fam_luna_PSEUDO_THIRD done, this attempt spent 0.15 USD   [23:43:51]
+>>> fam_gpt_KEEP   attempt 1   cap left 1.45 USD   [23:43:51]
+<<< fam_gpt_KEEP done, this attempt spent 1.22 USD   [23:49:03]
+>>> fam_gpt_PSEUDO   attempt 1   cap left 1.35 USD   [23:49:03]
+<<< fam_gpt_PSEUDO done, this attempt spent 1.19 USD   [23:54:23]
+>>> fam_gpt_PSEUDO_XY   attempt 1   cap left 1.15 USD   [23:54:23]
+<<< fam_gpt_PSEUDO_XY done, this attempt spent 1.01 USD   [23:58:36]
+>>> fam_gpt_PSEUDO_THIRD   attempt 1   cap left 1.30 USD   [23:58:36]
+... fam_gpt_PSEUDO_THIRD stopped, exit=1; trying again in 60 s
+>>> fam_gpt_PSEUDO_THIRD   attempt 2   cap left 1.23 USD   [00:01:30]
+... fam_gpt_PSEUDO_THIRD stopped, exit=1; trying again in 60 s
+>>> fam_gpt_PSEUDO_THIRD   attempt 3   cap left 1.23 USD   [00:03:03]
+... fam_gpt_PSEUDO_THIRD stopped, exit=1; trying again in 60 s
+>>> fam_gpt_PSEUDO_THIRD   attempt 4   cap left 1.23 USD   [00:04:29]
+... fam_gpt_PSEUDO_THIRD stopped, exit=1; trying again in 60 s
+!!! fam_gpt_PSEUDO_THIRD FAILED, exit=1. See results/cladder/logs/fam_gpt_PSEUDO_THIRD_a4.txt

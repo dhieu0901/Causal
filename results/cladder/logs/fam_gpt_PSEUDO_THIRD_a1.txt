@@ -1,0 +1,41 @@
+items=986  jobs/model=484  lexicon=PSEUDO_THIRD  paired_to=None  families=['IV', 'arrowhead', 'chain', 'collision', 'confounding', 'diamond', 'diamondcut', 'fork', 'frontdoor', 'mediation']
+
+>>> gpt-4.1-nano: 484 calls
+    25/484
+    50/484
+    75/484
+    100/484
+    125/484
+    150/484
+    175/484
+    200/484
+    225/484
+    250/484
+    275/484
+    300/484
+    325/484
+    350/484
+    375/484
+    400/484
+    425/484
+    450/484
+    475/484
+    done: {'calls': 484, 'cached': 150, 'errors': 0, 'err_rate': 0.0, 'in_tok': 64995, 'out_tok': 141165}   spent so far 0.05 USD
+
+>>> gpt-4.1-mini: 484 calls
+    25/484
+    50/484
+    75/484
+    100/484
+    125/484
+    150/484
+    175/484
+    done: {'calls': 484, 'cached': 150, 'errors': 305, 'err_rate': 0.6302, 'in_tok': 20364, 'out_tok': 13996}   spent so far 0.07 USD
+
+  !! 305/484 calls FAILED (63.02%) - gpt-4.1-mini
+     vi du: OUT OF CREDIT: Error code: 429 - {'error': {'message': 'Your project has reached its configured enforced spend limit. Update your limit at https://platform.open
+
+STOPPING: error rate 63.02% exceeds the 1.00% threshold.
+Continuing would contaminate the results - infrastructure failures would
+enter the tables as model mistakes. Fix the connection or the API key and
+run again; every successful call is already cached, so nothing is paid twice.

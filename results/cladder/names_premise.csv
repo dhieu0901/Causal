@@ -38,3 +38,38 @@ llama,descriptive,PSEUDO_XY - PSEUDO under RAW,accuracy,,1.07,-1.81,4.24,0.5045,
 llama,descriptive,PSEUDO_XY - PSEUDO under RAW,says yes,,5.78,3.22,8.92,0.0005,,,,467,37,
 llama,descriptive,PSEUDO_THIRD - PSEUDO under RAW,accuracy,,19.49,14.65,24.24,0.0005,,,,467,37,
 llama,descriptive,PSEUDO_THIRD - PSEUDO under RAW,says yes,,23.34,18.86,27.76,0.0005,,,,467,37,
+luna,primary,P1,"share of Yes answers under PSEUDO, RAW_OPEN minus RAW",positive,4.75,2.03,7.35,0.0005,0.002,0.0005,0.0005,484,37,confirmed
+luna,primary,P2,"(KEEP - PSEUDO | RAW) - (KEEP - PSEUDO | RAW_OPEN), accuracy",positive,2.07,-0.98,5.39,0.208,0.208,0.208,0.2375,484,37,not confirmed
+luna,primary,N1,"KEEP - PSEUDO_XY under RAW, accuracy",positive,12.81,8.41,16.7,0.0005,0.002,0.0005,0.0005,484,37,confirmed
+luna,primary,N2,"KEEP - PSEUDO_THIRD under RAW, accuracy, questions naming another variable",positive,3.59,0.35,7.16,0.0365,0.073,0.0365,0.0505,334,34,not confirmed
+luna,questions resampled,P1,"share of Yes answers under PSEUDO, RAW_OPEN minus RAW",positive,4.75,2.07,7.44,0.0005,0.002,0.0005,0.001,484,37,confirmed
+luna,questions resampled,P2,"(KEEP - PSEUDO | RAW) - (KEEP - PSEUDO | RAW_OPEN), accuracy",positive,2.07,-1.03,5.37,0.2225,0.2225,0.2225,0.237,484,37,not confirmed
+luna,questions resampled,N1,"KEEP - PSEUDO_XY under RAW, accuracy",positive,12.81,9.3,16.53,0.0005,0.002,0.0005,0.0005,484,37,confirmed
+luna,questions resampled,N2,"KEEP - PSEUDO_THIRD under RAW, accuracy, questions naming another variable",positive,3.59,0.3,7.19,0.047,0.094,0.0425,0.056,334,34,not confirmed
+luna,unparsed as wrong,P1,"share of Yes answers under PSEUDO, RAW_OPEN minus RAW",positive,4.75,2.03,7.35,0.0005,0.002,0.0005,0.0005,484,37,confirmed
+luna,unparsed as wrong,P2,"(KEEP - PSEUDO | RAW) - (KEEP - PSEUDO | RAW_OPEN), accuracy",positive,2.07,-0.98,5.39,0.208,0.208,0.208,0.2375,484,37,not confirmed
+luna,unparsed as wrong,N1,"KEEP - PSEUDO_XY under RAW, accuracy",positive,12.81,8.41,16.7,0.0005,0.002,0.0005,0.0005,484,37,confirmed
+luna,unparsed as wrong,N2,"KEEP - PSEUDO_THIRD under RAW, accuracy, questions naming another variable",positive,3.59,0.35,7.16,0.0365,0.073,0.0365,0.0505,334,34,not confirmed
+luna,descriptive,P2,gold yes,,4.9,0.0,9.68,0.0505,,,,245,36,
+luna,descriptive,P2,gold no,,-0.84,-3.61,2.84,0.756,,,,239,36,
+luna,descriptive,P2,says yes,,2.89,0.37,5.45,0.038,,,,484,37,
+luna,descriptive,N1,gold yes,,22.45,12.74,30.97,0.0005,,,,245,36,
+luna,descriptive,N1,gold no,,2.93,-1.42,7.25,0.218,,,,239,36,
+luna,descriptive,N1,says yes,,9.92,3.86,15.99,0.001,,,,484,37,
+luna,descriptive,N2,gold yes,,7.19,0.96,13.64,0.0315,,,,167,32,
+luna,descriptive,N2,gold no,,0.0,-1.74,1.89,1.0,,,,167,32,
+luna,descriptive,N2,says yes,,3.59,0.31,7.02,0.0455,,,,334,34,
+luna,descriptive,N2,every question,,2.48,0.25,4.58,0.038,,,,484,37,
+luna,descriptive,N2,"every question, says yes",,2.48,0.22,4.44,0.0465,,,,484,37,
+luna,descriptive,KEEP - PSEUDO under RAW,accuracy,,13.43,9.15,17.81,0.0005,,,,484,37,
+luna,descriptive,KEEP - PSEUDO under RAW,says yes,,11.36,5.64,16.81,0.0005,,,,484,37,
+luna,descriptive,KEEP - PSEUDO under RAW_OPEN,accuracy,,11.36,7.05,15.06,0.0005,,,,484,37,
+luna,descriptive,KEEP - PSEUDO under RAW_OPEN,says yes,,8.47,4.09,12.45,0.0005,,,,484,37,
+luna,descriptive,KEEP: RAW_OPEN minus RAW,accuracy,,0.62,-1.21,2.24,0.5675,,,,484,37,
+luna,descriptive,KEEP: RAW_OPEN minus RAW,says yes,,1.86,-0.37,4.34,0.13,,,,484,37,
+luna,descriptive,PSEUDO: RAW_OPEN minus RAW,accuracy,,2.69,-0.18,5.95,0.0765,,,,484,37,
+luna,descriptive,PSEUDO: RAW_OPEN minus RAW,says yes,,4.75,2.03,7.35,0.0005,,,,484,37,
+luna,descriptive,PSEUDO_XY - PSEUDO under RAW,accuracy,,0.62,-2.07,3.73,0.7235,,,,484,37,
+luna,descriptive,PSEUDO_XY - PSEUDO under RAW,says yes,,1.45,-0.75,3.69,0.238,,,,484,37,
+luna,descriptive,PSEUDO_THIRD - PSEUDO under RAW,accuracy,,10.95,6.82,15.27,0.0005,,,,484,37,
+luna,descriptive,PSEUDO_THIRD - PSEUDO under RAW,says yes,,8.88,3.64,14.04,0.0005,,,,484,37,
