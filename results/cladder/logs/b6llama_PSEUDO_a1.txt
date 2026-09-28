@@ -1,0 +1,158 @@
+    [lexicon PSEUDO] 208 items carry residue outside variable_mapping - KEPT (reported only)
+    [lexicon PSEUDO] residue biases this condition TOWARDS KEEP
+items=335  jobs/model=2855  lexicon=PSEUDO  paired_to=None  families=['IV', 'arrowhead', 'chain', 'confounding', 'diamond', 'diamondcut', 'fork', 'frontdoor', 'mediation']
+
+>>> meta-llama/llama-3.3-70b-instruct: 2855 calls
+    25/2855
+    50/2855
+    75/2855
+    100/2855
+    125/2855
+    150/2855
+    175/2855
+    200/2855
+    225/2855
+    250/2855
+    275/2855
+    300/2855
+    325/2855
+    350/2855
+    375/2855
+    400/2855
+    425/2855
+    450/2855
+    475/2855
+    500/2855
+    525/2855
+    550/2855
+    575/2855
+    600/2855
+    625/2855
+    650/2855
+    675/2855
+    700/2855
+    725/2855
+    750/2855
+    775/2855
+    800/2855
+    825/2855
+    850/2855
+    875/2855
+    900/2855
+    925/2855
+    950/2855
+    975/2855
+    1000/2855
+    1025/2855
+    1050/2855
+    1075/2855
+    1100/2855
+    1125/2855
+    1150/2855
+    1175/2855
+    1200/2855
+    1225/2855
+    1250/2855
+    1275/2855
+    1300/2855
+    1325/2855
+    1350/2855
+    1375/2855
+    1400/2855
+    1425/2855
+    1450/2855
+    1475/2855
+    1500/2855
+    1525/2855
+    1550/2855
+    1575/2855
+    1600/2855
+    1625/2855
+    1650/2855
+    1675/2855
+    1700/2855
+    1725/2855
+    1750/2855
+    1775/2855
+    1800/2855
+    1825/2855
+    1850/2855
+    1875/2855
+    1900/2855
+    1925/2855
+    1950/2855
+    1975/2855
+    2000/2855
+    2025/2855
+    2050/2855
+    2075/2855
+    2100/2855
+    2125/2855
+    2150/2855
+    2175/2855
+    2200/2855
+    2225/2855
+    2250/2855
+    2275/2855
+    2300/2855
+    2325/2855
+    2350/2855
+    2375/2855
+    2400/2855
+    2425/2855
+    2450/2855
+    2475/2855
+    2500/2855
+    2525/2855
+    2550/2855
+    2575/2855
+    2600/2855
+    2625/2855
+    2650/2855
+    2675/2855
+    2700/2855
+    2725/2855
+    2750/2855
+    2775/2855
+    2800/2855
+    2825/2855
+    2850/2855
+    done: {'calls': 2855, 'cached': 1916, 'errors': 0, 'err_rate': 0.0, 'in_tok': 527642, 'out_tok': 982276}   spent so far 0.16 USD
+
+>>> meta-llama/llama-3.3-70b-instruct: re-asking the 130 answers cut off at 700 tokens, with 1500
+    done: {'calls': 130, 'cached': 0, 'errors': 0, 'err_rate': 0.0, 'in_tok': 30961, 'out_tok': 85188}
+
+saved D:\code\Noisy Causal\results\cladder\raw\pilot_raw_b6llamaPSEUDO.csv  (2855 rows)
+saved D:\code\Noisy Causal\results\cladder\raw\pilot_raw_b6llamaPSEUDO_recap1500.csv  (130 rows)
+
+======================================================================
+PILOT: DO CHINH XAC THEO DIEU KIEN
+======================================================================
+
+--- meta-llama/llama-3.3-70b-instruct ---
+               n    acc  parse
+cond                          
+PROSE        NaN    NaN    NaN
+RAW        335.0  67.16   98.5
+ORACLE     335.0  66.87   97.0
+DR_k1      335.0  66.87   97.9
+DR_k1_NI   335.0  65.37   98.8
+DR_k2      335.0  64.78   96.4
+DR_k2_NI   335.0  63.28   97.9
+DR_k3      255.0  60.00   97.3
+DR_k3_NI   255.0  61.18   97.3
+ORACLE_NI  335.0  66.57   97.0
+  Delta_struct = ORACLE - RAW = -0.29 pp
+  Cost of stripping prose (PROSE - RAW) = +nan pp
+  DR_k1: 66.87  (vs RAW -0.29 pp)
+  DR_k2: 64.78  (vs RAW -2.38 pp)
+  DR_k3: 60.00  (vs RAW -7.16 pp)
+
+======================================================================
+McNEMAR EXACT (paired, on the same items)
+======================================================================
+  meta-llama/llama-3.3-70b-instruct ORACLE   vs RAW       b= 43 c= 44  p=1.0000
+  meta-llama/llama-3.3-70b-instruct DR_k1    vs RAW       b= 31 c= 32  p=1.0000
+  meta-llama/llama-3.3-70b-instruct DR_k2    vs RAW       b= 24 c= 32  p=0.3497
+  meta-llama/llama-3.3-70b-instruct DR_k3    vs RAW       b= 14 c= 31  p=0.0161
+  meta-llama/llama-3.3-70b-instruct ORACLE   vs DR_k1     b= 29 c= 29  p=1.0000

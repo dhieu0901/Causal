@@ -56,7 +56,7 @@ run () {
   exit "$rc"
 }
 
-run b6llama_KEEP 0.65 python scripts/pilot.py "${COMMON[@]}" --lexicon KEEP --tag _b6llamaKEEP
+[ -f results/cladder/raw/pilot_raw_b6llamaKEEP.csv ] || run b6llama_KEEP 0.65 python scripts/pilot.py "${COMMON[@]}" --lexicon KEEP --tag _b6llamaKEEP
 run b6llama_PSEUDO 0.65 python scripts/pilot.py "${COMMON[@]}" --lexicon PSEUDO --tag _b6llamaPSEUDO
 run b6llama_probe 0.30 python scripts/probe_path.py --models "$LLAMA" --tag _llama --workers 8
 

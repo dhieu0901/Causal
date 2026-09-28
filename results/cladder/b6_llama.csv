@@ -1,0 +1,16 @@
+analysis,test,quantity,predicted,estimate_pp,ci_lo,ci_hi,ci90_lo,ci90_hi,p_boot,p_holm,p_min_seeds,p_max_seeds,n_draws,n_items,verdict
+primary,M1,path cut: DR minus ORACLE,negative,,-22.86,-12.68,,,0.0005,0.0025,0.0005,0.0005,303,,contradicted
+primary,M2,"estimand changed, answer kept: DR minus ORACLE, within +-5",within +-5,,0.85,6.46,1.39,6.06,0.1974,0.2165,0.1974,0.2239,493,,not confirmed
+primary,M3,path cut minus answer changed with the path kept (DR minus ORACLE),negative,-19.02,-24.99,-12.44,,,0.0005,0.0025,0.0005,0.0005,371,,confirmed
+primary,R1,"path cut, no instruction: DR_NI minus ORACLE_NI",negative,-16.33,-21.36,-11.28,,,0.0005,0.0025,0.0005,0.0005,300,,confirmed
+primary,R2,"path cut: harm with the instruction minus harm without, within +-5",within +-5,-1.85,-6.6,3.1,-5.9,2.33,0.1082,0.2165,0.092,0.1082,298,,not confirmed
+unparsed scored as wrong,M1,path cut: DR minus ORACLE,negative,-18.4,-23.68,-13.12,,,0.0005,0.0025,0.0005,0.0005,307,,confirmed
+unparsed scored as wrong,M2,"estimand changed, answer kept: DR minus ORACLE, within +-5",within +-5,4.77,1.69,7.91,2.15,7.39,0.4517,0.4518,0.432,0.4522,493,,not confirmed
+unparsed scored as wrong,M3,path cut minus answer changed with the path kept (DR minus ORACLE),negative,-22.08,-31.11,-13.32,,,0.0005,0.0025,0.0005,0.0005,375,,confirmed
+unparsed scored as wrong,R1,"path cut, no instruction: DR_NI minus ORACLE_NI",negative,-15.47,-20.54,-10.78,,,0.0005,0.0025,0.0005,0.0005,307,,confirmed
+unparsed scored as wrong,R2,"path cut: harm with the instruction minus harm without, within +-5",within +-5,-2.93,-7.78,1.95,-6.91,1.14,0.1935,0.387,0.191,0.2037,307,,not confirmed
+re-asked at 1500,M1,path cut: DR minus ORACLE,negative,-18.73,-23.65,-13.92,,,0.0005,0.0025,0.0005,0.0005,307,,confirmed
+re-asked at 1500,M2,"estimand changed, answer kept: DR minus ORACLE, within +-5",within +-5,3.96,1.23,6.7,1.69,6.25,0.2372,0.4745,0.2278,0.2387,493,,not confirmed
+re-asked at 1500,M3,path cut minus answer changed with the path kept (DR minus ORACLE),negative,-20.94,-28.22,-13.86,,,0.0005,0.0025,0.0005,0.0005,375,,confirmed
+re-asked at 1500,R1,"path cut, no instruction: DR_NI minus ORACLE_NI",negative,-14.66,-19.7,-10.1,,,0.0005,0.0025,0.0005,0.0005,307,,confirmed
+re-asked at 1500,R2,"path cut: harm with the instruction minus harm without, within +-5",within +-5,-4.07,-8.36,0.0,-7.63,-0.65,0.321,0.4745,0.321,0.339,307,,not confirmed

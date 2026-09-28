@@ -1,0 +1,12 @@
+quantity,estimate_pp,ci_lo,ci_hi,p_boot,n_draws
+estimand kept: DR minus ORACLE,-0.96,-4.81,2.88,0.803,52
+estimand kept: DR_NI minus ORACLE_NI,-3.92,-7.84,-0.98,0.026,51
+"estimand changed, answer kept: DR minus ORACLE",,0.85,6.46,0.0149,493
+"estimand changed, answer kept: DR_NI minus ORACLE_NI",6.0,2.83,9.2,0.0005,492
+answer changed: DR minus ORACLE,,-19.47,-10.59,0.0005,371
+answer changed: DR_NI minus ORACLE_NI,-12.91,-17.52,-8.4,0.0005,368
+"answer changed, path kept: DR minus ORACLE",,-4.29,6.15,0.955,68
+"answer changed, path kept: DR_NI minus ORACLE_NI",2.21,-3.68,8.33,0.5155,68
+"path cut, DR_k1: DR minus ORACLE",,-29.46,-9.82,0.0005,56
+"path cut, DR_k2: DR minus ORACLE",,-26.69,-14.66,0.0005,133
+"path cut, DR_k3: DR minus ORACLE",-15.35,-21.49,-9.65,0.0005,114
