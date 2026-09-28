@@ -1,9 +1,12 @@
-"""CLadder's questions told in new stories (GPT-4.1 family and Llama 3.3 70B).
+"""CLadder's questions told in new stories (GPT-4.1 family, Llama 3.3 70B,
+gpt-5.6-luna).
 
     python scripts/analyze_new_stories.py
 
-Pre-registered in prereg/NEW_STORIES.md, committed and pushed before the first
-call. Study 1's 484 questions, under RAW, in one new condition: NEWSTORY, the
+Pre-registered in prereg/NEW_STORIES.md (GPT-4.1 family and Llama) and
+prereg/FOLLOWUPS_FAMILIES.md (gpt-5.6-luna, one answer per question at
+temperature 1, no re-asks), each committed and pushed before its first call.
+Study 1's 484 questions, under RAW, in one new condition: NEWSTORY, the
 question told in a new story (src/new_stories.py) with the same graph, numbers,
 query and label. KEEP and SYMBOL under RAW are Study 1's own answers.
 
@@ -50,7 +53,8 @@ RESULTS = ROOT / "results" / "cladder"
 RAW = RESULTS / "raw"
 NBOOT = 4000
 PLAUSIBLE = {"commonsense", "easy", "hard"}
-FAMILIES = {"gpt": (list(TIER), "conf", None), "llama": ([LLAMA], "llamaconf", 1500)}
+FAMILIES = {"gpt": (list(TIER), "conf", None), "llama": ([LLAMA], "llamaconf", 1500),
+            "luna": (["gpt-5.6-luna"], "lunaconf", None)}
 FILES = {"KEEP": "pilot_raw_{p}KEEP.csv", "SYMBOL": "pilot_raw_{p}ladderSYMBOL.csv",
          "NEWSTORY": "pilot_raw_{p}NEWSTORY.csv"}
 TESTS = [("S1", "NEWSTORY - SYMBOL under RAW", "two", +1),
@@ -217,7 +221,7 @@ def main() -> int:
         cells = load(prefix, models, "primary", recap)
         if cells is None:
             print(f"  {family}: no records yet ({FILES['NEWSTORY'].format(p=prefix)}; "
-                  f"scripts/run_new_stories.sh)")
+                  f"scripts/run_new_stories.sh, run_followups_families.sh)")
             continue
         check_h3b(family, cells)
         rows += rows_of(family, "primary", run_tests(cells))
