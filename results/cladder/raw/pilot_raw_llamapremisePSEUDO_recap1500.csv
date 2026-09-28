@@ -1,0 +1,10 @@
+model,item,id,cond,graph_id,rung,query_type,story_id,question_property,lexicon,gold,pred,correct,parsed,in_tok,out_tok,error,provider,finish,reason_tok,usd,answer_from,temperature,max_tokens
+meta-llama/llama-3.3-70b-instruct,189,14556,RAW_OPEN,arrowhead,3,nde,smoke_birthWeight,anticommonsense,PSEUDO,no,no,1,1,272,632,,Novita,stop,0,0.00028952,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,414,14216,RAW_OPEN,confounding,2,ate,simpson_kidneystone,anticommonsense,PSEUDO,no,no,1,1,161,489,,Novita,stop,0,0.000217335,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,452,3998,RAW_OPEN,confounding,3,ett,simpson_vaccine,easy,PSEUDO,no,yes,0,1,174,924,,Novita,stop,0,0.00039309,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,453,8747,RAW_OPEN,confounding,3,ett,simpson_vaccine,hard,PSEUDO,yes,no,0,1,166,717,,Novita,stop,0,0.00030921,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,472,8648,RAW_OPEN,confounding,3,ett,simpson_vaccine,hard,PSEUDO,yes,no,0,1,174,1024,,Novita,stop,0,0.00043309,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,657,10727,RAW_OPEN,diamondcut,3,ett,firing_employee,anticommonsense,PSEUDO,no,no,1,1,216,596,,Novita,stop,0,0.00026756,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,661,381,RAW_OPEN,diamondcut,3,ett,firing_employee,easy,PSEUDO,no,yes,0,1,230,392,,Novita,stop,0,0.00018785,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,664,10670,RAW_OPEN,diamondcut,3,ett,firing_employee,anticommonsense,PSEUDO,yes,yes,1,1,218,991,,Novita,stop,0,0.00042583,content,0.0,1500
+meta-llama/llama-3.3-70b-instruct,667,372,RAW_OPEN,diamondcut,3,ett,firing_employee,easy,PSEUDO,no,yes,0,1,230,778,,Novita,stop,0,0.00034225,content,0.0,1500

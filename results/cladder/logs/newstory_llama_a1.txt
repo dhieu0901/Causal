@@ -1,0 +1,47 @@
+    [lexicon NEWSTORY] dropped 39 items that could not be fully relabelled
+items=986  jobs/model=484  lexicon=NEWSTORY  paired_to=None  families=['IV', 'arrowhead', 'chain', 'collision', 'confounding', 'diamond', 'diamondcut', 'fork', 'frontdoor', 'mediation']
+
+>>> meta-llama/llama-3.3-70b-instruct: 484 calls
+    25/484
+    50/484
+    75/484
+    100/484
+    125/484
+    150/484
+    175/484
+    200/484
+    225/484
+    250/484
+    275/484
+    300/484
+    325/484
+    350/484
+    375/484
+    400/484
+    425/484
+    450/484
+    475/484
+    done: {'calls': 484, 'cached': 0, 'errors': 0, 'err_rate': 0.0, 'in_tok': 69804, 'out_tok': 130261}   spent so far 0.06 USD
+
+>>> meta-llama/llama-3.3-70b-instruct: re-asking the 31 answers cut off at 700 tokens, with 1500
+    done: {'calls': 31, 'cached': 0, 'errors': 0, 'err_rate': 0.0, 'in_tok': 6678, 'out_tok': 20722}
+
+saved D:\code\Noisy Causal\results\cladder\raw\pilot_raw_llamaconfNEWSTORY.csv  (484 rows)
+saved D:\code\Noisy Causal\results\cladder\raw\pilot_raw_llamaconfNEWSTORY_recap1500.csv  (31 rows)
+
+======================================================================
+PILOT: DO CHINH XAC THEO DIEU KIEN
+======================================================================
+
+--- meta-llama/llama-3.3-70b-instruct ---
+            n    acc  parse
+cond                       
+PROSE     NaN    NaN    NaN
+RAW     484.0  82.44   96.7
+ORACLE    NaN    NaN    NaN
+  Delta_struct = ORACLE - RAW = +nan pp
+  Cost of stripping prose (PROSE - RAW) = +nan pp
+
+======================================================================
+McNEMAR EXACT (paired, on the same items)
+======================================================================

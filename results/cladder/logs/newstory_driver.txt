@@ -1,0 +1,5 @@
+>>> newstory_llama   attempt 1   cap left 0.15 USD   [15:52:02]
+<<< newstory_llama done, this attempt spent 0.06 USD   [16:01:56]
+>>> newstory_gpt   attempt 1   cap left 1.40 USD   [16:01:56]
+<<< newstory_gpt done, this attempt spent 1.14 USD   [16:06:16]
+HOAN TAT 2026-09-28 16:06:16

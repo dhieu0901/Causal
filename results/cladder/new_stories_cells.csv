@@ -1,0 +1,7 @@
+family,lexicon,n,accuracy_pct,says_yes_pct,balanced_pct
+gpt,KEEP,1414,79.07,45.69,79.19
+gpt,SYMBOL,1438,67.94,35.61,68.06
+gpt,NEWSTORY,1426,78.82,45.58,78.9
+llama,KEEP,476,80.46,50.84,80.46
+llama,SYMBOL,480,68.75,38.12,68.9
+llama,NEWSTORY,468,85.26,51.5,85.24

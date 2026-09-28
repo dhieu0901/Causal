@@ -1,0 +1,40 @@
+analysis,test,quantity,predicted,estimate_pp,ci_lo,ci_hi,p_boot,p_holm,p_min_seeds,p_max_seeds,n_items,n_stories,verdict
+primary,P1,"share of Yes answers under PSEUDO, RAW_OPEN minus RAW",positive,5.53,3.26,7.74,0.0005,0.002,0.0005,0.0005,470,37,confirmed
+primary,P2,"(KEEP - PSEUDO | RAW) - (KEEP - PSEUDO | RAW_OPEN), accuracy",positive,-1.31,-5.12,2.69,0.56,0.56,0.5555,0.586,458,37,not confirmed
+primary,N1,"KEEP - PSEUDO_XY under RAW, accuracy",positive,14.26,9.52,19.33,0.0005,0.002,0.0005,0.0005,470,37,confirmed
+primary,N2,"KEEP - PSEUDO_THIRD under RAW, accuracy, questions naming another variable",positive,-5.36,-8.84,-0.88,0.0255,0.051,0.023,0.03,317,34,borderline (changes with the bootstrap seed)
+questions resampled,P1,"share of Yes answers under PSEUDO, RAW_OPEN minus RAW",positive,5.53,2.98,8.09,0.0005,0.002,0.0005,0.0005,470,37,confirmed
+questions resampled,P2,"(KEEP - PSEUDO | RAW) - (KEEP - PSEUDO | RAW_OPEN), accuracy",positive,-1.31,-5.02,2.62,0.531,0.531,0.531,0.5535,458,37,not confirmed
+questions resampled,N1,"KEEP - PSEUDO_XY under RAW, accuracy",positive,14.26,9.36,19.15,0.0005,0.002,0.0005,0.0005,470,37,confirmed
+questions resampled,N2,"KEEP - PSEUDO_THIRD under RAW, accuracy, questions naming another variable",positive,-5.36,-9.78,-0.95,0.026,0.052,0.0185,0.026,317,34,borderline (changes with the bootstrap seed)
+unparsed as wrong,P1,"share of Yes answers under PSEUDO, RAW_OPEN minus RAW",positive,5.58,3.23,8.15,0.0005,0.002,0.0005,0.0005,484,37,confirmed
+unparsed as wrong,P2,"(KEEP - PSEUDO | RAW) - (KEEP - PSEUDO | RAW_OPEN), accuracy",positive,-1.03,-5.12,3.36,0.6725,0.6725,0.665,0.6995,484,37,not confirmed
+unparsed as wrong,N1,"KEEP - PSEUDO_XY under RAW, accuracy",positive,14.26,9.61,19.72,0.0005,0.002,0.0005,0.0005,484,37,confirmed
+unparsed as wrong,N2,"KEEP - PSEUDO_THIRD under RAW, accuracy, questions naming another variable",positive,-4.79,-8.99,-0.52,0.0325,0.065,0.0325,0.046,334,34,not confirmed
+re-asked at 1500,P1,"share of Yes answers under PSEUDO, RAW_OPEN minus RAW",positive,5.17,3.08,7.08,0.0005,0.002,0.0005,0.0005,484,37,confirmed
+re-asked at 1500,P2,"(KEEP - PSEUDO | RAW) - (KEEP - PSEUDO | RAW_OPEN), accuracy",positive,-1.45,-5.75,2.45,0.5355,0.5355,0.5315,0.564,484,37,not confirmed
+re-asked at 1500,N1,"KEEP - PSEUDO_XY under RAW, accuracy",positive,14.67,9.95,19.43,0.0005,0.002,0.0005,0.0005,484,37,confirmed
+re-asked at 1500,N2,"KEEP - PSEUDO_THIRD under RAW, accuracy, questions naming another variable",positive,-4.49,-7.83,-0.38,0.041,0.082,0.0365,0.0445,334,34,not confirmed
+descriptive,P2,gold yes,,2.99,-1.06,7.28,0.176,,,,234,36,
+descriptive,P2,gold no,,-5.8,-11.48,0.0,0.056,,,,224,36,
+descriptive,P2,says yes,,4.37,1.5,7.61,0.0025,,,,458,37,
+descriptive,N1,gold yes,,31.12,22.22,40.09,0.0005,,,,241,36,
+descriptive,N1,gold no,,-3.49,-9.05,2.57,0.2925,,,,229,36,
+descriptive,N1,says yes,,17.66,11.27,23.71,0.0005,,,,470,37,
+descriptive,N2,gold yes,,-6.71,-11.39,-1.69,0.013,,,,164,32,
+descriptive,N2,gold no,,-3.92,-10.11,2.66,0.284,,,,153,32,
+descriptive,N2,says yes,,-1.58,-5.43,2.07,0.4265,,,,317,34,
+descriptive,N2,every question,,-3.64,-6.44,-0.53,0.022,,,,467,37,
+descriptive,N2,"every question, says yes",,-1.07,-3.62,1.29,0.4495,,,,467,37,
+descriptive,KEEP - PSEUDO under RAW,accuracy,,15.2,10.18,20.83,0.0005,,,,467,37,
+descriptive,KEEP - PSEUDO under RAW,says yes,,22.48,16.96,27.85,0.0005,,,,467,37,
+descriptive,KEEP - PSEUDO under RAW_OPEN,accuracy,,16.92,11.45,22.45,0.0005,,,,467,37,
+descriptive,KEEP - PSEUDO under RAW_OPEN,says yes,,17.77,12.56,22.82,0.0005,,,,467,37,
+descriptive,KEEP: RAW_OPEN minus RAW,accuracy,,2.56,-0.56,5.22,0.125,,,,469,37,
+descriptive,KEEP: RAW_OPEN minus RAW,says yes,,0.85,-1.93,3.46,0.585,,,,469,37,
+descriptive,PSEUDO: RAW_OPEN minus RAW,accuracy,,0.85,-2.11,3.69,0.598,,,,470,37,
+descriptive,PSEUDO: RAW_OPEN minus RAW,says yes,,5.53,3.26,7.74,0.0005,,,,470,37,
+descriptive,PSEUDO_XY - PSEUDO under RAW,accuracy,,1.07,-1.81,4.24,0.5045,,,,467,37,
+descriptive,PSEUDO_XY - PSEUDO under RAW,says yes,,5.78,3.22,8.92,0.0005,,,,467,37,
+descriptive,PSEUDO_THIRD - PSEUDO under RAW,accuracy,,19.49,14.65,24.24,0.0005,,,,467,37,
+descriptive,PSEUDO_THIRD - PSEUDO under RAW,says yes,,23.34,18.86,27.76,0.0005,,,,467,37,

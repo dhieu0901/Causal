@@ -1,0 +1,11 @@
+query_type,n,right,not_decidable_from_stated,decided_by_published_error,label_follows_published_error,label_follows_recomputed,label_wrong_otherwise,not_decidable_pct
+ate,1422,1412,10,0,0,0,0,0.7
+backadj,1580,1580,0,0,0,0,0,0.0
+collider_bias,158,158,0,0,0,0,0,0.0
+correlation,1422,1365,57,0,0,0,0,4.01
+det-counterfactual,1422,1422,0,0,0,0,0,0.0
+ett,1264,1250,13,1,1,0,0,1.03
+exp_away,158,157,1,0,0,0,0,0.63
+marginal,1580,1547,10,23,23,0,0,0.63
+nde,316,308,4,4,4,0,0,1.27
+nie,790,759,23,8,8,0,0,2.91

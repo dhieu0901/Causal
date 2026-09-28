@@ -1,0 +1,73 @@
+family,analysis,test,quantity,predicted,estimate_pp,ci_lo,ci_hi,ci90_lo,ci90_hi,p_boot,p_holm,p_min_seeds,p_max_seeds,n_items,n_stories,verdict,model
+gpt,primary,S1,NEWSTORY - SYMBOL under RAW,positive,11.09,7.7,14.52,,,0.0005,0.001,0.0005,0.0005,484,37,confirmed,
+gpt,primary,S2,"NEWSTORY - KEEP under RAW, within +-5",within +-5,-0.29,-2.45,2.13,-2.13,1.74,0.0003,0.0008,0.0003,0.0003,481,37,confirmed,
+gpt,primary,S3,"balanced (NEWSTORY - SYMBOL), commonsense minus anticommonsense, within +-5",within +-5,-2.52,-9.0,4.26,-8.03,3.22,0.2245,0.2245,0.2218,0.238,484,37,not confirmed,
+gpt,questions resampled,S1,NEWSTORY - SYMBOL under RAW,positive,11.09,7.72,14.46,,,0.0005,0.001,0.0005,0.0005,484,37,confirmed,
+gpt,questions resampled,S2,"NEWSTORY - KEEP under RAW, within +-5",within +-5,-0.29,-2.36,1.87,-2.04,1.5,0.0003,0.0008,0.0003,0.0003,481,37,confirmed,
+gpt,questions resampled,S3,"balanced (NEWSTORY - SYMBOL), commonsense minus anticommonsense, within +-5",within +-5,-2.52,-8.92,3.89,-7.87,2.84,0.2185,0.2185,0.209,0.2215,484,37,not confirmed,
+gpt,unparsed as wrong,S1,NEWSTORY - SYMBOL under RAW,positive,10.12,6.65,13.49,,,0.0005,0.001,0.0005,0.0005,484,37,confirmed,
+gpt,unparsed as wrong,S2,"NEWSTORY - KEEP under RAW, within +-5",within +-5,0.41,-1.7,2.63,-1.35,2.25,0.0003,0.0008,0.0003,0.0003,484,37,confirmed,
+gpt,unparsed as wrong,S3,"balanced (NEWSTORY - SYMBOL), commonsense minus anticommonsense, within +-5",within +-5,-2.52,-9.18,4.59,-8.05,3.4,0.232,0.232,0.2293,0.2492,484,37,not confirmed,
+gpt,descriptive,NEWSTORY - SYMBOL,gold yes,,20.5,13.41,27.13,,,0.0005,,,,245,36,,family
+gpt,descriptive,NEWSTORY - SYMBOL,gold no,,1.43,-3.21,6.9,,,0.606,,,,239,36,,family
+gpt,descriptive,NEWSTORY - SYMBOL,says yes,,9.68,4.64,14.83,,,0.0005,,,,484,37,,family
+gpt,descriptive,NEWSTORY - SYMBOL,commonsense,,9.02,4.49,14.3,,,0.0005,,,,254,37,,family
+gpt,descriptive,NEWSTORY - SYMBOL,"commonsense, says yes",,8.48,1.72,15.36,,,0.013,,,,254,37,,family
+gpt,descriptive,NEWSTORY - SYMBOL,anticommonsense,,13.37,8.3,18.29,,,0.0005,,,,230,37,,family
+gpt,descriptive,NEWSTORY - SYMBOL,"anticommonsense, says yes",,11.0,5.57,16.4,,,0.0005,,,,230,37,,family
+gpt,descriptive,NEWSTORY - SYMBOL,all,,9.66,4.5,15.15,,,0.0005,,,,466,37,,gpt-4.1-nano
+gpt,descriptive,NEWSTORY - SYMBOL,all,,9.68,4.85,14.38,,,0.0015,,,,475,37,,gpt-4.1-mini
+gpt,descriptive,NEWSTORY - SYMBOL,all,,13.89,9.62,18.23,,,0.0005,,,,475,37,,gpt-4.1
+gpt,descriptive,NEWSTORY - KEEP,gold yes,,0.0,-3.84,3.84,,,1.0,,,,245,36,,family
+gpt,descriptive,NEWSTORY - KEEP,gold no,,-0.58,-3.55,2.59,,,0.7295,,,,236,36,,family
+gpt,descriptive,NEWSTORY - KEEP,says yes,,0.29,-2.31,2.8,,,0.831,,,,481,37,,family
+gpt,descriptive,NEWSTORY - KEEP,commonsense,,-1.08,-4.37,2.41,,,0.5435,,,,253,37,,family
+gpt,descriptive,NEWSTORY - KEEP,"commonsense, says yes",,2.17,-0.82,5.28,,,0.168,,,,253,37,,family
+gpt,descriptive,NEWSTORY - KEEP,anticommonsense,,0.6,-2.04,3.12,,,0.677,,,,228,36,,family
+gpt,descriptive,NEWSTORY - KEEP,"anticommonsense, says yes",,-1.81,-5.37,1.73,,,0.3445,,,,228,36,,family
+gpt,descriptive,NEWSTORY - KEEP,all,,1.96,-1.76,5.41,,,0.3155,,,,459,37,,gpt-4.1-nano
+gpt,descriptive,NEWSTORY - KEEP,all,,-2.13,-5.37,1.6,,,0.292,,,,470,37,,gpt-4.1-mini
+gpt,descriptive,NEWSTORY - KEEP,all,,-0.64,-4.28,3.01,,,0.7715,,,,471,37,,gpt-4.1
+gpt,descriptive,KEEP - SYMBOL,gold yes,,21.09,13.58,27.88,,,0.0005,,,,245,36,,family
+gpt,descriptive,KEEP - SYMBOL,gold no,,1.74,-2.54,6.12,,,0.453,,,,237,36,,family
+gpt,descriptive,KEEP - SYMBOL,says yes,,9.9,5.18,14.62,,,0.0005,,,,482,37,,family
+gpt,descriptive,KEEP - SYMBOL,commonsense,,10.15,5.49,15.13,,,0.0005,,,,254,37,,family
+gpt,descriptive,KEEP - SYMBOL,"commonsense, says yes",,6.9,0.27,13.49,,,0.045,,,,254,37,,family
+gpt,descriptive,KEEP - SYMBOL,anticommonsense,,13.23,7.94,18.17,,,0.0005,,,,228,36,,family
+gpt,descriptive,KEEP - SYMBOL,"anticommonsense, says yes",,13.23,7.99,17.83,,,0.0005,,,,228,36,,family
+gpt,descriptive,KEEP - SYMBOL,all,,8.06,2.87,13.49,,,0.0035,,,,459,37,,gpt-4.1-nano
+gpt,descriptive,KEEP - SYMBOL,all,,12.1,7.87,15.69,,,0.0005,,,,471,37,,gpt-4.1-mini
+gpt,descriptive,KEEP - SYMBOL,all,,14.56,8.85,20.36,,,0.0005,,,,474,37,,gpt-4.1
+llama,primary,S1,NEWSTORY - SYMBOL under RAW,positive,15.73,10.97,20.5,,,0.0005,0.0015,0.0005,0.0005,464,37,confirmed,
+llama,primary,S2,"NEWSTORY - KEEP under RAW, within +-5",within +-5,4.1,1.52,6.58,1.97,6.14,0.2338,0.4675,0.2293,0.235,463,37,not confirmed,
+llama,primary,S3,"balanced (NEWSTORY - SYMBOL), commonsense minus anticommonsense, within +-5",within +-5,-3.18,-10.57,5.46,-9.46,3.65,0.3382,0.4675,0.3292,0.3382,464,37,not confirmed,
+llama,questions resampled,S1,NEWSTORY - SYMBOL under RAW,positive,15.73,11.21,20.04,,,0.0005,0.0015,0.0005,0.0005,464,37,confirmed,
+llama,questions resampled,S2,"NEWSTORY - KEEP under RAW, within +-5",within +-5,4.1,1.3,6.91,1.73,6.48,0.2335,0.467,0.2335,0.2607,463,37,not confirmed,
+llama,questions resampled,S3,"balanced (NEWSTORY - SYMBOL), commonsense minus anticommonsense, within +-5",within +-5,-3.18,-11.87,5.37,-10.52,4.09,0.3453,0.467,0.338,0.347,464,37,not confirmed,
+llama,unparsed as wrong,S1,NEWSTORY - SYMBOL under RAW,positive,14.26,9.04,19.2,,,0.0005,0.0015,0.0005,0.0005,484,37,confirmed,
+llama,unparsed as wrong,S2,"NEWSTORY - KEEP under RAW, within +-5",within +-5,3.31,0.0,6.28,0.61,5.87,0.1412,0.2825,0.131,0.1417,484,37,not confirmed,
+llama,unparsed as wrong,S3,"balanced (NEWSTORY - SYMBOL), commonsense minus anticommonsense, within +-5",within +-5,-2.4,-10.61,6.75,-9.36,5.22,0.2697,0.2825,0.255,0.2697,484,37,not confirmed,
+llama,re-asked at 1500,S1,NEWSTORY - SYMBOL under RAW,positive,16.32,11.72,21.0,,,0.0005,0.0015,0.0005,0.0005,484,37,confirmed,
+llama,re-asked at 1500,S2,"NEWSTORY - KEEP under RAW, within +-5",within +-5,3.51,1.14,5.81,1.55,5.41,0.1003,0.2005,0.091,0.1013,484,37,not confirmed,
+llama,re-asked at 1500,S3,"balanced (NEWSTORY - SYMBOL), commonsense minus anticommonsense, within +-5",within +-5,-1.85,-9.7,7.17,-8.68,5.65,0.2372,0.2372,0.2218,0.2372,484,37,not confirmed,
+llama,descriptive,NEWSTORY - SYMBOL,gold yes,,28.15,19.79,36.45,,,0.0005,,,,238,36,,family
+llama,descriptive,NEWSTORY - SYMBOL,gold no,,2.65,-3.0,8.37,,,0.4065,,,,226,36,,family
+llama,descriptive,NEWSTORY - SYMBOL,says yes,,13.15,7.35,19.27,,,0.0005,,,,464,37,,family
+llama,descriptive,NEWSTORY - SYMBOL,commonsense,,12.86,7.46,18.7,,,0.0005,,,,241,37,,family
+llama,descriptive,NEWSTORY - SYMBOL,"commonsense, says yes",,7.88,-0.39,16.81,,,0.065,,,,241,37,,family
+llama,descriptive,NEWSTORY - SYMBOL,anticommonsense,,18.83,12.2,25.0,,,0.0005,,,,223,36,,family
+llama,descriptive,NEWSTORY - SYMBOL,"anticommonsense, says yes",,18.83,12.68,24.75,,,0.0005,,,,223,36,,family
+llama,descriptive,NEWSTORY - KEEP,gold yes,,4.18,0.38,7.76,,,0.0485,,,,239,36,,family
+llama,descriptive,NEWSTORY - KEEP,gold no,,4.02,0.0,7.63,,,0.0595,,,,224,36,,family
+llama,descriptive,NEWSTORY - KEEP,says yes,,0.22,-2.57,2.93,,,0.9375,,,,463,37,,family
+llama,descriptive,NEWSTORY - KEEP,commonsense,,3.31,-0.45,7.5,,,0.11,,,,242,37,,family
+llama,descriptive,NEWSTORY - KEEP,"commonsense, says yes",,-3.31,-7.14,0.0,,,0.076,,,,242,37,,family
+llama,descriptive,NEWSTORY - KEEP,anticommonsense,,4.98,1.35,8.58,,,0.01,,,,221,36,,family
+llama,descriptive,NEWSTORY - KEEP,"anticommonsense, says yes",,4.07,0.42,8.26,,,0.0405,,,,221,36,,family
+llama,descriptive,KEEP - SYMBOL,gold yes,,23.65,15.6,31.96,,,0.0005,,,,241,36,,family
+llama,descriptive,KEEP - SYMBOL,gold no,,-1.73,-7.89,4.22,,,0.643,,,,231,36,,family
+llama,descriptive,KEEP - SYMBOL,says yes,,12.92,7.96,18.46,,,0.0005,,,,472,37,,family
+llama,descriptive,KEEP - SYMBOL,commonsense,,9.31,2.54,16.52,,,0.005,,,,247,37,,family
+llama,descriptive,KEEP - SYMBOL,"commonsense, says yes",,10.93,3.19,19.48,,,0.006,,,,247,37,,family
+llama,descriptive,KEEP - SYMBOL,anticommonsense,,13.33,6.53,20.0,,,0.0005,,,,225,37,,family
+llama,descriptive,KEEP - SYMBOL,"anticommonsense, says yes",,15.11,9.42,20.53,,,0.0005,,,,225,37,,family
