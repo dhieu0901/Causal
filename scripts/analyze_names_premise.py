@@ -103,12 +103,12 @@ def path_of(family, key):
     return RAW / f"pilot_raw_{FILES[key].format(s=s, n=n)}.csv"
 
 
-def load(family, mode):
+def load(family, mode, keys=None):
     """(lexicon, cond) -> one row per question (per (model, question) for the
-    GPT-4.1 family): correct, yes, gold, story."""
+    GPT-4.1 family): correct, yes, gold, story. `keys` limits it to some cells."""
     models, s, n, recap = FAMILIES[family]
     cells = {}
-    for key in FILES:
+    for key in (keys or FILES):
         p = path_of(family, key)
         if not p.exists():
             return None
@@ -272,6 +272,43 @@ def cell_rows(family, cells):
     return out
 
 
+def incomplete(family, missing) -> tuple[list, list]:
+    """A run that stopped before its last cell (the GPT-4.1 family's
+    PSEUDO_THIRD cell: the key reached its project's spending limit on
+    29/09). The tests whose cells all exist are reported with their intervals
+    and no verdict, since the registered Holm family of four is incomplete."""
+    have = [k for k in FILES if path_of(family, k).name not in missing]
+    if set(have) != set(FILES) - {TH}:
+        return [], []
+    cells = load(family, "primary", keys=have)
+    check_study1(family, cells)
+    cells[TH] = cells[K].iloc[:0]                  # no rows: N2 has nothing to compare
+    first = pd.concat(cells.values())
+    story_of = first.groupby(item_of(first.index)).story_id.first()
+    vy, vc = vectors(cells, "yes"), vectors(cells, "correct")
+    V = {"P1": vy["P1"], "P2": vc["P2"], "N1": vc["N1"]}
+    rows = []
+    for t, what, sign in TESTS[:3]:
+        e, d, nu = draws(V[t], story_of, SEEDS[0])
+        rows.append(dict(family=family, analysis="incomplete run, no verdict", test=t, quantity=what,
+                         predicted="positive" if sign > 0 else "negative",
+                         estimate_pp=round(e, 2), ci_lo=round(np.percentile(d, 2.5), 2),
+                         ci_hi=round(np.percentile(d, 97.5), 2), p_boot=round(boot_p(d, NBOOT), 4),
+                         n_items=len(set(item_of(V[t].index))), n_stories=nu,
+                         verdict="no verdict (run incomplete: N2's cell is missing)"))
+    c, y = cells[K], cells[P]
+    i = c.index.intersection(y.index)
+    for part, col in (("accuracy", "correct"), ("says yes", "yes")):
+        v = c[col][i] - y[col][i]
+        e, d, nu = draws(v, story_of, SEEDS[0])
+        rows.append(dict(family=family, analysis="descriptive", test="KEEP - PSEUDO under RAW",
+                         quantity=part, estimate_pp=round(e, 2), ci_lo=round(np.percentile(d, 2.5), 2),
+                         ci_hi=round(np.percentile(d, 97.5), 2), p_boot=round(boot_p(d, NBOOT), 4),
+                         n_items=len(set(item_of(v.index))), n_stories=nu))
+    del cells[TH]
+    return rows, cell_rows(family, cells)
+
+
 def main() -> int:
     rows, cells_out = [], []
     for family, (models, s, n, recap) in FAMILIES.items():
@@ -279,6 +316,9 @@ def main() -> int:
         if cells is None:
             missing = [path_of(family, k).name for k in FILES if not path_of(family, k).exists()]
             print(f"  {family}: no records yet: {', '.join(missing)}")
+            r, c = incomplete(family, missing)
+            rows += r
+            cells_out += c
             continue
         check_study1(family, cells)
         if not SHOWN:

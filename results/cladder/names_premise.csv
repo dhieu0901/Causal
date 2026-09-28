@@ -73,3 +73,8 @@ luna,descriptive,PSEUDO_XY - PSEUDO under RAW,accuracy,,0.62,-2.07,3.73,0.7235,,
 luna,descriptive,PSEUDO_XY - PSEUDO under RAW,says yes,,1.45,-0.75,3.69,0.238,,,,484,37,
 luna,descriptive,PSEUDO_THIRD - PSEUDO under RAW,accuracy,,10.95,6.82,15.27,0.0005,,,,484,37,
 luna,descriptive,PSEUDO_THIRD - PSEUDO under RAW,says yes,,8.88,3.64,14.04,0.0005,,,,484,37,
+gpt,"incomplete run, no verdict",P1,"share of Yes answers under PSEUDO, RAW_OPEN minus RAW",positive,5.03,3.28,6.69,0.0005,,,,483,37,no verdict (run incomplete: N2's cell is missing)
+gpt,"incomplete run, no verdict",P2,"(KEEP - PSEUDO | RAW) - (KEEP - PSEUDO | RAW_OPEN), accuracy",positive,2.45,-0.62,5.65,0.1235,,,,479,37,no verdict (run incomplete: N2's cell is missing)
+gpt,"incomplete run, no verdict",N1,"KEEP - PSEUDO_XY under RAW, accuracy",positive,12.86,8.67,17.17,0.0005,,,,480,37,no verdict (run incomplete: N2's cell is missing)
+gpt,descriptive,KEEP - PSEUDO under RAW,accuracy,,14.36,10.81,18.01,0.0005,,,,482,37,
+gpt,descriptive,KEEP - PSEUDO under RAW,says yes,,14.21,9.34,19.27,0.0005,,,,482,37,
