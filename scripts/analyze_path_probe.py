@@ -30,6 +30,10 @@ Replication on Llama 3.3 70B (prereg/B6_LLAMA.md), once its B6 and probe
 records exist: the same cells, check and tests on pilot_raw_b6llama*.csv and
 probe_path_raw_llama.csv, written to path_probe_llama.csv and
 path_probe_reading_llama.csv.
+
+The probe asked inside the B6 question (prereg/PATH_PROBE_CONTEXT.md), once
+probe_path_context_raw.csv exists: the same cells and tests, written to
+path_probe_context.csv and path_probe_reading_context.csv.
 """
 from __future__ import annotations
 
@@ -99,11 +103,11 @@ def reading(C: pd.DataFrame, P: pd.DataFrame) -> pd.DataFrame:
     return C.join(orc.rename("read_oracle"), on=["model", "item", "lexicon"])
 
 
-def lenient(P: pd.DataFrame) -> pd.DataFrame:
+def lenient(P: pd.DataFrame, context=False) -> pd.DataFrame:
     """P with every unparsed answer read by its opening yes/no (text from the cache)."""
-    from probe_path import MAX_TOKENS, jobs
+    from probe_path import MAX_TOKENS, context_jobs, jobs
     from runner import read_cached
-    J = pd.DataFrame(jobs())[["item", "lexicon", "cond", "prompt"]]
+    J = pd.DataFrame(context_jobs() if context else jobs())[["item", "lexicon", "cond", "prompt"]]
     U = P[P.parsed == 0].merge(J, on=["item", "lexicon", "cond"])
     fix = {}
     for r in U.itertuples():
@@ -153,10 +157,15 @@ def main() -> int:
         print("REPLICATION on Llama 3.3 70B (prereg/B6_LLAMA.md)")
         print("=" * 78)
         run("b6llama", "probe_path_raw_llama.csv", "_llama")
+    if (RAW / "probe_path_context_raw.csv").exists():
+        print("\n" + "=" * 78)
+        print("THE PROBE INSIDE THE QUESTION (prereg/PATH_PROBE_CONTEXT.md)")
+        print("=" * 78)
+        run("b6", "probe_path_context_raw.csv", "_context", context=True)
     return 0
 
 
-def run(prefix, probe_file, suffix) -> None:
+def run(prefix, probe_file, suffix, context=False) -> None:
     C0 = cells(prefix)
     check(C0, prefix)
     f = RAW / probe_file
@@ -192,7 +201,7 @@ def run(prefix, probe_file, suffix) -> None:
     # Not registered: gpt-4.1-nano often skips the ANSWER line when the graph has
     # a direct X -> Y edge and opens with "Yes, there is a directed path ...".
     # Read every unparsed answer by its opening yes/no instead, and redo PP2.
-    PL = lenient(P)
+    PL = lenient(P, context)
     L = reading(C0, PL)
     lp = tests(L, SEEDS[0])[0]["PP2"]
     per_l = [tests(L, s)[0]["PP2"]["p_boot"] for s in SEEDS]

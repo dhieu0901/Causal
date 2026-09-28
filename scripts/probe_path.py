@@ -29,6 +29,14 @@ Writes results/cladder/raw/probe_path_raw{tag}.csv, one row per (model, item,
 lexicon, graph). scripts/analyze_path_probe.py reads it. `--models` and
 `--tag` run the same probe on another family (prereg/B6_LLAMA.md:
 --models meta-llama/llama-3.3-70b-instruct --tag _llama).
+
+`--context` asks the same question INSIDE the question B6 sent
+(prereg/PATH_PROBE_CONTEXT.md): the B6 prompt with its story, numbers and
+instructed graph block kept, the causal question and its answer line removed,
+and the path question put in their place. Only the graphs PP2 needs are asked:
+every path-cut draw of B6 (answer changed, no X -> Y path) and the correct
+graph of each item that has one, under both lexicons. Writes
+probe_path_context_raw{tag}.csv.
 """
 from __future__ import annotations
 
@@ -59,6 +67,15 @@ B6 = dict(n=340, seed=20260926, sample_kmax=1, kmax=3,
           exclude="prereg/excluded_ids_b6.txt", query_types=["ate", "ett"])
 RAWDIR = ROOT / "results" / "cladder" / "raw"
 ANSWER = re.compile(r"ANSWER:\s*(yes|no)\b", re.IGNORECASE)
+
+CONTEXT_TAIL = (
+    "\n\nIn this causal structure, is there a directed path from {x} to {y}? A directed "
+    "path is a chain of one or more direct effects, each one pointing forward, that starts "
+    "at {x} and ends at {y}.\n\n"
+    "Think briefly, then answer on the last line in exactly this format:\n"
+    "ANSWER: yes\nor\nANSWER: no")
+GRAPH_HEAD = "\n\nThe causal structure of this world is:"
+QUESTION = re.compile(r"\s*([^.?!]*\?)\s*$")
 
 TEMPLATE = (
     "Here is a causal graph, given as statements of direct effects:\n{block}\n\n"
@@ -115,11 +132,44 @@ def jobs():
                 out.append(dict(item=i, id=int(r.id), query_type=r.query_type,
                                 family=r.graph_id, lexicon=lex, cond=cond, x=x, y=y,
                                 path_true=int(y in descendants(g, x)),
-                                prompt=TEMPLATE.format(block=describe_graph(g), x=x, y=y)))
+                                prompt=TEMPLATE.format(block=describe_graph(g), x=x, y=y),
+                                b6_prompt=b6_prompt))
     if missing:
         raise SystemExit(f"{missing} replayed graphs are not the prompts B6 sent; stopping")
     print(f"  replay check: all {len(out)} graphs rebuild a B6 prompt found in the API cache;"
           f" {skipped} (item, lexicon) pairs left out")
+    return out
+
+
+def context_prompt(b6_prompt: str, x: str, y: str) -> str:
+    """The B6 prompt with its causal question and answer line replaced by the path question."""
+    from prompts import ANSWER_RULE
+    if not b6_prompt.endswith(ANSWER_RULE) or b6_prompt.count(GRAPH_HEAD) != 1:
+        raise SystemExit("a B6 prompt does not have the expected shape")
+    body, block = b6_prompt[:-len(ANSWER_RULE)].split(GRAPH_HEAD)
+    m = QUESTION.search(body)
+    if not m or any(c.isdigit() for c in m.group(1)):
+        raise SystemExit(f"no clean question at the end of: ...{body[-120:]}")
+    kept = body[:m.start()]
+    if not kept.rstrip().endswith("."):
+        raise SystemExit(f"the story does not end in a sentence: ...{kept[-80:]}")
+    return kept + GRAPH_HEAD + block + CONTEXT_TAIL.format(x=x, y=y)
+
+
+def context_jobs():
+    """The rows of jobs() that PP2 uses, with the prompt put back into its question."""
+    from analyze_answer_change import Matcher, draws_for
+    from analyze_b6 import B6 as B6_ANALYSIS
+    G = draws_for("b6", Matcher(), kw=B6_ANALYSIS)
+    G = G[(G.lexicon == "KEEP") & (G.group == "answer changed") & (G.route == "no path")]
+    cut = set(zip(G.item, G.cond))
+    items = {i for i, _ in cut}
+    out = []
+    for j in jobs():
+        if (j["cond"] == "ORACLE" and j["item"] in items) or (j["item"], j["cond"]) in cut:
+            out.append(j | dict(prompt=context_prompt(j["b6_prompt"], j["x"], j["y"])))
+    print(f"  context: {len(out)} rows, {len(cut)} path-cut draws on {len(items)} items, "
+          f"both lexicons")
     return out
 
 
@@ -133,12 +183,14 @@ def main() -> int:
     ap.add_argument("--workers", type=int, default=16)
     ap.add_argument("--models", default=",".join(MODELS))
     ap.add_argument("--tag", default="", help="output probe_path_raw{tag}.csv")
+    ap.add_argument("--context", action="store_true",
+                    help="ask inside the B6 question (prereg/PATH_PROBE_CONTEXT.md)")
     ap.add_argument("--assume-out", type=float, default=None, dest="assume_out",
                     help="with --dry-run: mean output tokens per call, from the pilot")
     a = ap.parse_args()
     models = a.models.split(",")
-    OUT = RAWDIR / f"probe_path_raw{a.tag}.csv"
-    J = jobs()
+    OUT = RAWDIR / f"probe_path{'_context' if a.context else ''}_raw{a.tag}.csv"
+    J = context_jobs() if a.context else jobs()
     distinct = len({j["prompt"] for j in J})
     print(f"  {len(J)} (item, lexicon, graph) rows, {distinct} distinct prompts per model; "
           f"path present in {sum(j['path_true'] for j in J)}")
