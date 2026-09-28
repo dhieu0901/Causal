@@ -303,7 +303,8 @@ def residue(original: str, relabelled: str, lexicon: str,
     design - that is the point of the condition, not a defect). The measure is
     about SYMBOL and PSEUDO, which claim to remove real words.
     """
-    if lexicon in ("KEEP", "PERMUTE") or lexicon in PARTIAL:
+    if lexicon in ("KEEP", "PERMUTE", "NEWSTORY") or lexicon in PARTIAL:
+        # NEWSTORY runs its own, stricter check (src/new_stories.py)
         return set()
     vocab = story_vocab(max_stories)
     before = set(WORD_RE.findall(original.lower())) & vocab

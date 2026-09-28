@@ -21,6 +21,7 @@ from perturb import (FAMILY_STRUCTURE, to_edges, max_k, ENUMERATORS,
                      enumerate_scramble)
 from prompts import build, parse_answer, strip_structure, parse_prose_graph, ANSWER_RE
 from lexical import relabel_item, residue
+from new_stories import rewrite as new_story
 from runner import run_batch, usage_summary, guard_errors, is_ok, OPENROUTER, billed_usd
 from stats import mcnemar_exact_p
 
@@ -136,7 +137,12 @@ def build_jobs(items, kmax=3, seed=0, types=("DR",), lexicon="KEEP",
     for i, r in items.iterrows():
         # KEEP returns the prompt unchanged, so a default run stays byte-identical
         # to earlier ones and reuses their cache entries.
-        prompt, clean = relabel_item(r.prompt, lexicon, seed=str(r.id))
+        if lexicon == "NEWSTORY":
+            # the question told in a new story (src/new_stories.py,
+            # prereg/NEW_STORIES.md)
+            prompt, clean = new_story(r.prompt, r.get("story_id", ""))
+        else:
+            prompt, clean = relabel_item(r.prompt, lexicon, seed=str(r.id))
         if not clean:
             # Half-relabelled text would leave real world knowledge in an item
             # scored as lexicon-free, which is the confound the condition exists
@@ -261,7 +267,7 @@ def main():
                          "are paired item by item")
     ap.add_argument("--lexicon", default="KEEP",
                     choices=["KEEP", "PERMUTE", "IRRELEVANT", "SYMBOL", "PSEUDO",
-                             "PSEUDO_XY", "PSEUDO_THIRD"],
+                             "PSEUDO_XY", "PSEUDO_THIRD", "NEWSTORY"],
                     help="swap variable names within item (see src/lexical.py)")
     ap.add_argument("--drop-nonsense", action="store_true", dest="drop_nonsense",
                     help="keep only the real-word stories; full_v1.5_default.csv "
