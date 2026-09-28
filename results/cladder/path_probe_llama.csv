@@ -1,0 +1,5 @@
+test,predicted,estimate_pp,ci_lo,ci_hi,p_boot,p_holm,p_min_seeds,p_max_seeds,n_cells,n_items,verdict
+PP2,negative,-18.43,-23.68,-12.68,0.0005,0.001,0.0005,0.0005,548,161,confirmed
+PP3,positive,5.93,-13.3,23.79,0.536,0.536,0.4875,0.536,572,163,not confirmed
+PP2 without instruction,descriptive,-17.4,-22.54,-12.48,0.0005,,0.0005,0.0005,546,161,no verdict
+"PP2, unparsed probe answers read by their opening yes/no (not registered)",descriptive,-18.43,-23.68,-12.68,0.0005,,0.0005,0.0005,548,161,no verdict

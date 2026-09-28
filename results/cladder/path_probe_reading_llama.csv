@@ -1,0 +1,5 @@
+model,graphs,n,parsed_pct,read_correctly_pct
+meta-llama/llama-3.3-70b-instruct,correct graph,670,100.0,100.0
+meta-llama/llama-3.3-70b-instruct,"reversal, path present",648,100.0,100.0
+meta-llama/llama-3.3-70b-instruct,"reversal, no path",1202,97.09,95.12
+meta-llama/llama-3.3-70b-instruct,path-cut draws of B6,583,,95.54

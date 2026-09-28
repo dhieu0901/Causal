@@ -75,6 +75,7 @@ def units(x: pd.DataFrame) -> list[np.ndarray]:
 def boot_mean(x: pd.DataFrame, col: str, seed: int):
     """Mean over draws, items resampled with all their draws; the construction of
     analyze_answer_change.boot_groups, returning the draws as well."""
+    x = x.dropna(subset=[col])
     keys, vals = units(x), x[col].values
     d = cluster_boot(len(keys), lambda i: 100 * vals[np.concatenate([keys[j] for j in i])].mean(),
                      seed, NBOOT)
@@ -83,8 +84,8 @@ def boot_mean(x: pd.DataFrame, col: str, seed: int):
 
 def boot_diff(a: pd.DataFrame, b: pd.DataFrame, col: str, seed: int):
     """mean(a) - mean(b); items resampled once, both groups taken from the same draw."""
-    a = a.assign(_g="a")
-    b = b.assign(_g="b")
+    a = a.dropna(subset=[col]).assign(_g="a")
+    b = b.dropna(subset=[col]).assign(_g="b")
     x = pd.concat([a, b], ignore_index=True)
     keys = units(x)
     va, vb = x[col].values, x._g.values == "a"

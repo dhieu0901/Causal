@@ -10,6 +10,13 @@ b6,"answer changed, path cut, consistent with the stated numbers",159,,278.0,100
 b6,"answer changed, path kept, computable",12,,14.0,100.0,14.29,44.05,55.95,44.05,11.9,-0.0,21.88,0.064,
 b6,"answer changed, path kept, not computable",44,,54.0,0.0,0.0,77.47,78.4,21.6,0.93,-3.18,5.09,0.641,
 b6,M3 within graph family and query type,128,,260.0,,,,,,-28.78,-36.73,-19.81,0.0005,10.0
+b6llama,all reversals,333,,913.0,84.12,8.43,76.07,72.07,64.73,-4.0,-6.7,-1.23,0.0025,
+b6llama,estimand kept,52,,52.0,100.0,0.0,79.81,78.85,78.85,-0.96,-4.81,2.88,0.803,
+b6llama,"estimand changed, answer kept",241,,489.0,82.0,9.41,77.71,81.49,81.49,3.78,0.82,6.69,0.0125,
+b6llama,"answer changed, path cut",163,,301.0,100.0,9.63,73.26,54.98,45.02,-18.27,-23.49,-12.89,0.0005,
+b6llama,"answer changed, path kept",55,,67.0,20.9,2.99,75.37,76.12,23.88,0.75,-4.11,6.15,0.8975,
+b6llama,"answer changed, path cut, contradicted by the stated numbers",25,,29.0,100.0,100.0,74.14,41.38,58.62,-32.76,-50.0,-14.0,0.0005,
+b6llama,"answer changed, path cut, consistent with the stated numbers",158,,272.0,100.0,0.0,73.16,56.43,43.57,-16.73,-21.8,-11.45,0.0005,
 conf,items whose structure-free contrast gives the true answer,271,80.81,,,,,,,,,,,
 conf,estimand kept,50,,50.0,100.0,0.0,,,,,,,,
 conf,"estimand changed, answer kept",192,,398.0,87.69,7.79,,,,,,,,

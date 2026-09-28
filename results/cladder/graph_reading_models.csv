@@ -13,6 +13,10 @@ b6,gpt-4.1-nano,"answer changed, path cut",300,161,67.67,51.33,48.67,43.33,54.07
 b6,gpt-4.1-nano,"answer changed, path kept",63,52,69.84,70.63,29.37,,,
 b6,gpt-4.1 minus gpt-4.1-nano,"answer changed, path cut",294,159,,,19.73,13.26,26.33,0.0005
 b6,gpt-4.1-mini minus gpt-4.1-nano,"answer changed, path cut",296,159,,,13.01,6.48,19.59,0.0005
+b6llama,meta-llama/llama-3.3-70b-instruct,estimand kept,52,52,79.81,78.85,78.85,,,
+b6llama,meta-llama/llama-3.3-70b-instruct,"estimand changed, answer kept",489,241,77.71,81.49,81.49,,,
+b6llama,meta-llama/llama-3.3-70b-instruct,"answer changed, path cut",301,163,73.26,54.98,45.02,39.06,50.83,
+b6llama,meta-llama/llama-3.3-70b-instruct,"answer changed, path kept",67,55,75.37,76.12,23.88,,,
 conf,gpt-4.1,estimand kept,49,49,75.51,74.49,74.49,,,
 conf,gpt-4.1,"estimand changed, answer kept",386,188,82.25,84.2,84.2,,,
 conf,gpt-4.1,"answer changed, path cut",236,130,70.13,30.93,69.07,63.02,75.11,
