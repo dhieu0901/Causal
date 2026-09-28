@@ -1,0 +1,12 @@
+  structure source: 335 items verified against their reasoning line, 0 mismatches;
+  0 items have no reasoning line and use the per-family structure.
+  0 items with no fitting name mapping, 0 draws whose verdict depends on an automorphism - both left out.
+
+  replay check: 1850/1850 rebuilt prompts are keys in the API cache (100.0%).
+  replay check: all 2520 graphs rebuild a B6 prompt found in the API cache; 0 (item, lexicon) pairs left out
+  context: 942 rows, 307 path-cut draws on 164 items, both lexicons
+  942 (item, lexicon, graph) rows, 937 distinct prompts per model; path present in 328
+  gpt-4.1-nano: {'calls': 942, 'cached': 0, 'errors': 0, 'err_rate': 0.0, 'in_tok': 191806, 'out_tok': 127301}  spent so far 0.07 USD
+  gpt-4.1-mini: {'calls': 942, 'cached': 0, 'errors': 0, 'err_rate': 0.0, 'in_tok': 191806, 'out_tok': 134943}  spent so far 0.36 USD
+  gpt-4.1: {'calls': 942, 'cached': 0, 'errors': 0, 'err_rate': 0.0, 'in_tok': 191806, 'out_tok': 137481}  spent so far 1.84 USD
+  wrote results\cladder\raw\probe_path_context_raw.csv  (2826 rows, 1.84 USD)

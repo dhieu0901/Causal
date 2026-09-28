@@ -1,0 +1,5 @@
+test,predicted,estimate_pp,ci_lo,ci_hi,p_boot,p_holm,p_min_seeds,p_max_seeds,n_cells,n_items,verdict
+PC2,negative,-30.51,-35.82,-24.97,0.0005,0.001,0.0005,0.0005,1521,164,confirmed
+PC3,positive,25.63,2.88,48.33,0.029,0.029,0.026,0.029,1562,164,confirmed
+PC2 without instruction,descriptive,-23.05,-27.56,-18.62,0.0005,,0.0005,0.0005,1549,164,no verdict
+"PC2, unparsed probe answers read by their opening yes/no (not registered)",descriptive,-29.85,-34.82,-24.57,0.0005,,0.0005,0.0005,1645,164,no verdict

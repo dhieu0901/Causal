@@ -246,6 +246,9 @@ def run(prefix, probe_file, suffix, context=False) -> None:
                        read_correctly_pct=round(100 * x.correct.mean(), 2)))
     pd.DataFrame(rd).to_csv(RESULTS / f"path_probe_reading{suffix}.csv", index=False)
     R = pd.DataFrame(rows)
+    if context:
+        # prereg/PATH_PROBE_CONTEXT.md names the same tests PC2 and PC3
+        R["test"] = R.test.str.replace(r"^PP(\d)", r"PC\1", regex=True)
     R.to_csv(RESULTS / f"path_probe{suffix}.csv", index=False)
     print("\n  tests:")
     for r in R.itertuples():
