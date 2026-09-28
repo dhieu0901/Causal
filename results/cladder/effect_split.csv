@@ -1,0 +1,211 @@
+benchmark,family,models,test,part,estimate_pp,ci_lo,ci_hi,p_boot,n_questions
+CLadder B5,gpt,GPT-4.1 family,H1,all,2.67,-1.15,6.54,0.1685,475
+CLadder B5,gpt,GPT-4.1 family,H1,gold yes,13.13,7.34,18.96,0.0005,242
+CLadder B5,gpt,GPT-4.1 family,H1,gold no,-8.5,-12.93,-3.8,0.0005,233
+CLadder B5,gpt,GPT-4.1 family,H1,balanced,2.31,-1.53,6.0,0.215,475
+CLadder B5,gpt,GPT-4.1 family,H1,says yes,10.89,7.08,14.58,0.0005,475
+CLadder B5,gpt,GPT-4.1 family,H2,all,2.93,0.0,5.87,0.053,479
+CLadder B5,gpt,GPT-4.1 family,H2,gold yes,7.43,2.82,11.86,0.0015,244
+CLadder B5,gpt,GPT-4.1 family,H2,gold no,-1.8,-5.22,1.76,0.3335,235
+CLadder B5,gpt,GPT-4.1 family,H2,balanced,2.81,-0.09,5.7,0.0545,479
+CLadder B5,gpt,GPT-4.1 family,H2,says yes,4.69,1.74,7.57,0.004,479
+CLadder B5,gpt,GPT-4.1 family,H3a,all,-0.36,-3.21,2.37,0.817,484
+CLadder B5,gpt,GPT-4.1 family,H3a,gold yes,-4.18,-8.48,0.28,0.0675,245
+CLadder B5,gpt,GPT-4.1 family,H3a,gold no,3.67,0.15,7.31,0.043,239
+CLadder B5,gpt,GPT-4.1 family,H3a,balanced,-0.26,-3.12,2.45,0.854,484
+CLadder B5,gpt,GPT-4.1 family,H3a,says yes,-3.93,-6.76,-1.22,0.006,484
+CLadder B5,gpt,GPT-4.1 family,H3b,all,11.61,8.33,14.92,0.0005,482
+CLadder B5,gpt,GPT-4.1 family,H3b,gold yes,21.09,15.86,26.08,0.0005,245
+CLadder B5,gpt,GPT-4.1 family,H3b,gold no,1.74,-2.17,5.48,0.389,237
+CLadder B5,gpt,GPT-4.1 family,H3b,balanced,11.42,8.23,14.65,0.0005,482
+CLadder B5,gpt,GPT-4.1 family,H3b,says yes,9.9,6.64,13.22,0.0005,482
+CLadder B5,gpt,GPT-4.1 family,RAW: KEEP minus PSEUDO,all,14.36,10.94,17.89,0.0005,482
+CLadder B5,gpt,GPT-4.1 family,RAW: KEEP minus PSEUDO,gold yes,27.79,22.25,33.15,0.0005,245
+CLadder B5,gpt,GPT-4.1 family,RAW: KEEP minus PSEUDO,gold no,0.15,-3.52,3.73,0.9585,237
+CLadder B5,gpt,GPT-4.1 family,RAW: KEEP minus PSEUDO,balanced,13.97,10.74,17.26,0.0005,482
+CLadder B5,gpt,GPT-4.1 family,RAW: KEEP minus PSEUDO,says yes,14.21,10.67,17.8,0.0005,482
+CLadder B5,gpt,GPT-4.1 family,ORACLE: KEEP minus PSEUDO,all,11.68,8.35,15.05,0.0005,482
+CLadder B5,gpt,GPT-4.1 family,ORACLE: KEEP minus PSEUDO,gold yes,15.42,10.73,20.12,0.0005,245
+CLadder B5,gpt,GPT-4.1 family,ORACLE: KEEP minus PSEUDO,gold no,7.74,3.18,12.23,0.0015,237
+CLadder B5,gpt,GPT-4.1 family,ORACLE: KEEP minus PSEUDO,balanced,11.58,8.22,14.96,0.0005,482
+CLadder B5,gpt,GPT-4.1 family,ORACLE: KEEP minus PSEUDO,says yes,4.14,0.74,7.62,0.019,482
+CLadder B5,gpt,gpt-4.1-nano,H1,all,-2.64,-9.35,4.32,0.471,417
+CLadder B5,gpt,gpt-4.1-nano,H1,gold yes,6.98,-2.79,16.74,0.1805,215
+CLadder B5,gpt,gpt-4.1-nano,H1,gold no,-12.87,-22.28,-3.96,0.007,202
+CLadder B5,gpt,gpt-4.1-nano,H1,balanced,-2.95,-9.59,3.81,0.397,417
+CLadder B5,gpt,gpt-4.1-nano,H1,says yes,9.83,2.88,16.31,0.003,417
+CLadder B5,gpt,gpt-4.1-nano,H2,all,-3.84,-8.58,0.9,0.126,443
+CLadder B5,gpt,gpt-4.1-nano,H2,gold yes,-1.78,-8.89,5.33,0.669,225
+CLadder B5,gpt,gpt-4.1-nano,H2,gold no,-5.96,-12.39,0.92,0.0995,218
+CLadder B5,gpt,gpt-4.1-nano,H2,balanced,-3.87,-8.64,0.95,0.109,443
+CLadder B5,gpt,gpt-4.1-nano,H2,says yes,2.03,-2.71,6.77,0.4555,443
+CLadder B5,gpt,gpt-4.1-nano,H3a,all,-0.67,-5.11,3.78,0.792,450
+CLadder B5,gpt,gpt-4.1-nano,H3a,gold yes,-3.42,-9.83,2.99,0.3595,234
+CLadder B5,gpt,gpt-4.1-nano,H3a,gold no,2.31,-3.7,8.33,0.464,216
+CLadder B5,gpt,gpt-4.1-nano,H3a,balanced,-0.55,-5.06,3.98,0.802,450
+CLadder B5,gpt,gpt-4.1-nano,H3a,says yes,-2.89,-7.33,1.56,0.228,450
+CLadder B5,gpt,gpt-4.1-nano,H3b,all,8.06,2.83,13.29,0.003,459
+CLadder B5,gpt,gpt-4.1-nano,H3b,gold yes,12.82,4.7,20.94,0.0015,234
+CLadder B5,gpt,gpt-4.1-nano,H3b,gold no,3.11,-3.11,9.33,0.3895,225
+CLadder B5,gpt,gpt-4.1-nano,H3b,balanced,7.97,2.84,13.09,0.0025,459
+CLadder B5,gpt,gpt-4.1-nano,H3b,says yes,5.01,-0.22,10.24,0.065,459
+CLadder B5,gpt,gpt-4.1-nano,RAW: KEEP minus PSEUDO,all,9.03,4.18,14.1,0.0005,454
+CLadder B5,gpt,gpt-4.1-nano,RAW: KEEP minus PSEUDO,gold yes,15.74,8.09,22.98,0.0005,235
+CLadder B5,gpt,gpt-4.1-nano,RAW: KEEP minus PSEUDO,gold no,1.83,-4.58,8.68,0.6415,219
+CLadder B5,gpt,gpt-4.1-nano,RAW: KEEP minus PSEUDO,balanced,8.79,3.96,13.84,0.0005,454
+CLadder B5,gpt,gpt-4.1-nano,RAW: KEEP minus PSEUDO,says yes,7.27,1.98,12.34,0.0065,454
+CLadder B5,gpt,gpt-4.1-nano,ORACLE: KEEP minus PSEUDO,all,10.98,6.18,15.79,0.0005,437
+CLadder B5,gpt,gpt-4.1-nano,ORACLE: KEEP minus PSEUDO,gold yes,10.31,2.69,17.94,0.004,223
+CLadder B5,gpt,gpt-4.1-nano,ORACLE: KEEP minus PSEUDO,gold no,11.68,5.14,18.22,0.001,214
+CLadder B5,gpt,gpt-4.1-nano,ORACLE: KEEP minus PSEUDO,balanced,11.0,6.22,15.81,0.0005,437
+CLadder B5,gpt,gpt-4.1-nano,ORACLE: KEEP minus PSEUDO,says yes,-0.46,-5.49,4.58,0.887,437
+CLadder B5,gpt,gpt-4.1-mini,H1,all,8.62,3.17,14.06,0.0025,441
+CLadder B5,gpt,gpt-4.1-mini,H1,gold yes,23.79,16.3,31.72,0.0005,227
+CLadder B5,gpt,gpt-4.1-mini,H1,gold no,-7.48,-14.02,-0.93,0.0305,214
+CLadder B5,gpt,gpt-4.1-mini,H1,balanced,8.16,2.94,13.26,0.0025,441
+CLadder B5,gpt,gpt-4.1-mini,H1,says yes,15.87,10.88,21.09,0.0005,441
+CLadder B5,gpt,gpt-4.1-mini,H2,all,5.91,1.53,10.28,0.0055,457
+CLadder B5,gpt,gpt-4.1-mini,H2,gold yes,9.32,2.12,16.11,0.0105,236
+CLadder B5,gpt,gpt-4.1-mini,H2,gold no,2.26,-2.71,7.24,0.423,221
+CLadder B5,gpt,gpt-4.1-mini,H2,balanced,5.79,1.48,10.05,0.0035,457
+CLadder B5,gpt,gpt-4.1-mini,H2,says yes,3.72,-0.66,8.1,0.1095,457
+CLadder B5,gpt,gpt-4.1-mini,H3a,all,-0.21,-4.22,3.8,0.9605,474
+CLadder B5,gpt,gpt-4.1-mini,H3a,gold yes,-4.56,-10.79,1.66,0.17,241
+CLadder B5,gpt,gpt-4.1-mini,H3a,gold no,4.29,-0.43,9.44,0.104,233
+CLadder B5,gpt,gpt-4.1-mini,H3a,balanced,-0.14,-4.01,3.77,0.949,474
+CLadder B5,gpt,gpt-4.1-mini,H3a,says yes,-4.43,-8.44,-0.63,0.0315,474
+CLadder B5,gpt,gpt-4.1-mini,H3b,all,12.1,7.43,16.35,0.0005,471
+CLadder B5,gpt,gpt-4.1-mini,H3b,gold yes,24.58,17.92,31.25,0.0005,240
+CLadder B5,gpt,gpt-4.1-mini,H3b,gold no,-0.87,-6.49,4.34,0.8105,231
+CLadder B5,gpt,gpt-4.1-mini,H3b,balanced,11.86,7.35,15.9,0.0005,471
+CLadder B5,gpt,gpt-4.1-mini,H3b,says yes,12.95,8.49,17.41,0.0005,471
+CLadder B5,gpt,gpt-4.1-mini,RAW: KEEP minus PSEUDO,all,17.13,12.63,21.85,0.0005,467
+CLadder B5,gpt,gpt-4.1-mini,RAW: KEEP minus PSEUDO,gold yes,34.31,27.62,41.42,0.0005,239
+CLadder B5,gpt,gpt-4.1-mini,RAW: KEEP minus PSEUDO,gold no,-0.88,-6.14,4.39,0.812,228
+CLadder B5,gpt,gpt-4.1-mini,RAW: KEEP minus PSEUDO,balanced,16.72,12.46,21.11,0.0005,467
+CLadder B5,gpt,gpt-4.1-mini,RAW: KEEP minus PSEUDO,says yes,17.99,13.49,22.7,0.0005,467
+CLadder B5,gpt,gpt-4.1-mini,ORACLE: KEEP minus PSEUDO,all,9.11,4.22,13.78,0.0005,450
+CLadder B5,gpt,gpt-4.1-mini,ORACLE: KEEP minus PSEUDO,gold yes,11.21,3.88,18.53,0.0025,232
+CLadder B5,gpt,gpt-4.1-mini,ORACLE: KEEP minus PSEUDO,gold no,6.88,0.92,13.3,0.0345,218
+CLadder B5,gpt,gpt-4.1-mini,ORACLE: KEEP minus PSEUDO,balanced,9.04,4.35,13.69,0.0005,450
+CLadder B5,gpt,gpt-4.1-mini,ORACLE: KEEP minus PSEUDO,says yes,2.44,-2.44,7.33,0.3545,450
+CLadder B5,gpt,gpt-4.1,H1,all,1.76,-3.74,7.47,0.5405,455
+CLadder B5,gpt,gpt-4.1,H1,gold yes,8.47,-0.42,16.95,0.0675,236
+CLadder B5,gpt,gpt-4.1,H1,gold no,-5.48,-11.42,0.47,0.0925,219
+CLadder B5,gpt,gpt-4.1,H1,balanced,1.5,-3.88,7.0,0.573,455
+CLadder B5,gpt,gpt-4.1,H1,says yes,7.03,1.76,12.53,0.009,455
+CLadder B5,gpt,gpt-4.1,H2,all,6.45,2.58,10.33,0.001,465
+CLadder B5,gpt,gpt-4.1,H2,gold yes,14.23,8.37,20.5,0.0005,239
+CLadder B5,gpt,gpt-4.1,H2,gold no,-1.77,-5.75,2.21,0.461,226
+CLadder B5,gpt,gpt-4.1,H2,balanced,6.23,2.5,10.07,0.001,465
+CLadder B5,gpt,gpt-4.1,H2,says yes,8.17,4.3,12.04,0.0005,465
+CLadder B5,gpt,gpt-4.1,H3a,all,-0.21,-3.78,3.57,0.9555,476
+CLadder B5,gpt,gpt-4.1,H3a,gold yes,-4.53,-10.29,1.65,0.164,243
+CLadder B5,gpt,gpt-4.1,H3a,gold no,4.29,0.43,8.58,0.046,233
+CLadder B5,gpt,gpt-4.1,H3a,balanced,-0.12,-3.62,3.54,0.9485,476
+CLadder B5,gpt,gpt-4.1,H3a,says yes,-4.41,-7.98,-0.84,0.023,476
+CLadder B5,gpt,gpt-4.1,H3b,all,14.56,10.13,18.78,0.0005,474
+CLadder B5,gpt,gpt-4.1,H3b,gold yes,25.62,18.18,33.06,0.0005,242
+CLadder B5,gpt,gpt-4.1,H3b,gold no,3.02,-1.29,7.33,0.212,232
+CLadder B5,gpt,gpt-4.1,H3b,balanced,14.32,10.13,18.51,0.0005,474
+CLadder B5,gpt,gpt-4.1,H3b,says yes,11.6,7.17,15.82,0.0005,474
+CLadder B5,gpt,gpt-4.1,RAW: KEEP minus PSEUDO,all,16.74,12.5,21.4,0.0005,472
+CLadder B5,gpt,gpt-4.1,RAW: KEEP minus PSEUDO,gold yes,33.06,25.62,40.5,0.0005,242
+CLadder B5,gpt,gpt-4.1,RAW: KEEP minus PSEUDO,gold no,-0.43,-4.35,3.48,0.936,230
+CLadder B5,gpt,gpt-4.1,RAW: KEEP minus PSEUDO,balanced,16.31,12.29,20.54,0.0005,472
+CLadder B5,gpt,gpt-4.1,RAW: KEEP minus PSEUDO,says yes,17.16,12.71,21.61,0.0005,472
+CLadder B5,gpt,gpt-4.1,ORACLE: KEEP minus PSEUDO,all,14.81,10.52,19.31,0.0005,466
+CLadder B5,gpt,gpt-4.1,ORACLE: KEEP minus PSEUDO,gold yes,24.27,17.57,30.14,0.0005,239
+CLadder B5,gpt,gpt-4.1,ORACLE: KEEP minus PSEUDO,gold no,4.85,-0.88,10.57,0.129,227
+CLadder B5,gpt,gpt-4.1,ORACLE: KEEP minus PSEUDO,balanced,14.56,10.23,19.0,0.0005,466
+CLadder B5,gpt,gpt-4.1,ORACLE: KEEP minus PSEUDO,says yes,10.09,5.58,14.59,0.0005,466
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,H1,all,1.56,-4.02,6.93,0.6195,448
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,H1,gold yes,15.95,7.76,24.14,0.0005,232
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,H1,gold no,-13.89,-20.37,-7.87,0.0005,216
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,H1,balanced,1.03,-4.24,6.32,0.709,448
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,H1,says yes,14.96,9.6,20.09,0.0005,448
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,H2,all,0.66,-3.29,4.82,0.7775,456
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,H2,gold yes,6.36,0.42,12.29,0.0415,236
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,H2,gold no,-5.45,-10.91,0.0,0.051,220
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,H2,balanced,0.45,-3.47,4.54,0.8035,456
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,H2,says yes,5.92,1.97,9.87,0.005,456
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,H3a,all,-4.66,-8.26,-1.06,0.014,472
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,H3a,gold yes,-8.86,-14.35,-2.95,0.0045,237
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,H3a,gold no,-0.43,-5.11,4.26,0.952,235
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,H3a,balanced,-4.64,-8.28,-1.07,0.0125,472
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,H3a,says yes,-4.24,-7.84,-0.42,0.029,472
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,H3b,all,11.23,6.57,15.89,0.0005,472
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,H3b,gold yes,23.65,17.01,30.29,0.0005,241
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,H3b,gold no,-1.73,-6.93,3.46,0.569,231
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,H3b,balanced,10.96,6.5,15.37,0.0005,472
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,H3b,says yes,12.92,8.47,17.58,0.0005,472
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,RAW: KEEP minus PSEUDO,all,15.2,10.49,19.91,0.0005,467
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,RAW: KEEP minus PSEUDO,gold yes,36.97,29.41,44.12,0.0005,238
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,RAW: KEEP minus PSEUDO,gold no,-7.42,-12.66,-2.18,0.004,229
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,RAW: KEEP minus PSEUDO,balanced,14.78,10.42,19.11,0.0005,467
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,RAW: KEEP minus PSEUDO,says yes,22.48,17.77,26.98,0.0005,467
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,ORACLE: KEEP minus PSEUDO,all,14.44,9.63,19.47,0.0005,457
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,ORACLE: KEEP minus PSEUDO,gold yes,21.52,13.92,29.11,0.0005,237
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,ORACLE: KEEP minus PSEUDO,gold no,6.82,0.45,13.18,0.033,220
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,ORACLE: KEEP minus PSEUDO,balanced,14.17,9.4,19.29,0.0005,457
+CLadder B5,llama,meta-llama/llama-3.3-70b-instruct,ORACLE: KEEP minus PSEUDO,says yes,7.88,2.63,12.91,0.002,457
+CLadder B5,luna,gpt-5.6-luna,H1,all,0.0,-4.13,4.34,1.0,484
+CLadder B5,luna,gpt-5.6-luna,H1,gold yes,4.08,-3.27,11.02,0.302,245
+CLadder B5,luna,gpt-5.6-luna,H1,gold no,-4.18,-8.79,0.42,0.0835,239
+CLadder B5,luna,gpt-5.6-luna,H1,balanced,-0.05,-4.25,4.22,0.9835,484
+CLadder B5,luna,gpt-5.6-luna,H1,says yes,4.13,-0.21,8.26,0.07,484
+CLadder B5,luna,gpt-5.6-luna,H2,all,7.85,3.51,12.4,0.0005,484
+CLadder B5,luna,gpt-5.6-luna,H2,gold yes,18.78,11.02,26.53,0.0005,245
+CLadder B5,luna,gpt-5.6-luna,H2,gold no,-3.35,-7.53,0.42,0.112,239
+CLadder B5,luna,gpt-5.6-luna,H2,balanced,7.71,3.48,12.04,0.0005,484
+CLadder B5,luna,gpt-5.6-luna,H2,says yes,11.16,6.82,15.7,0.0005,484
+CLadder B5,luna,gpt-5.6-luna,H3a,all,-4.55,-8.06,-1.03,0.0135,484
+CLadder B5,luna,gpt-5.6-luna,H3a,gold yes,-10.61,-16.33,-4.9,0.0005,245
+CLadder B5,luna,gpt-5.6-luna,H3a,gold no,1.67,-2.09,5.86,0.4575,239
+CLadder B5,luna,gpt-5.6-luna,H3a,balanced,-4.47,-7.96,-1.1,0.0105,484
+CLadder B5,luna,gpt-5.6-luna,H3a,says yes,-6.2,-9.5,-2.68,0.0005,484
+CLadder B5,luna,gpt-5.6-luna,H3b,all,13.02,9.5,16.53,0.0005,484
+CLadder B5,luna,gpt-5.6-luna,H3b,gold yes,18.78,13.06,24.49,0.0005,245
+CLadder B5,luna,gpt-5.6-luna,H3b,gold no,7.11,3.77,10.88,0.0005,239
+CLadder B5,luna,gpt-5.6-luna,H3b,balanced,12.94,9.55,16.36,0.0005,484
+CLadder B5,luna,gpt-5.6-luna,H3b,says yes,5.99,2.48,9.71,0.0015,484
+CLadder B5,luna,gpt-5.6-luna,RAW: KEEP minus PSEUDO,all,13.43,9.71,17.15,0.0005,484
+CLadder B5,luna,gpt-5.6-luna,RAW: KEEP minus PSEUDO,gold yes,24.49,18.37,30.61,0.0005,245
+CLadder B5,luna,gpt-5.6-luna,RAW: KEEP minus PSEUDO,gold no,2.09,-1.26,5.44,0.2795,239
+CLadder B5,luna,gpt-5.6-luna,RAW: KEEP minus PSEUDO,balanced,13.29,9.78,16.87,0.0005,484
+CLadder B5,luna,gpt-5.6-luna,RAW: KEEP minus PSEUDO,says yes,11.36,7.64,15.29,0.0005,484
+CLadder B5,luna,gpt-5.6-luna,ORACLE: KEEP minus PSEUDO,all,13.43,9.5,17.36,0.0005,484
+CLadder B5,luna,gpt-5.6-luna,ORACLE: KEEP minus PSEUDO,gold yes,20.41,14.29,26.53,0.0005,245
+CLadder B5,luna,gpt-5.6-luna,ORACLE: KEEP minus PSEUDO,gold no,6.28,1.26,11.3,0.0135,239
+CLadder B5,luna,gpt-5.6-luna,ORACLE: KEEP minus PSEUDO,balanced,13.34,9.37,17.35,0.0005,484
+CLadder B5,luna,gpt-5.6-luna,ORACLE: KEEP minus PSEUDO,says yes,7.23,3.31,11.36,0.0005,484
+CaLM,gpt,GPT-4.1 family,C1,all,-6.89,-9.4,-4.56,0.0005,512
+CaLM,gpt,GPT-4.1 family,C1,gold yes,-1.85,-3.85,0.0,0.101,104
+CaLM,gpt,GPT-4.1 family,C1,gold no,-8.09,-11.07,-5.12,0.0005,408
+CaLM,gpt,GPT-4.1 family,C1,balanced,-4.97,-6.86,-3.14,0.0005,512
+CaLM,gpt,GPT-4.1 family,C1,says yes,6.18,3.81,8.7,0.0005,512
+CaLM,gpt,GPT-4.1 family,C2,all,6.25,4.24,8.35,0.0005,513
+CaLM,gpt,GPT-4.1 family,C2,gold yes,14.13,9.05,19.77,0.0005,103
+CaLM,gpt,GPT-4.1 family,C2,gold no,4.43,2.41,6.62,0.0005,410
+CaLM,gpt,GPT-4.1 family,C2,balanced,9.28,6.46,12.3,0.0005,513
+CaLM,gpt,GPT-4.1 family,C2,says yes,-0.95,-2.89,0.96,0.35,513
+CaLM,gpt,GPT-4.1 family,C3,all,-7.33,-9.58,-5.15,0.0005,520
+CaLM,gpt,GPT-4.1 family,C3,gold yes,-1.6,-3.03,-0.34,0.012,107
+CaLM,gpt,GPT-4.1 family,C3,gold no,-8.85,-11.55,-6.0,0.0005,413
+CaLM,gpt,GPT-4.1 family,C3,balanced,-5.23,-6.89,-3.7,0.0005,520
+CaLM,gpt,GPT-4.1 family,C3,says yes,6.66,4.51,8.85,0.0005,520
+CaLM,llama,meta-llama/llama-3.3-70b-instruct,C1,all,-3.91,-7.95,-0.22,0.041,486
+CaLM,llama,meta-llama/llama-3.3-70b-instruct,C1,gold yes,1.08,-2.17,4.76,0.776,93
+CaLM,llama,meta-llama/llama-3.3-70b-instruct,C1,gold no,-5.09,-9.77,-0.52,0.0325,393
+CaLM,llama,meta-llama/llama-3.3-70b-instruct,C1,balanced,-2.01,-5.13,0.86,0.171,486
+CaLM,llama,meta-llama/llama-3.3-70b-instruct,C1,says yes,4.32,0.67,8.13,0.0245,486
+CaLM,llama,meta-llama/llama-3.3-70b-instruct,C2,all,6.84,4.15,9.66,0.0005,497
+CaLM,llama,meta-llama/llama-3.3-70b-instruct,C2,gold yes,-0.99,-3.06,0.0,0.7455,101
+CaLM,llama,meta-llama/llama-3.3-70b-instruct,C2,gold no,8.84,5.68,12.29,0.0005,396
+CaLM,llama,meta-llama/llama-3.3-70b-instruct,C2,balanced,3.92,1.98,5.92,0.0005,497
+CaLM,llama,meta-llama/llama-3.3-70b-instruct,C2,says yes,-7.24,-10.06,-4.65,0.0005,497
+CaLM,llama,meta-llama/llama-3.3-70b-instruct,C3,all,-6.63,-10.9,-2.66,0.001,498
+CaLM,llama,meta-llama/llama-3.3-70b-instruct,C3,gold yes,0.0,0.0,0.0,1.0,98
+CaLM,llama,meta-llama/llama-3.3-70b-instruct,C3,gold no,-8.25,-13.35,-3.06,0.0015,400
+CaLM,llama,meta-llama/llama-3.3-70b-instruct,C3,balanced,-4.12,-6.75,-1.7,0.001,498
+CaLM,llama,meta-llama/llama-3.3-70b-instruct,C3,says yes,6.63,2.66,10.9,0.001,498

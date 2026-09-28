@@ -1,0 +1,24 @@
+phase,family,test,estimate_pp,ci_lo,ci_hi,ci90_lo,ci90_hi,p_boot,p_holm,p_min_seeds,p_max_seeds,n_items,n_stories,verdict,registered_verdict
+B5,gpt,H1,2.67,-2.2,7.24,,,0.2775,0.2775,0.2775,0.2935,475,37,not confirmed,not confirmed
+B5,gpt,H2,2.93,-0.15,6.42,,,0.0685,0.137,0.0635,0.08,479,37,not confirmed,not confirmed
+B5,gpt,H3a,-0.36,-4.03,3.03,-3.5,2.5,0.0067,0.022,0.0035,0.0067,484,37,confirmed,confirmed
+B5,gpt,H3b,11.61,7.74,15.28,,,0.0005,0.003,0.0005,0.0005,482,37,confirmed,confirmed
+B5,gpt,H4-KEEP,-3.05,-5.54,-0.89,,,0.0055,0.022,0.0025,0.006,290,25,confirmed,confirmed
+B5,gpt,H4-PSEUDO,-3.41,-6.02,-1.14,,,0.002,0.01,0.0005,0.0025,293,25,confirmed,confirmed
+B5,llama,H1,1.56,-3.76,7.31,,,0.571,1.0,0.571,0.5985,448,37,not confirmed,not confirmed
+B5,llama,H2,0.66,-3.21,4.55,,,0.8235,1.0,0.8155,0.8345,456,37,not confirmed,not confirmed
+B5,llama,H3a,-4.66,-9.72,-0.15,-8.97,-0.84,0.4552,1.0,0.4435,0.4552,472,37,not confirmed,not confirmed
+B5,llama,H3b,11.23,5.73,16.6,,,0.0005,0.003,0.0005,0.0005,472,37,confirmed,confirmed
+B5,llama,H4-KEEP,-0.36,-2.51,1.78,,,0.769,1.0,0.769,0.7975,276,25,not confirmed,not confirmed
+B5,llama,H4-PSEUDO,-0.19,-3.11,2.21,,,0.916,1.0,0.902,0.933,263,26,not confirmed,not confirmed
+B5,luna,H1,0.0,-5.34,4.69,,,0.9805,0.9805,0.9805,1.0,484,37,not confirmed,not confirmed
+B5,luna,H2,7.85,0.47,15.09,,,0.0355,0.1065,0.035,0.041,484,37,not confirmed,confirmed
+B5,luna,H3a,-4.55,-8.92,-0.36,-8.28,-0.98,0.4522,0.9045,0.4412,0.4532,484,37,not confirmed,not confirmed
+B5,luna,H3b,13.02,8.15,17.78,,,0.0005,0.003,0.0005,0.0005,484,37,confirmed,confirmed
+B5,luna,H4-KEEP,-6.04,-8.63,-3.51,,,0.0005,0.003,0.0005,0.0005,298,26,confirmed,confirmed
+B5,luna,H4-PSEUDO,-6.04,-8.4,-3.98,,,0.0005,0.003,0.0005,0.0005,298,26,confirmed,confirmed
+B6,gpt,M1,-27.42,-34.21,-21.89,,,0.0005,0.0025,0.0005,0.0005,335,33,confirmed,confirmed
+B6,gpt,M2,4.56,2.96,6.34,3.18,6.04,0.31,0.62,0.2963,0.3142,335,33,not confirmed,not confirmed
+B6,gpt,M3,-30.6,-36.61,-25.48,,,0.0005,0.0025,0.0005,0.0005,335,33,confirmed,confirmed
+B6,gpt,R1,-20.85,-26.51,-16.49,,,0.0005,0.0025,0.0005,0.0005,335,33,confirmed,confirmed
+B6,gpt,R2,-6.57,-10.42,-3.26,-9.87,-3.73,0.817,0.817,0.8155,0.8283,335,33,not confirmed,not confirmed

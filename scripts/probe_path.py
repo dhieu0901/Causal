@@ -25,8 +25,10 @@ item whose mappings disagree on which node is X or Y is left out.
 The graph block is describe_graph's prose, the very sentences the B6 prompt
 carried; the story, the numbers and the causal question are not shown.
 
-Writes results/cladder/raw/probe_path_raw.csv, one row per (model, item,
-lexicon, graph). scripts/analyze_path_probe.py reads it.
+Writes results/cladder/raw/probe_path_raw{tag}.csv, one row per (model, item,
+lexicon, graph). scripts/analyze_path_probe.py reads it. `--models` and
+`--tag` run the same probe on another family (prereg/B6_LLAMA.md:
+--models meta-llama/llama-3.3-70b-instruct --tag _llama).
 """
 from __future__ import annotations
 
@@ -55,7 +57,7 @@ MAX_TOKENS = 300
 # the B6 draw, exactly as prereg/B6.md and analyze_b6.B6 give it
 B6 = dict(n=340, seed=20260926, sample_kmax=1, kmax=3,
           exclude="prereg/excluded_ids_b6.txt", query_types=["ate", "ett"])
-OUT = ROOT / "results" / "cladder" / "raw" / "probe_path_raw.csv"
+RAWDIR = ROOT / "results" / "cladder" / "raw"
 ANSWER = re.compile(r"ANSWER:\s*(yes|no)\b", re.IGNORECASE)
 
 TEMPLATE = (
@@ -129,9 +131,13 @@ def main() -> int:
                          "measure answer length; not data")
     ap.add_argument("--max-usd", type=float, default=None, dest="max_usd")
     ap.add_argument("--workers", type=int, default=16)
+    ap.add_argument("--models", default=",".join(MODELS))
+    ap.add_argument("--tag", default="", help="output probe_path_raw{tag}.csv")
     ap.add_argument("--assume-out", type=float, default=None, dest="assume_out",
                     help="with --dry-run: mean output tokens per call, from the pilot")
     a = ap.parse_args()
+    models = a.models.split(",")
+    OUT = RAWDIR / f"probe_path_raw{a.tag}.csv"
     J = jobs()
     distinct = len({j["prompt"] for j in J})
     print(f"  {len(J)} (item, lexicon, graph) rows, {distinct} distinct prompts per model; "
@@ -139,7 +145,7 @@ def main() -> int:
     if a.dry_run:
         tin = sum(len(p) for p in {j["prompt"] for j in J}) / CHARS_PER_TOKEN
         tot = cap = 0.0
-        for m in MODELS:
+        for m in models:
             pi, po = PRICES_PER_M[m]
             hi = (tin * pi + distinct * MAX_TOKENS * po) / 1e6
             cap += hi
@@ -155,7 +161,7 @@ def main() -> int:
         return 0
     if a.pilot:
         P = [j for j in J if j["cond"] != "ORACLE"][:: max(1, len(J) // (4 * a.pilot))][:a.pilot]
-        for m in MODELS:
+        for m in models:
             recs = run_batch(P, m, temperature=0.0, workers=4, max_tokens=MAX_TOKENS,
                              cache=ROOT / "cache_probe_pilot")
             outs = [r["result"]["out_tok"] for r in recs if is_ok(r["result"])]
@@ -164,7 +170,7 @@ def main() -> int:
         return 0
 
     spent, rows = 0.0, []
-    for m in MODELS:
+    for m in models:
         left = None if a.max_usd is None else max(0.0, a.max_usd - spent)
         recs = run_batch(J, m, temperature=0.0, workers=a.workers, max_tokens=MAX_TOKENS,
                          max_usd=left)

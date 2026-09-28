@@ -61,6 +61,8 @@ ORDER = [
     "analyze_b5_vs_raw", "analyze_answer_change", "analyze_edge_types", "analyze_b6", "analyze_path_probe", "analyze_b8", "analyze_b7",
     "analyze_r1_chains",
     "analyze_calm_direction",
+    "analyze_graph_reading", "analyze_accuracy_cells", "analyze_story_clusters",
+    "verify_sample_labels",
     "check_consistency",
     "check_numbers", "check_pipeline_order", "verify_determinism",
 ]

@@ -25,6 +25,11 @@ Check that stops the script: the cells, averaged over models and lexicons per
 draw, must give analyze_b6.b6_draws()'s harm on every draw.
 
 Writes: results/cladder/path_probe.csv, results/cladder/path_probe_reading.csv
+
+Replication on Llama 3.3 70B (prereg/B6_LLAMA.md), once its B6 and probe
+records exist: the same cells, check and tests on pilot_raw_b6llama*.csv and
+probe_path_raw_llama.csv, written to path_probe_llama.csv and
+path_probe_reading_llama.csv.
 """
 from __future__ import annotations
 
@@ -50,13 +55,13 @@ MIN_MISREAD, MIN_ITEMS = 20, 10
 OPENING = re.compile(r"^\W*(yes|no)\b", re.IGNORECASE)
 
 
-def cells() -> pd.DataFrame:
+def cells(prefix="b6") -> pd.DataFrame:
     """One row per (model, item, lexicon, k): h and h_ni from B6's records."""
     G = draws_for("b6", Matcher(), kw=B6)
     G = G[G.lexicon == "KEEP"].set_index(["item", "cond"])[["group", "route", "gold"]]
     rows = []
     for lex in ("KEEP", "PSEUDO"):
-        d = pd.read_csv(RAW / f"pilot_raw_b6{lex}.csv")
+        d = pd.read_csv(RAW / f"pilot_raw_{prefix}{lex}.csv")
         d = d[d.parsed == 1]
         by = {c: g.drop_duplicates(["model", "item"]).set_index(["model", "item"]).correct
               for c, g in d.groupby("cond")}
@@ -75,8 +80,8 @@ def cells() -> pd.DataFrame:
     return C.join(G, on=["item", "cond"], how="inner").assign(sample="b6")
 
 
-def check(C: pd.DataFrame) -> None:
-    X = b6_draws().set_index(["item", "cond"])
+def check(C: pd.DataFrame, prefix="b6") -> None:
+    X = b6_draws(prefix=prefix).set_index(["item", "cond"])
     # b6_draws averages over models within a lexicon, then over the two lexicons
     mine = (C.groupby(["item", "cond", "lexicon"]).h.mean()
             .groupby(level=["item", "cond"]).mean())
@@ -96,13 +101,13 @@ def reading(C: pd.DataFrame, P: pd.DataFrame) -> pd.DataFrame:
 
 def lenient(P: pd.DataFrame) -> pd.DataFrame:
     """P with every unparsed answer read by its opening yes/no (text from the cache)."""
-    from probe_path import jobs
+    from probe_path import MAX_TOKENS, jobs
     from runner import read_cached
     J = pd.DataFrame(jobs())[["item", "lexicon", "cond", "prompt"]]
     U = P[P.parsed == 0].merge(J, on=["item", "lexicon", "cond"])
     fix = {}
     for r in U.itertuples():
-        rec = read_cached(r.model, 0.0, r.prompt) or {}
+        rec = read_cached(r.model, 0.0, r.prompt, max_tokens=MAX_TOKENS) or {}
         m = OPENING.search(rec.get("text", "") or "")
         if m:
             fix[(r.model, r.item, r.lexicon, r.cond)] = m.group(1).lower()
@@ -142,12 +147,22 @@ def tests(C, seed):
 
 
 def main() -> int:
-    C0 = cells()
-    check(C0)
-    f = RAW / "probe_path_raw.csv"
+    run("b6", "probe_path_raw.csv", "")
+    if (RAW / "pilot_raw_b6llamaKEEP.csv").exists():
+        print("\n" + "=" * 78)
+        print("REPLICATION on Llama 3.3 70B (prereg/B6_LLAMA.md)")
+        print("=" * 78)
+        run("b6llama", "probe_path_raw_llama.csv", "_llama")
+    return 0
+
+
+def run(prefix, probe_file, suffix) -> None:
+    C0 = cells(prefix)
+    check(C0, prefix)
+    f = RAW / probe_file
     if not f.exists():
-        print("  no probe records yet (scripts/probe_path.py)")
-        return 0
+        print(f"  no probe records yet ({probe_file}; scripts/probe_path.py)")
+        return
     P = pd.read_csv(f)
 
     # descriptive: how well each model reads path existence
@@ -169,7 +184,7 @@ def main() -> int:
         rd.append(dict(model=m, graphs="path-cut draws of B6", n=len(g), parsed_pct=None,
                        read_correctly_pct=round(100 * (g.read_shown == "no").mean(), 2)))
     RD = pd.DataFrame(rd)
-    RD.to_csv(RESULTS / "path_probe_reading.csv", index=False)
+    RD.to_csv(RESULTS / f"path_probe_reading{suffix}.csv", index=False)
     print("\n  reading of path existence, % read correctly:")
     print(RD.to_string(index=False))
 
@@ -220,16 +235,15 @@ def main() -> int:
                        + ", unparsed read by opening word (not registered)", n=len(g),
                        parsed_pct=round(100 * g.parsed.mean(), 2),
                        read_correctly_pct=round(100 * x.correct.mean(), 2)))
-    pd.DataFrame(rd).to_csv(RESULTS / "path_probe_reading.csv", index=False)
+    pd.DataFrame(rd).to_csv(RESULTS / f"path_probe_reading{suffix}.csv", index=False)
     R = pd.DataFrame(rows)
-    R.to_csv(RESULTS / "path_probe.csv", index=False)
+    R.to_csv(RESULTS / f"path_probe{suffix}.csv", index=False)
     print("\n  tests:")
     for r in R.itertuples():
         print(f"    {r.test:26s} {r.estimate_pp:+7.2f} [{r.ci_lo:+6.2f} ; {r.ci_hi:+6.2f}]  "
               f"p {r.p_min_seeds:.4f}-{r.p_max_seeds:.4f}  cells {r.n_cells}  items {r.n_items}"
               f"  {r.verdict}")
-    print("\n  wrote results/cladder/path_probe.csv, path_probe_reading.csv")
-    return 0
+    print(f"\n  wrote results/cladder/path_probe{suffix}.csv, path_probe_reading{suffix}.csv")
 
 
 if __name__ == "__main__":

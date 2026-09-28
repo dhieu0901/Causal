@@ -214,8 +214,11 @@ def correct_by(d, cond):
     return s.set_index(["model", "item"]).correct
 
 
-def b6_draws(unparsed_wrong=False) -> pd.DataFrame | None:
-    f = {lex: RAW / f"pilot_raw_b6{lex}.csv" for lex in ("KEEP", "PSEUDO")}
+def b6_draws(unparsed_wrong=False, prefix="b6", recap=None) -> pd.DataFrame | None:
+    """One row per reversal draw. `prefix` picks the records: "b6" is the
+    GPT-4.1 family, "b6llama" Llama 3.3 70B (prereg/B6_LLAMA.md); `recap`
+    replaces every answer cut off at the token cap by its re-ask."""
+    f = {lex: RAW / f"pilot_raw_{prefix}{lex}.csv" for lex in ("KEEP", "PSEUDO")}
     if not all(p.exists() for p in f.values()):
         return None
     G = draws_for("b6", Matcher(), kw=B6)
@@ -223,6 +226,11 @@ def b6_draws(unparsed_wrong=False) -> pd.DataFrame | None:
     rows = []
     for lex, p in f.items():
         d = pd.read_csv(p)
+        if recap:
+            from analyze_confirmatory import with_recap
+            d = with_recap(d, p.with_name(f"{p.stem}_recap{recap}.csv"))
+            if d is None:
+                raise SystemExit(f"{p.name}: no re-ask file for --recap {recap}")
         if unparsed_wrong:
             d = d.assign(correct=np.where(d.parsed == 1, d.correct, 0), parsed=1)
         for k in (1, 2, 3):
@@ -333,6 +341,28 @@ def probe() -> None:
     print("  wrote results/cladder/probe_direction.csv")
 
 
+def llama() -> None:
+    """prereg/B6_LLAMA.md: the five tests, unchanged, on Llama 3.3 70B."""
+    X = b6_draws(prefix="b6llama")
+    if X is None:
+        print("\n  B6 on Llama: no records yet (results/cladder/raw/pilot_raw_b6llama*.csv)")
+        return
+    print("\n" + "=" * 78)
+    print("4. REPLICATION - the five tests on Llama 3.3 70B (prereg/B6_LLAMA.md)")
+    print("=" * 78)
+    print(f"  {len(X)} reversal draws on {X.item.nunique()} items\n\n  primary")
+    rows = confirm(X, "primary")
+    print("\n  sensitivity: unparsed answers scored as wrong")
+    rows += confirm(b6_draws(unparsed_wrong=True, prefix="b6llama"), "unparsed scored as wrong")
+    print("\n  sensitivity: cut-off answers re-asked at 1500 tokens")
+    rows += confirm(b6_draws(prefix="b6llama", recap=1500), "re-asked at 1500")
+    pd.DataFrame(rows).to_csv(RESULTS / "b6_llama.csv", index=False)
+    desc = pd.DataFrame(descriptive(X))
+    desc.to_csv(RESULTS / "b6_llama_descriptive.csv", index=False)
+    print(desc.to_string(index=False))
+    print("\n  wrote results/cladder/b6_llama.csv, b6_llama_descriptive.csv")
+
+
 def main() -> int:
     check()
     X = b6_draws()
@@ -354,6 +384,7 @@ def main() -> int:
         print(desc.to_string(index=False))
         print("\n  wrote results/cladder/b6.csv, b6_descriptive.csv")
     probe()
+    llama()
     return 0
 
 

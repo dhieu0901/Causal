@@ -1,0 +1,17 @@
+sample,quantity,n_items,share_pct,n_draws,computable_pct,contradicted_pct,acc_oracle_pct,acc_dr_pct,follows_graph_pct,harm_pp,ci_lo,ci_hi,p_boot,n_strata
+b6,items whose structure-free contrast gives the true answer,335,84.18,,,,,,,,,,,
+b6,all reversals,335,,925.0,84.22,8.43,74.32,67.89,70.17,-6.43,-8.85,-4.0,0.0005,
+b6,estimand kept,53,,53.0,100.0,0.0,75.79,76.42,76.42,0.63,-1.89,3.14,0.68,
+b6,"estimand changed, answer kept",242,,493.0,82.15,9.53,78.52,83.08,83.08,4.56,2.51,6.63,0.0005,
+b6,"answer changed, path cut",164,,307.0,100.0,9.45,68.4,40.99,59.01,-27.42,-32.14,-22.48,0.0005,
+b6,"answer changed, path kept",56,,68.0,20.59,2.94,70.59,73.77,26.23,3.19,-1.06,7.58,0.1475,
+b6,"answer changed, path cut, contradicted by the stated numbers",25,,29.0,100.0,100.0,71.26,31.9,68.1,-39.37,-48.68,-29.01,0.0005,
+b6,"answer changed, path cut, consistent with the stated numbers",159,,278.0,100.0,0.0,68.11,41.94,58.06,-26.17,-31.15,-21.11,0.0005,
+b6,"answer changed, path kept, computable",12,,14.0,100.0,14.29,44.05,55.95,44.05,11.9,-0.0,21.88,0.064,
+b6,"answer changed, path kept, not computable",44,,54.0,0.0,0.0,77.47,78.4,21.6,0.93,-3.18,5.09,0.641,
+b6,M3 within graph family and query type,128,,260.0,,,,,,-28.78,-36.73,-19.81,0.0005,10.0
+conf,items whose structure-free contrast gives the true answer,271,80.81,,,,,,,,,,,
+conf,estimand kept,50,,50.0,100.0,0.0,,,,,,,,
+conf,"estimand changed, answer kept",192,,398.0,87.69,7.79,,,,,,,,
+conf,"answer changed, path cut",132,,239.0,100.0,9.21,,,,,,,,
+conf,"answer changed, path kept",47,,57.0,8.77,0.0,,,,,,,,

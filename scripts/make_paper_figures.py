@@ -3,7 +3,9 @@
     python scripts/make_paper_figures.py
 
   fig_prereg.pdf      the six pre-registered tests of B5 on three families
-                      (confirmatory.csv, primary rows), estimate and 95% CI
+                      (confirmatory.csv, primary rows), estimate and 95% CI; for
+                      H3a, an equivalence test, the 90% interval that its two
+                      one-sided tests at 0.05 correspond to
   fig_harm_groups.pdf where the harm of a reversed edge lives, per model, on the
                       ate and ett items of B5 (b7_descriptive.csv, part 3)
   fig_edge_types.pdf  reversed, deleted and spurious edges by group, price400,
@@ -84,21 +86,22 @@ def fig_prereg():
     d = d[d.analysis.eq("primary")]
     tests = [("H1", "H1  graph offsets anonymised names"),
              ("H2", "H2  correct graph beats one reversal"),
-             ("H3a", "H3a  wrong prior vs unrelated words"),
+             ("H3a", "H3a  unrelated words vs permuted (90% CI)"),
              ("H3b", "H3b  real names vs symbols"),
              ("H4-KEEP", "H4  slope per reversal, real names"),
              ("H4-PSEUDO", "H4  slope per reversal, anonymised")]
-    fams = [("gpt", "GPT-4.1 (three models)"), ("luna", "gpt-5.6-luna"), ("llama", "Llama 3.3 70B")]
+    fams = [("gpt", "GPT-4.1 family (mean of 3)"), ("luna", "gpt-5.6-luna"), ("llama", "Llama 3.3 70B")]
     rows = []
     for t, _ in tests:
         per = []
+        cols = ["estimate_pp", "ci90_lo", "ci90_hi"] if t == "H3a" else ["estimate_pp", "ci_lo", "ci_hi"]
         for f, _ in fams:
             r = d[d.family.eq(f) & d.test.eq(t)]
-            per.append(None if r.empty else tuple(r.iloc[0][["estimate_pp", "ci_lo", "ci_hi"]]))
+            per.append(None if r.empty else tuple(float(x) for x in r.iloc[0][cols]))
         rows.append(per)
     fig, ax = plt.subplots(figsize=(5.2, 2.9))
     dotplot(ax, rows, [n for _, n in fams], [n for _, n in tests],
-            "estimate, percentage points (95% CI)", band=(-5, 5, 2))
+            "estimate, percentage points (95% CI; H3a 90%)", band=(-5, 5, 2))
     save(fig, "fig_prereg.pdf")
 
 

@@ -1,0 +1,21 @@
+model,group,n_draws,n_items,acc_oracle_pct,acc_dr_pct,follows_graph_pct
+gpt-4.1,estimand kept,49,49,75.51,74.49,74.49
+gpt-4.1,"estimand changed, answer kept",386,188,82.25,84.2,84.2
+gpt-4.1,"answer changed, path cut",236,130,70.13,30.93,69.07
+gpt-4.1,"answer changed, path kept",55,46,76.36,79.09,20.91
+gpt-4.1-mini,estimand kept,50,50,76.0,76.0,76.0
+gpt-4.1-mini,"estimand changed, answer kept",394,191,85.41,85.28,85.28
+gpt-4.1-mini,"answer changed, path cut",238,131,71.22,35.5,64.5
+gpt-4.1-mini,"answer changed, path kept",57,47,72.81,76.32,23.68
+gpt-4.1-nano,estimand kept,50,50,74.0,73.0,73.0
+gpt-4.1-nano,"estimand changed, answer kept",387,189,74.42,79.46,79.46
+gpt-4.1-nano,"answer changed, path cut",237,131,69.83,54.43,45.57
+gpt-4.1-nano,"answer changed, path kept",55,45,70.91,72.73,27.27
+gpt-5.6-luna,estimand kept,50,50,78.0,77.0,77.0
+gpt-5.6-luna,"estimand changed, answer kept",398,192,83.79,87.31,87.31
+gpt-5.6-luna,"answer changed, path cut",239,132,76.15,7.11,92.89
+gpt-5.6-luna,"answer changed, path kept",57,47,80.7,59.65,40.35
+meta-llama/llama-3.3-70b-instruct,estimand kept,48,48,78.12,80.21,80.21
+meta-llama/llama-3.3-70b-instruct,"estimand changed, answer kept",392,191,79.46,79.46,79.46
+meta-llama/llama-3.3-70b-instruct,"answer changed, path cut",239,132,75.1,54.81,45.19
+meta-llama/llama-3.3-70b-instruct,"answer changed, path kept",57,47,82.46,82.46,17.54

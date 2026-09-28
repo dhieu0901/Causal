@@ -257,10 +257,13 @@ def answer(value, polarity):
 
 
 # ------------------------------------------------------------ per sample
-def draws_for(tag, M, kw=None, lexicons=("KEEP", "PSEUDO"), arms=("DR",)):
+def draws_for(tag, M, kw=None, lexicons=("KEEP", "PSEUDO"), arms=("DR",), per_draw=None):
     """One row per draw on an ate/ett item, reversals by default. `kw` defaults
     to the sample's entry in SAMPLES; analyze_r1_chains.py passes the lex
-    sample's. analyze_edge_types.py passes arms=("DR", "ED", "FE")."""
+    sample's. analyze_edge_types.py passes arms=("DR", "ED", "FE").
+    analyze_graph_reading.py passes `per_draw(item_row, scms, shown_graphs,
+    latent, true_graph) -> dict`, whose fields are added to each row; without
+    it the rows are exactly as before."""
     kw = kw or SAMPLES[tag][0]
     items = make_items(kw["n_items"], kw["seed"], kw["sample_kmax"], "full_v1.5_default.csv",
                        None, True, kw["exclude_ids"], kw.get("query_types"))
@@ -325,7 +328,9 @@ def draws_for(tag, M, kw=None, lexicons=("KEEP", "PSEUDO"), arms=("DR",)):
                          estimand_unchanged=x.estimand_unchanged, route=route,
                          implied_answer=ans, gold=gold,
                          gold_is_true_answer=true_ans == {gold}, n_scm=len(per),
-                         group=group))
+                         group=group,
+                         **(per_draw(r, per, x.shown_sym, latent, canon[r.graph_id])
+                            if per_draw else {})))
     return pd.DataFrame(rows)
 
 
