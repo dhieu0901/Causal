@@ -16,13 +16,24 @@ Exploratory sensitivity analyses, added after the registered ones.
      CaLM's registered tests already resample stories.
   2. PRIOR. CLadder labels each real-word question commonsense (with its easy
      and hard difficulty tags) or anticommonsense, where the names are real
-     but the story's causal direction is implausible. If real names help only
-     because they carry a correct prior, the gain over symbols should shrink
-     or vanish on anticommonsense questions. H3b and KEEP minus PSEUDO are
-     split by that label, questions resampled as registered, with the
-     difference between the two groups.
+     but the named effect is implausible. If real names help only because
+     they carry a correct prior, the gain over symbols should shrink or
+     vanish on anticommonsense questions. H3b and KEEP minus PSEUDO are
+     split by that label, with the difference between the two groups. Every
+     story of the sample comes in both versions (the anticommonsense one
+     swaps one name), so the questions of one story share names across the
+     two groups: the intervals are given twice, questions resampled as
+     registered and stories resampled with all their questions in both
+     groups (the story columns).
+  3. PRIOR BY GOLD LABEL. Accuracy mixes a shift towards Yes with a change in
+     discrimination, and the two groups differ in their share of Yes labels.
+     So each contrast of 2 is also split by gold label within each group, with
+     its change in balanced accuracy and in the share of Yes answers, and the
+     Yes rates of both conditions. If the names carried the plausibility of
+     the effect, real names should push towards No on anticommonsense
+     questions and towards Yes on commonsense ones. Stories resampled.
 
-Writes results/cladder/story_clusters.csv and prior_split.csv.
+Writes results/cladder/story_clusters.csv, prior_split.csv and prior_yesno.csv.
 """
 from __future__ import annotations
 
@@ -40,6 +51,7 @@ import analyze_b6 as b6
 from analyze_confirmatory import (ALPHA, CONF, FAMILIES, MARGIN, SEEDS, SEVEN, TESTS,
                                   cell_item, classes, conf_data, h1_matrix, h2_matrix, holm,
                                   paired_causal)
+from analyze_querygroup import ARITH, IDENT
 from pilot import read_ids
 from stats import boot_p, cluster_boot
 
@@ -153,58 +165,148 @@ def collect(phase, family, per_seed, registered):
 
 
 # ---------------------------------------------------------------- 2. prior
+GROUPS = ("commonsense", "anticommonsense")
+
+
+def with_yes(d):
+    return d.assign(yes=(d.pred.astype(str).str.lower() == "yes").astype(float))
+
+
+def pair(hi, lo, models, cond, col, causal_only):
+    """hi and lo per (item, model) on the questions both answered; NaN elsewhere.
+    causal_only=True is cell_item's filter (step_df), False is the plain
+    parsed filter of the KEEP minus PSEUDO contrasts."""
+    def cell(d, m):
+        x = d[(d.model == m) & (d.cond == cond) & (d.parsed == 1)]
+        if causal_only:
+            x = x[~x.query_type.isin(ARITH | IDENT)]
+        return x.set_index("item")[col]
+    H, L = [], []
+    for m in models:
+        x, y = cell(hi, m), cell(lo, m)
+        i = x.index.intersection(y.index)
+        if len(i):
+            H.append(pd.Series(x[i].values, index=i, name=m))
+            L.append(pd.Series(y[i].values, index=i, name=m))
+    H, L = pd.concat(H, axis=1), pd.concat(L, axis=1)
+    # step_df sorts its rows and the KEEP minus PSEUDO matrices did not; the
+    # question bootstrap depends on row order, so each keeps its own.
+    return (H.sort_index(), L.sort_index()) if causal_only else (H, L)
+
+
+def story_draws(stat, st):
+    """stat(rows) over stories resampled with all their rows; st = story per row."""
+    stories = sorted(set(st))
+    idx = [np.flatnonzero(st == x) for x in stories]
+    return cluster_boot(len(idx), lambda i: stat(np.concatenate([idx[j] for j in i])),
+                        SEEDS[0], NBOOT)
+
+
+def ci(d):
+    d = np.asarray(d, dtype=float)
+    d = d[np.isfinite(d)]
+    return round(np.percentile(d, 2.5), 2), round(np.percentile(d, 97.5), 2), round(boot_p(d, NBOOT), 4)
+
+
 def prior_rows(family, models, prefix):
     S = conf_data(prefix, None)
-    K, P, Lad = S["main"]["KEEP"], S["main"]["PSEUDO"], S["ladder"]
-    qp = K.drop_duplicates("item").set_index("item").question_property
-    cls = qp.map(lambda q: "commonsense" if q in PLAUSIBLE else q)
+    K, P, Lad = (with_yes(S["main"]["KEEP"]), with_yes(S["main"]["PSEUDO"]),
+                 {k: with_yes(v) for k, v in S["ladder"].items()})
+    first = K.drop_duplicates("item").set_index("item")
+    cls = first.question_property.map(lambda q: "commonsense" if q in PLAUSIBLE else q)
+    story, gold = first.story_id, first.gold
 
-    def keep_minus(lo, cond):
-        cols = []
-        for m in models:
-            x = K[(K.model == m) & (K.cond == cond)]
-            y = lo[(lo.model == m) & (lo.cond == cond)]
-            x = x[x.parsed == 1].set_index("item").correct
-            y = y[y.parsed == 1].set_index("item").correct
-            i = x.index.intersection(y.index)
-            cols.append(pd.Series(x[i].values - y[i].values, index=i, name=m))
-        return pd.concat(cols, axis=1)
-
-    q = {"H3b: RAW, KEEP minus SYMBOL": step_df(Lad["KEEP"], Lad["SYMBOL"], models),
-         "RAW, KEEP minus PSEUDO": keep_minus(P, "RAW"),
-         "ORACLE, KEEP minus PSEUDO": keep_minus(P, "ORACLE")}
-    rows = []
-    for what, W in q.items():
-        W = W.loc[W.index.isin(cls.index)]
+    specs = {"H3b: RAW, KEEP minus SYMBOL": (Lad["KEEP"], Lad["SYMBOL"], "RAW", True),
+             "RAW, KEEP minus PSEUDO": (K, P, "RAW", False),
+             "ORACLE, KEEP minus PSEUDO": (K, P, "ORACLE", False)}
+    rows, yn = [], []
+    for what, (hi, lo, cond, causal) in specs.items():
+        Hc, Lc = pair(hi, lo, models, cond, "correct", causal)
+        Hy, Ly = pair(hi, lo, models, cond, "yes", causal)
+        W = (Hc - Lc).loc[lambda w: w.index.isin(cls.index)]
+        Y = (Hy - Ly).reindex(W.index)
+        Hy, Ly, Hc, Lc = (m.reindex(W.index) for m in (Hy, Ly, Hc, Lc))
         lab = np.asarray(W.index.map(cls))
-        A = {g: W.values[lab == g] for g in ("commonsense", "anticommonsense")}
+        st = np.asarray(W.index.map(story))
+        gd = np.asarray(W.index.map(gold))
+        V = W.values
+        mean = lambda M, r, g: 100 * np.nanmean(M.values[r][lab[r] == g]) if isinstance(M, pd.DataFrame) \
+            else 100 * np.nanmean(M[r][lab[r] == g])
+        allr = np.arange(len(W))
+
+        # ---- 2. the accuracy split, questions and stories resampled
+        A = {g: V[lab == g] for g in GROUPS}
         for g, a in A.items():
             d = cluster_boot(len(a), lambda i: 100 * np.nanmean(a[i]), SEEDS[0], NBOOT)
+            lo_s, hi_s, p_s = ci(story_draws(lambda r: mean(V, r, g), st))
             rows.append(dict(family=family, quantity=what, group=g, estimate_pp=round(100 * np.nanmean(a), 2),
                              ci_lo=round(np.percentile(d, 2.5), 2), ci_hi=round(np.percentile(d, 97.5), 2),
-                             p_boot=round(boot_p(d, NBOOT), 4), n_items=len(a)))
+                             p_boot=round(boot_p(d, NBOOT), 4), n_items=len(a),
+                             story_ci_lo=lo_s, story_ci_hi=hi_s, story_p_boot=p_s,
+                             n_stories=len(set(st[lab == g]))))
         a, b = A["commonsense"], A["anticommonsense"]
         rng = np.random.default_rng(SEEDS[0])
         d = np.array([100 * (np.nanmean(a[rng.integers(0, len(a), len(a))])
                              - np.nanmean(b[rng.integers(0, len(b), len(b))])) for _ in range(NBOOT)])
+        lo_s, hi_s, p_s = ci(story_draws(lambda r: mean(V, r, GROUPS[0]) - mean(V, r, GROUPS[1]), st))
         rows.append(dict(family=family, quantity=what, group="commonsense minus anticommonsense",
                          estimate_pp=round(100 * (np.nanmean(a) - np.nanmean(b)), 2),
                          ci_lo=round(np.percentile(d, 2.5), 2), ci_hi=round(np.percentile(d, 97.5), 2),
-                         p_boot=round(boot_p(d, NBOOT), 4), n_items=len(a) + len(b)))
-    return rows
+                         p_boot=round(boot_p(d, NBOOT), 4), n_items=len(a) + len(b),
+                         story_ci_lo=lo_s, story_ci_hi=hi_s, story_p_boot=p_s,
+                         n_stories=len(set(st))))
+
+        # ---- 3. by gold label, stories resampled
+        def part_stat(part, g):
+            def f(r):
+                m = lab[r] == g
+                if part in ("gold yes", "gold no"):
+                    return 100 * np.nanmean(V[r][m & (gd[r] == part.split()[1])])
+                if part == "balanced":
+                    return 50 * (np.nanmean(V[r][m & (gd[r] == "yes")]) + np.nanmean(V[r][m & (gd[r] == "no")]))
+                if part == "says yes":
+                    return 100 * np.nanmean(Y.values[r][m])
+                return 100 * np.nanmean(V[r][m])
+            return f
+
+        for part in ("all", "gold yes", "gold no", "balanced", "says yes"):
+            for g in GROUPS:
+                f = part_stat(part, g)
+                lo_s, hi_s, p_s = ci(story_draws(f, st))
+                m = lab == g
+                sel = m & (gd == part.split()[1]) if part in ("gold yes", "gold no") else m
+                r = dict(family=family, contrast=what, group=g, part=part, estimate_pp=round(f(allr), 2),
+                         ci_lo=lo_s, ci_hi=hi_s, p_boot=p_s, n_items=int(sel.sum()),
+                         n_stories=len(set(st[sel])),
+                         gold_yes_pct=round(100 * np.mean(gd[m] == "yes"), 2))
+                if part == "says yes":
+                    r |= dict(hi_pct=round(100 * np.nanmean(Hy.values[m]), 2),
+                              lo_pct=round(100 * np.nanmean(Ly.values[m]), 2))
+                elif part != "balanced":
+                    r |= dict(hi_pct=round(100 * np.nanmean(Hc.values[sel]), 2),
+                              lo_pct=round(100 * np.nanmean(Lc.values[sel]), 2))
+                yn.append(r)
+            fa, fb = part_stat(part, GROUPS[0]), part_stat(part, GROUPS[1])
+            lo_s, hi_s, p_s = ci(story_draws(lambda r: fa(r) - fb(r), st))
+            yn.append(dict(family=family, contrast=what, group="commonsense minus anticommonsense",
+                           part=part, estimate_pp=round(fa(allr) - fb(allr), 2), ci_lo=lo_s, ci_hi=hi_s,
+                           p_boot=p_s, n_items=len(W), n_stories=len(set(st))))
+    return rows, yn
 
 
 def main() -> int:
     conf = pd.read_csv(RESULTS / "confirmatory.csv")
     conf = conf[conf.analysis == "primary"]
     cls = classes(CONF["n"], CONF["seed"], read_ids(CONF["exclude"]))
-    rows, prior = [], []
+    rows, prior, prior_yn = [], [], []
     for family, (models, prefix, _) in FAMILIES.items():
         if conf_data(prefix, None) is None:
             continue
         reg = conf[conf.family == family].set_index("test").verdict.to_dict()
         rows += collect("B5", family, b5_family(family, models, prefix, cls), reg)
-        prior += prior_rows(family, models, prefix)
+        pr, yn = prior_rows(family, models, prefix)
+        prior += pr
+        prior_yn += yn
     b6reg = pd.read_csv(RESULTS / "b6.csv")
     b6reg = b6reg[b6reg.analysis == "primary"].set_index("test").verdict.to_dict()
     rows += collect("B6", "gpt", b6_stories(), b6reg)
@@ -213,11 +315,15 @@ def main() -> int:
     R.to_csv(RESULTS / "story_clusters.csv", index=False)
     P = pd.DataFrame(prior)
     P.to_csv(RESULTS / "prior_split.csv", index=False)
+    Q = pd.DataFrame(prior_yn)
+    Q.to_csv(RESULTS / "prior_yesno.csv", index=False)
     with pd.option_context("display.width", 220, "display.max_rows", 200):
         print(R.to_string(index=False))
         print()
         print(P.to_string(index=False))
-    print("\n  wrote results/cladder/story_clusters.csv, prior_split.csv")
+        print()
+        print(Q.to_string(index=False))
+    print("\n  wrote results/cladder/story_clusters.csv, prior_split.csv, prior_yesno.csv")
     return 0
 
 

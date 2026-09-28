@@ -62,7 +62,7 @@ ORDER = [
     "analyze_r1_chains",
     "analyze_calm_direction",
     "analyze_graph_reading", "analyze_accuracy_cells", "analyze_story_clusters",
-    "verify_sample_labels",
+    "verify_sample_labels", "analyze_names_premise",
     "check_consistency",
     "check_numbers", "check_pipeline_order", "verify_determinism",
 ]

@@ -15,6 +15,13 @@ PREAMBLE = ("Imagine a self-contained, hypothetical world with only the followin
 EFFECT_SENT = re.compile(
     r"\s*[A-Z][^.]*?\bhas a direct effect on\b[^.]*?\.", re.IGNORECASE)
 
+# RAW_OPEN (prereg/NAMES_PREMISE.md): the preamble without its closed-world
+# clause. CLadder's opening sentence says the world has no causal relationship
+# beyond those stated; RAW removes every stated one, so read literally a RAW
+# question implies "no effect". RAW_OPEN drops that clause and nothing else.
+CLOSED_CLAUSE = ", and without any unmentioned factors or causal relationships"
+OPEN_PREAMBLE = PREAMBLE.replace(CLOSED_CLAUSE, "")
+
 ANSWER_RULE = ("\n\nAnswer the question with a single word on the last line, "
                "in exactly this format:\nANSWER: yes\nor\nANSWER: no")
 
@@ -108,8 +115,8 @@ def list_nodes(edges, var_names: dict[str, str] | None = None) -> str:
 
 
 def build(prompt: str, condition: str, edges=None, var_names=None) -> str:
-    """condition: RAW | RAW_CLEAN | RAW_INSTR | NAMES_ONLY | ORACLE | PERTURB (edges) | PROSE,
-    and ORACLE_NI | PERTURB_NI.
+    """condition: RAW | RAW_CLEAN | RAW_INSTR | RAW_OPEN | NAMES_ONLY | ORACLE | PERTURB (edges)
+    | PROSE, and ORACLE_NI | PERTURB_NI.
 
     ORACLE_NI and PERTURB_NI are ORACLE and PERTURB with the closing line "Use
     this causal structure when reasoning." left out, and nothing else changed
@@ -164,6 +171,10 @@ def build(prompt: str, condition: str, edges=None, var_names=None) -> str:
     stripped, _ = strip_structure(prompt)
     if condition == "RAW":
         return stripped + ANSWER_RULE
+    if condition == "RAW_OPEN":
+        if stripped.count(PREAMBLE) != 1:
+            raise ValueError("RAW_OPEN: the preamble is not there exactly once")
+        return stripped.replace(PREAMBLE, OPEN_PREAMBLE) + ANSWER_RULE
     if condition == "RAW_CLEAN":
         # Identical to RAW wherever there is no latent sentence, so those items
         # hit RAW's cache entry and cost nothing.

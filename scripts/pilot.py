@@ -116,7 +116,7 @@ def read_ids(path) -> set[int]:
 def build_jobs(items, kmax=3, seed=0, types=("DR",), lexicon="KEEP",
                drop_residue=False, with_instr=False, with_names=False,
                with_scramble=False, with_clean_raw=False, with_noinstr=False,
-               with_uncertain=False):
+               with_uncertain=False, with_open_raw=False):
     """Every graph is built over the story's own variable names.
 
     Using the symbol DAG (X -> V2 -> Y) beside a body about husbands and wives
@@ -173,6 +173,10 @@ def build_jobs(items, kmax=3, seed=0, types=("DR",), lexicon="KEEP",
                     question_property=r.get("question_property", ""))
         jobs.append(dict(cond="PROSE", prompt=build(prompt, "PROSE"), **meta))
         jobs.append(dict(cond="RAW", prompt=build(prompt, "RAW"), **meta))
+        if with_open_raw:
+            # RAW without the preamble's closed-world clause (src/prompts.py,
+            # prereg/NAMES_PREMISE.md). Opt-in.
+            jobs.append(dict(cond="RAW_OPEN", prompt=build(prompt, "RAW_OPEN"), **meta))
         if with_clean_raw:
             # RAW without the latent-confounder sentence (src/prompts.py). Equal
             # to RAW, and so free, on every family that has no latent.
@@ -256,7 +260,8 @@ def main():
                     help="reuse the ids sampled from this split, so the two runs "
                          "are paired item by item")
     ap.add_argument("--lexicon", default="KEEP",
-                    choices=["KEEP", "PERMUTE", "IRRELEVANT", "SYMBOL", "PSEUDO"],
+                    choices=["KEEP", "PERMUTE", "IRRELEVANT", "SYMBOL", "PSEUDO",
+                             "PSEUDO_XY", "PSEUDO_THIRD"],
                     help="swap variable names within item (see src/lexical.py)")
     ap.add_argument("--drop-nonsense", action="store_true", dest="drop_nonsense",
                     help="keep only the real-word stories; full_v1.5_default.csv "
@@ -317,6 +322,9 @@ def main():
                     help="also send ORACLE and every perturbation as 'A proposed causal "
                          "structure of this world, which may contain errors, is:' with no "
                          "instruction line (B8)")
+    ap.add_argument("--open-raw", action="store_true", dest="with_open_raw",
+                    help="also send RAW without the preamble's closed-world clause "
+                         "(RAW_OPEN, prereg/NAMES_PREMISE.md)")
     ap.add_argument("--workers", type=int, default=16,
                     help="concurrent calls. Lower it when two runs share one "
                          "OpenRouter provider, which rate-limits (429) under load")
@@ -335,7 +343,7 @@ def main():
                       drop_residue=a.drop_residue, with_instr=a.with_instr,
                       with_names=a.with_names, with_scramble=a.with_scramble,
                       with_clean_raw=a.with_clean_raw, with_noinstr=a.with_noinstr,
-                      with_uncertain=a.with_uncertain)
+                      with_uncertain=a.with_uncertain, with_open_raw=a.with_open_raw)
     if a.conds:
         keep = {c.strip() for c in a.conds.split(",") if c.strip()}
         unknown = keep - {j["cond"] for j in jobs}

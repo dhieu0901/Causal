@@ -1,21 +1,35 @@
-model,group,n_draws,n_items,acc_oracle_pct,acc_dr_pct,follows_graph_pct
-gpt-4.1,estimand kept,49,49,75.51,74.49,74.49
-gpt-4.1,"estimand changed, answer kept",386,188,82.25,84.2,84.2
-gpt-4.1,"answer changed, path cut",236,130,70.13,30.93,69.07
-gpt-4.1,"answer changed, path kept",55,46,76.36,79.09,20.91
-gpt-4.1-mini,estimand kept,50,50,76.0,76.0,76.0
-gpt-4.1-mini,"estimand changed, answer kept",394,191,85.41,85.28,85.28
-gpt-4.1-mini,"answer changed, path cut",238,131,71.22,35.5,64.5
-gpt-4.1-mini,"answer changed, path kept",57,47,72.81,76.32,23.68
-gpt-4.1-nano,estimand kept,50,50,74.0,73.0,73.0
-gpt-4.1-nano,"estimand changed, answer kept",387,189,74.42,79.46,79.46
-gpt-4.1-nano,"answer changed, path cut",237,131,69.83,54.43,45.57
-gpt-4.1-nano,"answer changed, path kept",55,45,70.91,72.73,27.27
-gpt-5.6-luna,estimand kept,50,50,78.0,77.0,77.0
-gpt-5.6-luna,"estimand changed, answer kept",398,192,83.79,87.31,87.31
-gpt-5.6-luna,"answer changed, path cut",239,132,76.15,7.11,92.89
-gpt-5.6-luna,"answer changed, path kept",57,47,80.7,59.65,40.35
-meta-llama/llama-3.3-70b-instruct,estimand kept,48,48,78.12,80.21,80.21
-meta-llama/llama-3.3-70b-instruct,"estimand changed, answer kept",392,191,79.46,79.46,79.46
-meta-llama/llama-3.3-70b-instruct,"answer changed, path cut",239,132,75.1,54.81,45.19
-meta-llama/llama-3.3-70b-instruct,"answer changed, path kept",57,47,82.46,82.46,17.54
+sample,model,group,n_draws,n_items,acc_oracle_pct,acc_dr_pct,follows_graph_pct,follows_ci_lo,follows_ci_hi,p_boot
+b6,gpt-4.1,estimand kept,53,53,76.42,76.42,76.42,,,
+b6,gpt-4.1,"estimand changed, answer kept",485,238,80.52,85.57,85.57,,,
+b6,gpt-4.1,"answer changed, path cut",301,162,67.77,32.56,67.44,62.02,72.61,
+b6,gpt-4.1,"answer changed, path kept",68,56,74.26,77.94,22.06,,,
+b6,gpt-4.1-mini,estimand kept,53,53,77.36,78.3,78.3,,,
+b6,gpt-4.1-mini,"estimand changed, answer kept",489,240,82.62,85.89,85.89,,,
+b6,gpt-4.1-mini,"answer changed, path cut",302,162,71.03,38.74,61.26,55.46,66.83,
+b6,gpt-4.1-mini,"answer changed, path kept",68,56,68.38,73.53,26.47,,,
+b6,gpt-4.1-nano,estimand kept,52,52,75.96,76.92,76.92,,,
+b6,gpt-4.1-nano,"estimand changed, answer kept",489,241,73.62,78.53,78.53,,,
+b6,gpt-4.1-nano,"answer changed, path cut",300,161,67.67,51.33,48.67,43.33,54.07,
+b6,gpt-4.1-nano,"answer changed, path kept",63,52,69.84,70.63,29.37,,,
+b6,gpt-4.1 minus gpt-4.1-nano,"answer changed, path cut",294,159,,,19.73,13.26,26.33,0.0005
+b6,gpt-4.1-mini minus gpt-4.1-nano,"answer changed, path cut",296,159,,,13.01,6.48,19.59,0.0005
+conf,gpt-4.1,estimand kept,49,49,75.51,74.49,74.49,,,
+conf,gpt-4.1,"estimand changed, answer kept",386,188,82.25,84.2,84.2,,,
+conf,gpt-4.1,"answer changed, path cut",236,130,70.13,30.93,69.07,63.02,75.11,
+conf,gpt-4.1,"answer changed, path kept",55,46,76.36,79.09,20.91,,,
+conf,gpt-4.1-mini,estimand kept,50,50,76.0,76.0,76.0,,,
+conf,gpt-4.1-mini,"estimand changed, answer kept",394,191,85.41,85.28,85.28,,,
+conf,gpt-4.1-mini,"answer changed, path cut",238,131,71.22,35.5,64.5,58.23,70.85,
+conf,gpt-4.1-mini,"answer changed, path kept",57,47,72.81,76.32,23.68,,,
+conf,gpt-4.1-nano,estimand kept,50,50,74.0,73.0,73.0,,,
+conf,gpt-4.1-nano,"estimand changed, answer kept",387,189,74.42,79.46,79.46,,,
+conf,gpt-4.1-nano,"answer changed, path cut",237,131,69.83,54.43,45.57,39.78,51.25,
+conf,gpt-4.1-nano,"answer changed, path kept",55,45,70.91,72.73,27.27,,,
+conf,gpt-5.6-luna,estimand kept,50,50,78.0,77.0,77.0,,,
+conf,gpt-5.6-luna,"estimand changed, answer kept",398,192,83.79,87.31,87.31,,,
+conf,gpt-5.6-luna,"answer changed, path cut",239,132,76.15,7.11,92.89,90.33,95.34,
+conf,gpt-5.6-luna,"answer changed, path kept",57,47,80.7,59.65,40.35,,,
+conf,meta-llama/llama-3.3-70b-instruct,estimand kept,48,48,78.12,80.21,80.21,,,
+conf,meta-llama/llama-3.3-70b-instruct,"estimand changed, answer kept",392,191,79.46,79.46,79.46,,,
+conf,meta-llama/llama-3.3-70b-instruct,"answer changed, path cut",239,132,75.1,54.81,45.19,39.48,51.11,
+conf,meta-llama/llama-3.3-70b-instruct,"answer changed, path kept",57,47,82.46,82.46,17.54,,,

@@ -26,11 +26,18 @@ Three questions a reader of M1 to M3 asks:
      stops.
 
 Also: the share of items whose answer does not depend on the structure (the
-sign of P(Y | X=1) - P(Y | X=0) gives the true answer), and M3 with the
-comparison made within graph family and query type.
+sign of P(Y | X=1) - P(Y | X=0) gives the true answer), with what the correct
+graph adds under real names on those ate/ett items of B5 (ORACLE minus RAW),
+and M3 with the comparison made within graph family and query type.
 
-Samples: B6 (GPT-4.1 family, both lexicons) and the ate/ett questions of B5
-(every family). Harm is DR minus ORACLE as in analyze_b6.py; the bootstrap
+Per model (graph_reading_models.csv): the follow share on path-cut draws with
+its interval, for B5 (every family) and B6 (the three GPT-4.1 models, one
+developer, so size is the only thing that differs), and the B6 difference
+gpt-4.1 minus gpt-4.1-nano on the draws both answered.
+
+Samples: B6 (GPT-4.1 family, both lexicons; and Llama 3.3 70B once its B6
+records exist, prereg/B6_LLAMA.md) and the ate/ett questions of B5 (every
+family). Harm is DR minus ORACLE as in analyze_b6.py; the bootstrap
 resamples items with all their draws.
 
 Writes results/cladder/graph_reading.csv and graph_reading_models.csv.
@@ -225,6 +232,68 @@ def per_draw_rates(A: pd.DataFrame, D: pd.DataFrame, by_model=False) -> pd.DataF
     return lex.groupby(level=keys).mean().rename(columns={"correct": "acc_dr"}).reset_index()
 
 
+def boot_items(x, col):
+    """Mean of col over draws, items resampled with all their draws."""
+    keys = list(x.groupby("item").indices.values())
+    v = x[col].to_numpy(dtype=float)
+    d = cluster_boot(len(keys), lambda i: 100 * np.nanmean(v[np.concatenate([keys[j] for j in i])]),
+                     SEED, NBOOT)
+    return 100 * np.nanmean(v), d
+
+
+def model_rows(sample, D, A):
+    """Per model and group: accuracy under ORACLE and DR, follow share with an
+    interval on the path-cut group."""
+    Xm = D.merge(per_draw_rates(A, D, by_model=True), on=["item", "cond"])
+    out = []
+    for m, xm in Xm.groupby("model"):
+        for g, x in groups(xm).items():
+            r = dict(sample=sample, model=m, group=g, n_draws=len(x), n_items=x.item.nunique(),
+                     acc_oracle_pct=round(100 * x.acc_oracle.mean(), 2),
+                     acc_dr_pct=round(100 * x.acc_dr.mean(), 2),
+                     follows_graph_pct=round(100 * x.follows.mean(), 2))
+            if g == "answer changed, path cut":
+                e, d = boot_items(x, "follows")
+                r |= dict(follows_ci_lo=round(np.percentile(d, 2.5), 2),
+                          follows_ci_hi=round(np.percentile(d, 97.5), 2))
+            out.append(r)
+    return out, Xm
+
+
+def model_gap(sample, Xm, hi, lo):
+    """Follow share of hi minus lo on the path-cut draws both answered."""
+    x = groups(Xm)["answer changed, path cut"]
+    w = x.pivot_table(index=["item", "cond"], columns="model", values="follows").dropna(subset=[hi, lo])
+    w = w.assign(gap=w[hi] - w[lo]).reset_index()
+    e, d = boot_items(w, "gap")
+    return dict(sample=sample, model=f"{hi} minus {lo}", group="answer changed, path cut",
+                n_draws=len(w), n_items=w.item.nunique(), follows_graph_pct=round(e, 2),
+                follows_ci_lo=round(np.percentile(d, 2.5), 2),
+                follows_ci_hi=round(np.percentile(d, 97.5), 2),
+                p_boot=round(boot_p(d, NBOOT), 4))
+
+
+def oracle_gain(D5, fam, f, models):
+    """ORACLE minus RAW under real names on B5's ate/ett items, per model then
+    averaged per item; all items and split by whether the structure-free
+    contrast already gives the true answer."""
+    d = pd.read_csv(RAW / f.format("KEEP"))
+    d = d[d.model.isin(models) & (d.parsed == 1) & d.query_type.isin(["ate", "ett"])]
+    w = d[d.cond.isin(["RAW", "ORACLE"])].pivot_table(index=["item", "model"], columns="cond",
+                                                       values="correct").dropna()
+    g = (w.ORACLE - w.RAW).groupby(level="item").mean().rename("gain").reset_index()
+    naive = D5.drop_duplicates("item").set_index("item").naive_gives_true
+    g = g.assign(naive=g.item.map(naive)).dropna(subset=["naive"])
+    out = []
+    for name, x in (("all ate/ett", g), ("structure-free contrast right", g[g.naive == True]),
+                    ("structure-free contrast wrong", g[g.naive == False])):
+        e, dd = boot_items(x, "gain")
+        out.append(dict(sample="conf", quantity=f"ORACLE minus RAW, real names, {name} ({fam})",
+                        n_items=len(x), harm_pp=round(e, 2), ci_lo=round(np.percentile(dd, 2.5), 2),
+                        ci_hi=round(np.percentile(dd, 97.5), 2), p_boot=round(boot_p(dd, NBOOT), 4)))
+    return out
+
+
 # ---------------------------------------------------------------- summaries
 def groups(X: pd.DataFrame) -> dict:
     cut = (X.group == "answer changed") & (X.route == "no path")
@@ -308,6 +377,24 @@ def main() -> int:
         x = g["answer changed, path kept"]
         rows.append(row("b6", f"answer changed, path kept, {name}", x[x.computable == flag]))
     rows.append(stratified_m3(X))
+    mrows, Xg = model_rows("b6", D, answers("pilot_raw_b6{}.csv", GPT))
+    mrows.append(model_gap("b6", Xg, "gpt-4.1", "gpt-4.1-nano"))
+    mrows.append(model_gap("b6", Xg, "gpt-4.1-mini", "gpt-4.1-nano"))
+
+    # ---- B6 on Llama 3.3 70B, once its records exist (prereg/B6_LLAMA.md)
+    if all((RAW / f"pilot_raw_b6llama{lex}.csv").exists() for lex in ("KEEP", "PSEUDO")):
+        HL = b6_draws(prefix="b6llama")[["item", "cond", "h"]]
+        RL = per_draw_rates(answers("pilot_raw_b6llama{}.csv", [LLAMA]), D)
+        XL = D.merge(RL, on=["item", "cond"]).merge(HL, on=["item", "cond"], how="left")
+        rows.append(row("b6llama", "all reversals", XL))
+        for g, x in groups(XL).items():
+            rows.append(row("b6llama", g, x))
+        gl = groups(XL)["answer changed, path cut"]
+        for flag, name in ((True, "contradicted by the stated numbers"),
+                           (False, "consistent with the stated numbers")):
+            rows.append(row("b6llama", f"answer changed, path cut, {name}",
+                            gl[gl.contradicted == flag]))
+        mrows += model_rows("b6llama", D, answers("pilot_raw_b6llama{}.csv", [LLAMA]))[0]
 
     # ---- B5 ate/ett: every family, per model
     print("\n" + "=" * 78)
@@ -322,17 +409,10 @@ def main() -> int:
         rows.append(dict(sample="conf", quantity=g, n_draws=len(x), n_items=x.item.nunique(),
                          computable_pct=round(100 * x.computable.mean(), 2),
                          contradicted_pct=round(100 * x.contradicted.mean(), 2)))
-    mrows = []
     for fam, f in B5_FILES.items():
         models = {"gpt": GPT, "luna": ["gpt-5.6-luna"], "llama": [LLAMA]}[fam]
-        Rm = per_draw_rates(answers(f, models), D5, by_model=True)
-        Xm = D5.merge(Rm, on=["item", "cond"])
-        for m, xm in Xm.groupby("model"):
-            for g, x in groups(xm).items():
-                mrows.append(dict(model=m, group=g, n_draws=len(x), n_items=x.item.nunique(),
-                                  acc_oracle_pct=round(100 * x.acc_oracle.mean(), 2),
-                                  acc_dr_pct=round(100 * x.acc_dr.mean(), 2),
-                                  follows_graph_pct=round(100 * x.follows.mean(), 2)))
+        mrows += model_rows("conf", D5, answers(f, models))[0]
+        rows += oracle_gain(D5, fam, f, models)
     Rows = pd.DataFrame(rows)
     Rows.to_csv(RESULTS / "graph_reading.csv", index=False)
     M = pd.DataFrame(mrows)

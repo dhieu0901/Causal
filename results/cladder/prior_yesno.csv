@@ -1,0 +1,136 @@
+family,contrast,group,part,estimate_pp,ci_lo,ci_hi,p_boot,n_items,n_stories,gold_yes_pct,hi_pct,lo_pct
+gpt,"H3b: RAW, KEEP minus SYMBOL",commonsense,all,10.15,5.49,15.13,0.0005,254,37,46.06,79.03,68.88
+gpt,"H3b: RAW, KEEP minus SYMBOL",anticommonsense,all,13.23,7.98,18.09,0.0005,228,36,56.14,79.4,66.17
+gpt,"H3b: RAW, KEEP minus SYMBOL",commonsense minus anticommonsense,all,-3.08,-9.45,3.03,0.3475,482,37,,,
+gpt,"H3b: RAW, KEEP minus SYMBOL",commonsense,gold yes,18.31,10.26,26.35,0.0005,117,34,46.06,72.38,54.07
+gpt,"H3b: RAW, KEEP minus SYMBOL",anticommonsense,gold yes,23.66,14.67,31.38,0.0005,128,35,56.14,76.34,52.69
+gpt,"H3b: RAW, KEEP minus SYMBOL",commonsense minus anticommonsense,gold yes,-5.34,-13.26,3.63,0.2215,482,37,,,
+gpt,"H3b: RAW, KEEP minus SYMBOL",commonsense,gold no,3.04,-4.18,10.0,0.4345,137,35,46.06,84.81,81.77
+gpt,"H3b: RAW, KEEP minus SYMBOL",anticommonsense,gold no,0.0,-3.15,3.62,1.0,100,33,56.14,83.28,83.28
+gpt,"H3b: RAW, KEEP minus SYMBOL",commonsense minus anticommonsense,gold no,3.04,-5.04,11.02,0.502,482,37,,,
+gpt,"H3b: RAW, KEEP minus SYMBOL",commonsense,balanced,10.68,6.01,15.32,0.0005,254,37,46.06,,
+gpt,"H3b: RAW, KEEP minus SYMBOL",anticommonsense,balanced,11.83,6.92,15.94,0.0005,228,36,56.14,,
+gpt,"H3b: RAW, KEEP minus SYMBOL",commonsense minus anticommonsense,balanced,-1.15,-6.96,4.53,0.6855,482,37,,,
+gpt,"H3b: RAW, KEEP minus SYMBOL",commonsense,says yes,6.9,0.27,13.49,0.045,254,37,46.06,41.81,34.91
+gpt,"H3b: RAW, KEEP minus SYMBOL",anticommonsense,says yes,13.23,8.14,17.76,0.0005,228,36,56.14,50.08,36.84
+gpt,"H3b: RAW, KEEP minus SYMBOL",commonsense minus anticommonsense,says yes,-6.33,-12.92,0.14,0.058,482,37,,,
+gpt,"RAW, KEEP minus PSEUDO",commonsense,all,13.64,9.32,18.82,0.0005,254,37,46.06,79.26,65.62
+gpt,"RAW, KEEP minus PSEUDO",anticommonsense,all,15.15,9.79,20.61,0.0005,228,36,56.14,79.39,64.24
+gpt,"RAW, KEEP minus PSEUDO",commonsense minus anticommonsense,all,-1.51,-8.7,5.59,0.6835,482,37,,,
+gpt,"RAW, KEEP minus PSEUDO",commonsense,gold yes,24.86,15.51,34.69,0.0005,117,34,46.06,72.25,47.4
+gpt,"RAW, KEEP minus PSEUDO",anticommonsense,gold yes,30.54,21.45,39.03,0.0005,128,35,56.14,76.22,45.68
+gpt,"RAW, KEEP minus PSEUDO",commonsense minus anticommonsense,gold yes,-5.69,-16.04,5.36,0.2995,482,37,,,
+gpt,"RAW, KEEP minus PSEUDO",commonsense,gold no,3.62,-1.37,8.49,0.1685,137,35,46.06,85.53,81.91
+gpt,"RAW, KEEP minus PSEUDO",anticommonsense,gold no,-4.48,-8.13,-1.41,0.007,100,33,56.14,83.45,87.93
+gpt,"RAW, KEEP minus PSEUDO",commonsense minus anticommonsense,gold no,8.1,2.86,13.56,0.002,482,37,,,
+gpt,"RAW, KEEP minus PSEUDO",commonsense,balanced,14.24,9.85,19.09,0.0005,254,37,46.06,,
+gpt,"RAW, KEEP minus PSEUDO",anticommonsense,balanced,13.03,8.37,17.17,0.0005,228,36,56.14,,
+gpt,"RAW, KEEP minus PSEUDO",commonsense minus anticommonsense,balanced,1.21,-4.72,7.69,0.703,482,37,,,
+gpt,"RAW, KEEP minus PSEUDO",commonsense,says yes,9.82,3.1,16.44,0.002,254,37,46.06,41.75,31.92
+gpt,"RAW, KEEP minus PSEUDO",anticommonsense,says yes,19.09,13.69,24.96,0.0005,228,36,56.14,50.0,30.91
+gpt,"RAW, KEEP minus PSEUDO",commonsense minus anticommonsense,says yes,-9.27,-16.36,-2.54,0.006,482,37,,,
+gpt,"ORACLE, KEEP minus PSEUDO",commonsense,all,11.86,8.01,16.07,0.0005,253,37,46.25,81.92,70.06
+gpt,"ORACLE, KEEP minus PSEUDO",anticommonsense,all,11.47,6.4,16.89,0.0005,229,37,55.9,82.02,70.54
+gpt,"ORACLE, KEEP minus PSEUDO",commonsense minus anticommonsense,all,0.39,-5.34,6.29,0.8865,482,37,,,
+gpt,"ORACLE, KEEP minus PSEUDO",commonsense,gold yes,15.5,9.45,22.0,0.0005,117,34,46.25,80.85,65.35
+gpt,"ORACLE, KEEP minus PSEUDO",anticommonsense,gold yes,15.34,7.81,23.25,0.0005,128,35,55.9,79.18,63.84
+gpt,"ORACLE, KEEP minus PSEUDO",commonsense minus anticommonsense,gold yes,0.16,-8.98,9.25,0.949,482,37,,,
+gpt,"ORACLE, KEEP minus PSEUDO",commonsense,gold no,8.71,3.58,14.07,0.001,136,35,46.25,82.85,74.14
+gpt,"ORACLE, KEEP minus PSEUDO",anticommonsense,gold no,6.43,1.61,12.45,0.0095,101,34,55.9,85.71,79.29
+gpt,"ORACLE, KEEP minus PSEUDO",commonsense minus anticommonsense,gold no,2.28,-4.38,8.11,0.5095,482,37,,,
+gpt,"ORACLE, KEEP minus PSEUDO",commonsense,balanced,12.1,8.16,16.39,0.0005,253,37,46.25,,
+gpt,"ORACLE, KEEP minus PSEUDO",anticommonsense,balanced,10.89,5.94,15.87,0.0005,229,37,55.9,,
+gpt,"ORACLE, KEEP minus PSEUDO",commonsense minus anticommonsense,balanced,1.22,-4.26,6.7,0.6765,482,37,,,
+gpt,"ORACLE, KEEP minus PSEUDO",commonsense,says yes,2.54,-2.23,7.33,0.3105,253,37,46.25,46.75,44.21
+gpt,"ORACLE, KEEP minus PSEUDO",anticommonsense,says yes,5.89,1.26,10.57,0.016,229,37,55.9,51.01,45.12
+gpt,"ORACLE, KEEP minus PSEUDO",commonsense minus anticommonsense,says yes,-3.35,-10.12,3.11,0.326,482,37,,,
+llama,"H3b: RAW, KEEP minus SYMBOL",commonsense,all,9.31,2.54,16.52,0.005,247,37,45.75,80.57,71.26
+llama,"H3b: RAW, KEEP minus SYMBOL",anticommonsense,all,13.33,6.53,20.0,0.0005,225,37,56.89,80.0,66.67
+llama,"H3b: RAW, KEEP minus SYMBOL",commonsense minus anticommonsense,all,-4.02,-12.77,4.12,0.343,472,37,,,
+llama,"H3b: RAW, KEEP minus SYMBOL",commonsense,gold yes,22.12,10.38,35.09,0.0005,113,34,45.75,84.07,61.95
+llama,"H3b: RAW, KEEP minus SYMBOL",anticommonsense,gold yes,25.0,15.18,34.0,0.0005,128,35,56.89,77.34,52.34
+llama,"H3b: RAW, KEEP minus SYMBOL",commonsense minus anticommonsense,gold yes,-2.88,-16.61,11.21,0.695,472,37,,,
+llama,"H3b: RAW, KEEP minus SYMBOL",commonsense,gold no,-1.49,-9.76,6.06,0.757,134,35,45.75,77.61,79.1
+llama,"H3b: RAW, KEEP minus SYMBOL",anticommonsense,gold no,-2.06,-8.79,4.82,0.677,97,34,56.89,83.51,85.57
+llama,"H3b: RAW, KEEP minus SYMBOL",commonsense minus anticommonsense,gold no,0.57,-9.37,9.09,0.9345,472,37,,,
+llama,"H3b: RAW, KEEP minus SYMBOL",commonsense,balanced,10.32,3.43,17.72,0.0025,247,37,45.75,,
+llama,"H3b: RAW, KEEP minus SYMBOL",anticommonsense,balanced,11.47,5.13,17.8,0.0005,225,37,56.89,,
+llama,"H3b: RAW, KEEP minus SYMBOL",commonsense minus anticommonsense,balanced,-1.15,-9.15,6.4,0.764,472,37,,,
+llama,"H3b: RAW, KEEP minus SYMBOL",commonsense,says yes,10.93,3.19,19.48,0.006,247,37,45.75,50.61,39.68
+llama,"H3b: RAW, KEEP minus SYMBOL",anticommonsense,says yes,15.11,9.42,20.53,0.0005,225,37,56.89,51.11,36.0
+llama,"H3b: RAW, KEEP minus SYMBOL",commonsense minus anticommonsense,says yes,-4.18,-13.27,5.43,0.3975,472,37,,,
+llama,"RAW, KEEP minus PSEUDO",commonsense,all,11.93,3.9,20.78,0.003,243,37,45.27,80.25,68.31
+llama,"RAW, KEEP minus PSEUDO",anticommonsense,all,18.75,12.11,25.23,0.0005,224,37,57.14,80.36,61.61
+llama,"RAW, KEEP minus PSEUDO",commonsense minus anticommonsense,all,-6.82,-17.99,4.59,0.2365,467,37,,,
+llama,"RAW, KEEP minus PSEUDO",commonsense,gold yes,36.36,22.4,51.25,0.0005,110,34,45.27,83.64,47.27
+llama,"RAW, KEEP minus PSEUDO",anticommonsense,gold yes,37.5,26.45,46.94,0.0005,128,35,57.14,77.34,39.84
+llama,"RAW, KEEP minus PSEUDO",commonsense minus anticommonsense,gold yes,-1.14,-18.09,17.03,0.912,467,37,,,
+llama,"RAW, KEEP minus PSEUDO",commonsense,gold no,-8.27,-16.67,0.0,0.0545,133,35,45.27,77.44,85.71
+llama,"RAW, KEEP minus PSEUDO",anticommonsense,gold no,-6.25,-11.24,-1.0,0.044,96,34,57.14,84.38,90.62
+llama,"RAW, KEEP minus PSEUDO",commonsense minus anticommonsense,gold no,-2.02,-11.81,6.59,0.6405,467,37,,,
+llama,"RAW, KEEP minus PSEUDO",commonsense,balanced,14.05,6.1,22.9,0.0005,243,37,45.27,,
+llama,"RAW, KEEP minus PSEUDO",anticommonsense,balanced,15.62,9.66,21.13,0.0005,224,37,57.14,,
+llama,"RAW, KEEP minus PSEUDO",commonsense minus anticommonsense,balanced,-1.58,-11.23,8.52,0.7555,467,37,,,
+llama,"RAW, KEEP minus PSEUDO",commonsense,says yes,20.99,12.5,29.84,0.0005,243,37,45.27,50.21,29.22
+llama,"RAW, KEEP minus PSEUDO",anticommonsense,says yes,24.11,17.49,29.7,0.0005,224,37,57.14,50.89,26.79
+llama,"RAW, KEEP minus PSEUDO",commonsense minus anticommonsense,says yes,-3.12,-13.15,7.75,0.589,467,37,,,
+llama,"ORACLE, KEEP minus PSEUDO",commonsense,all,16.39,7.56,24.91,0.0005,238,37,47.06,81.09,64.71
+llama,"ORACLE, KEEP minus PSEUDO",anticommonsense,all,12.33,4.57,20.33,0.001,219,36,57.08,83.11,70.78
+llama,"ORACLE, KEEP minus PSEUDO",commonsense minus anticommonsense,all,4.06,-9.58,17.45,0.5855,457,37,,,
+llama,"ORACLE, KEEP minus PSEUDO",commonsense,gold yes,27.68,14.95,40.0,0.0005,112,34,47.06,83.93,56.25
+llama,"ORACLE, KEEP minus PSEUDO",anticommonsense,gold yes,16.0,5.15,27.34,0.0095,125,35,57.08,80.8,64.8
+llama,"ORACLE, KEEP minus PSEUDO",commonsense minus anticommonsense,gold yes,11.68,-5.47,28.28,0.1885,457,37,,,
+llama,"ORACLE, KEEP minus PSEUDO",commonsense,gold no,6.35,-2.61,15.15,0.208,126,35,47.06,78.57,72.22
+llama,"ORACLE, KEEP minus PSEUDO",anticommonsense,gold no,7.45,-1.25,17.31,0.1455,94,33,57.08,86.17,78.72
+llama,"ORACLE, KEEP minus PSEUDO",commonsense minus anticommonsense,gold no,-1.1,-16.44,13.03,0.908,457,37,,,
+llama,"ORACLE, KEEP minus PSEUDO",commonsense,balanced,17.01,8.26,25.62,0.0005,238,37,47.06,,
+llama,"ORACLE, KEEP minus PSEUDO",anticommonsense,balanced,11.72,4.3,19.54,0.0005,219,36,57.08,,
+llama,"ORACLE, KEEP minus PSEUDO",commonsense minus anticommonsense,balanced,5.29,-8.26,18.51,0.462,457,37,,,
+llama,"ORACLE, KEEP minus PSEUDO",commonsense,says yes,9.66,3.05,16.36,0.0035,238,37,47.06,50.84,41.18
+llama,"ORACLE, KEEP minus PSEUDO",anticommonsense,says yes,5.94,-0.95,13.54,0.1015,219,36,57.08,52.05,46.12
+llama,"ORACLE, KEEP minus PSEUDO",commonsense minus anticommonsense,says yes,3.73,-5.98,12.5,0.4505,457,37,,,
+luna,"H3b: RAW, KEEP minus SYMBOL",commonsense,all,11.42,5.66,17.27,0.0005,254,37,46.06,83.07,71.65
+luna,"H3b: RAW, KEEP minus SYMBOL",anticommonsense,all,14.78,8.2,21.46,0.0005,230,37,55.65,81.74,66.96
+luna,"H3b: RAW, KEEP minus SYMBOL",commonsense minus anticommonsense,all,-3.37,-11.19,4.67,0.402,484,37,,,
+luna,"H3b: RAW, KEEP minus SYMBOL",commonsense,gold yes,17.09,7.75,26.47,0.0005,117,34,46.06,76.07,58.97
+luna,"H3b: RAW, KEEP minus SYMBOL",anticommonsense,gold yes,20.31,8.82,31.79,0.0005,128,35,55.65,74.22,53.91
+luna,"H3b: RAW, KEEP minus SYMBOL",commonsense minus anticommonsense,gold yes,-3.22,-17.53,11.11,0.6595,484,37,,,
+luna,"H3b: RAW, KEEP minus SYMBOL",commonsense,gold no,6.57,0.0,14.97,0.0795,137,35,46.06,89.05,82.48
+luna,"H3b: RAW, KEEP minus SYMBOL",anticommonsense,gold no,7.84,3.19,12.87,0.001,102,34,55.65,91.18,83.33
+luna,"H3b: RAW, KEEP minus SYMBOL",commonsense minus anticommonsense,gold no,-1.27,-9.28,7.25,0.729,484,37,,,
+luna,"H3b: RAW, KEEP minus SYMBOL",commonsense,balanced,11.83,5.8,17.81,0.0005,254,37,46.06,,
+luna,"H3b: RAW, KEEP minus SYMBOL",anticommonsense,balanced,14.08,7.83,20.28,0.0005,230,37,55.65,,
+luna,"H3b: RAW, KEEP minus SYMBOL",commonsense minus anticommonsense,balanced,-2.25,-9.79,5.68,0.544,484,37,,,
+luna,"H3b: RAW, KEEP minus SYMBOL",commonsense,says yes,4.33,-3.45,10.85,0.261,254,37,46.06,40.94,36.61
+luna,"H3b: RAW, KEEP minus SYMBOL",anticommonsense,says yes,7.83,1.0,14.29,0.0265,230,37,55.65,45.22,37.39
+luna,"H3b: RAW, KEEP minus SYMBOL",commonsense minus anticommonsense,says yes,-3.5,-14.49,6.38,0.5105,484,37,,,
+luna,"RAW, KEEP minus PSEUDO",commonsense,all,13.78,7.81,19.78,0.0005,254,37,46.06,83.07,69.29
+luna,"RAW, KEEP minus PSEUDO",anticommonsense,all,13.04,7.87,18.99,0.0005,230,37,55.65,81.74,68.7
+luna,"RAW, KEEP minus PSEUDO",commonsense minus anticommonsense,all,0.74,-7.22,7.93,0.842,484,37,,,
+luna,"RAW, KEEP minus PSEUDO",commonsense,gold yes,24.79,10.74,37.39,0.0005,117,34,46.06,76.07,51.28
+luna,"RAW, KEEP minus PSEUDO",anticommonsense,gold yes,24.22,14.81,33.33,0.0005,128,35,55.65,74.22,50.0
+luna,"RAW, KEEP minus PSEUDO",commonsense minus anticommonsense,gold yes,0.57,-15.65,14.79,0.94,484,37,,,
+luna,"RAW, KEEP minus PSEUDO",commonsense,gold no,4.38,-1.49,10.22,0.18,137,35,46.06,89.05,84.67
+luna,"RAW, KEEP minus PSEUDO",anticommonsense,gold no,-0.98,-3.52,2.44,0.7905,102,34,55.65,91.18,92.16
+luna,"RAW, KEEP minus PSEUDO",commonsense minus anticommonsense,gold no,5.36,0.6,9.8,0.0295,484,37,,,
+luna,"RAW, KEEP minus PSEUDO",commonsense,balanced,14.58,8.09,20.72,0.0005,254,37,46.06,,
+luna,"RAW, KEEP minus PSEUDO",anticommonsense,balanced,11.62,7.07,16.69,0.0005,230,37,55.65,,
+luna,"RAW, KEEP minus PSEUDO",commonsense minus anticommonsense,balanced,2.96,-4.74,9.6,0.4345,484,37,,,
+luna,"RAW, KEEP minus PSEUDO",commonsense,says yes,9.06,0.0,17.5,0.053,254,37,46.06,40.94,31.89
+luna,"RAW, KEEP minus PSEUDO",anticommonsense,says yes,13.91,8.38,19.13,0.0005,230,37,55.65,45.22,31.3
+luna,"RAW, KEEP minus PSEUDO",commonsense minus anticommonsense,says yes,-4.86,-14.63,4.37,0.301,484,37,,,
+luna,"ORACLE, KEEP minus PSEUDO",commonsense,all,12.99,7.29,19.03,0.0005,254,37,46.06,83.86,70.87
+luna,"ORACLE, KEEP minus PSEUDO",anticommonsense,all,13.91,8.27,20.56,0.0005,230,37,55.65,85.22,71.3
+luna,"ORACLE, KEEP minus PSEUDO",commonsense minus anticommonsense,all,-0.92,-9.22,5.83,0.783,484,37,,,
+luna,"ORACLE, KEEP minus PSEUDO",commonsense,gold yes,18.8,9.26,28.72,0.0005,117,34,46.06,80.34,61.54
+luna,"ORACLE, KEEP minus PSEUDO",anticommonsense,gold yes,21.88,11.71,32.74,0.0005,128,35,55.65,83.59,61.72
+luna,"ORACLE, KEEP minus PSEUDO",commonsense minus anticommonsense,gold yes,-3.07,-17.25,9.82,0.633,484,37,,,
+luna,"ORACLE, KEEP minus PSEUDO",commonsense,gold no,8.03,0.72,15.44,0.045,137,35,46.06,86.86,78.83
+luna,"ORACLE, KEEP minus PSEUDO",anticommonsense,gold no,3.92,-2.13,10.11,0.2555,102,34,55.65,87.25,83.33
+luna,"ORACLE, KEEP minus PSEUDO",commonsense minus anticommonsense,gold no,4.11,-2.86,11.42,0.276,484,37,,,
+luna,"ORACLE, KEEP minus PSEUDO",commonsense,balanced,13.42,7.46,19.68,0.0005,254,37,46.06,,
+luna,"ORACLE, KEEP minus PSEUDO",anticommonsense,balanced,12.9,7.74,18.73,0.0005,230,37,55.65,,
+luna,"ORACLE, KEEP minus PSEUDO",commonsense minus anticommonsense,balanced,0.52,-7.09,7.06,0.917,484,37,,,
+luna,"ORACLE, KEEP minus PSEUDO",commonsense,says yes,4.33,-2.4,11.11,0.252,254,37,46.06,44.09,39.76
+luna,"ORACLE, KEEP minus PSEUDO",anticommonsense,says yes,10.43,3.55,17.76,0.004,230,37,55.65,52.17,41.74
+luna,"ORACLE, KEEP minus PSEUDO",commonsense minus anticommonsense,says yes,-6.1,-15.99,2.75,0.195,484,37,,,

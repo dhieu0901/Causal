@@ -18,7 +18,12 @@ every family) and CaLM (every family):
      change in the share of Yes answers. A pure shift towards Yes raises
      accuracy on Yes questions and lowers it on No questions by the same
      amount; a gain in discrimination raises both. The "all" row must equal
-     the published primary estimate, or the script stops.
+     the published primary estimate, or the script stops. The two halves of
+     H1 (KEEP minus PSEUDO without and with the graph) are computed on H1's
+     own questions, every (model, question) answered in all four cells, so
+     that they subtract to H1 in every column; the script checks that too.
+     The cells of 1 use every parsed answer of a cell, so differences of
+     cells need not equal a contrast.
   3. PER MODEL. H1 to H3b for each model of the GPT-4.1 family, which the
      registered tests average.
 
@@ -95,6 +100,22 @@ def did(a1, b1, a2, b2, models, col, key):
     return pd.concat(cols, axis=1).groupby(level=0).mean() if cols else None
 
 
+def halves(a1, b1, a2, b2, models, col, key):
+    """a1 - b1 and a2 - b2 per (model, key) on H1's set: every item answered
+    in all four cells, as did() uses."""
+    one, two = [], []
+    for m in models:
+        s = [d[d.model == m].drop_duplicates(key).set_index(key)[col] for d in (a1, b1, a2, b2)]
+        i = s[0].index.intersection(s[1].index).intersection(s[2].index).intersection(s[3].index)
+        if len(i) >= 10:
+            one.append(pd.Series((s[0][i] - s[1][i]).values, index=i, name=m))
+            two.append(pd.Series((s[2][i] - s[3][i]).values, index=i, name=m))
+    if not one:
+        return None, None
+    return (pd.concat(one, axis=1).groupby(level=0).mean(),
+            pd.concat(two, axis=1).groupby(level=0).mean())
+
+
 def boot(W, cluster_of=None):
     """Mean over every cell; resample rows, or clusters of rows."""
     if cluster_of is None:
@@ -163,16 +184,22 @@ def b5_rows(family, S, models, published):
         "H3b": (lambda col: per_unit(c(L["KEEP"], "RAW"), c(L["SYMBOL"], "RAW"),
                                      models, col, "item"), gold_item),
         # not registered: the cost of anonymising, with and without the graph,
-        # the two halves of H1
-        "RAW: KEEP minus PSEUDO": (lambda col: per_unit(c(K, "RAW"), c(P, "RAW"),
-                                                        models, col, "id"), gold_of),
-        "ORACLE: KEEP minus PSEUDO": (lambda col: per_unit(c(K, "ORACLE"), c(P, "ORACLE"),
-                                                           models, col, "id"), gold_of),
+        # the two halves of H1, on H1's own questions
+        "RAW: KEEP minus PSEUDO": (lambda col: halves(c(K, "RAW"), c(P, "RAW"), c(K, "ORACLE"),
+                                                      c(P, "ORACLE"), models, col, "id")[0], gold_of),
+        "ORACLE: KEEP minus PSEUDO": (lambda col: halves(c(K, "RAW"), c(P, "RAW"), c(K, "ORACLE"),
+                                                         c(P, "ORACLE"), models, col, "id")[1], gold_of),
     }
     rows = []
     for t, (build, g) in tests.items():
         rows += split_rows("CLadder B5", family, models, t, build, g,
                            published=published.get(t) if published else None)
+    # the halves must subtract to H1 in every column
+    est = {(r["test"], r["part"]): r["estimate_pp"] for r in rows}
+    for part in ("all", "gold yes", "gold no", "balanced", "says yes"):
+        gap = est[("RAW: KEEP minus PSEUDO", part)] - est[("ORACLE: KEEP minus PSEUDO", part)] - est[("H1", part)]
+        if abs(gap) > 0.011:
+            raise SystemExit(f"{family} {models}: the halves of H1 miss it by {gap:.2f} ({part})")
     return rows
 
 

@@ -72,6 +72,13 @@ IRRELEVANT_WORDS = [
 # Xname/X1/X0, V2name/V21/V20, ...
 VAR_RE = re.compile(r"^(X|Y|V\d+)(name|0|1)$")
 
+# Partial anonymisation (prereg/NAMES_PREMISE.md): PSEUDO's own pseudowords on
+# some variables only, the others keep CLadder's names. With the same words as
+# PSEUDO, KEEP, PSEUDO_XY, PSEUDO_THIRD and PSEUDO form a 2 x 2: treatment and
+# outcome named or not, crossed with the other variables named or not.
+PARTIAL = {"PSEUDO_XY": lambda v: v in ("X", "Y"),
+           "PSEUDO_THIRD": lambda v: v not in ("X", "Y")}
+
 
 @lru_cache(maxsize=1)
 def _background_index() -> dict[str, dict]:
@@ -139,6 +146,14 @@ def build_lexicon(vm: dict, lexicon: str, seed: str = "") -> dict[str, str]:
     name - otherwise part of the item would still carry a usable prior.
     """
     syms = _symbols_of(vm)
+
+    if lexicon in PARTIAL:
+        full = build_lexicon(vm, "PSEUDO", seed)
+        pick = PARTIAL[lexicon]
+        # a kept variable maps to its own phrases, so the one-pass swap consumes
+        # them whole and a replaced name inside a kept phrase is left alone
+        return {k: (w if pick(VAR_RE.match(k).group(1)) else vm[k])
+                for k, w in full.items() if k in vm}
 
     if lexicon == "PERMUTE":
         order = _derangement(len(syms), random.Random(f"permute:{seed}"))
@@ -228,7 +243,20 @@ def relabel_item(prompt: str, lexicon: str, seed: str = "") -> tuple[str, bool]:
     vm = find_mapping(prompt)
     if vm is None:
         return prompt, False
-    return relabel(prompt, vm, build_lexicon(vm, lexicon, seed))
+    new = build_lexicon(vm, lexicon, seed)
+    out, clean = relabel(prompt, vm, new)
+    if lexicon in PARTIAL:
+        # relabel() cannot test these (the kept phrases reuse the vocabulary):
+        # every replaced phrase must be gone once the kept ones are set aside,
+        # and at least one variable must be on each side.
+        gone = [vm[k] for k in new if new[k] != vm[k]]
+        kept = [vm[k] for k in new if new[k] == vm[k]]
+        rest = out
+        for ph in sorted(kept, key=len, reverse=True):
+            rest = re.sub(re.escape(ph), " ", rest, flags=re.IGNORECASE)
+        survived = any(re.search(re.escape(ph), rest, re.IGNORECASE) for ph in gone)
+        clean = bool(gone) and bool(kept) and out != prompt and not survived
+    return out, clean
 
 
 # ---------------------------------------------------------------------------
@@ -275,7 +303,7 @@ def residue(original: str, relabelled: str, lexicon: str,
     design - that is the point of the condition, not a defect). The measure is
     about SYMBOL and PSEUDO, which claim to remove real words.
     """
-    if lexicon in ("KEEP", "PERMUTE"):
+    if lexicon in ("KEEP", "PERMUTE") or lexicon in PARTIAL:
         return set()
     vocab = story_vocab(max_stories)
     before = set(WORD_RE.findall(original.lower())) & vocab
