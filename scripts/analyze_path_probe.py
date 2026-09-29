@@ -57,6 +57,24 @@ SEEDS = [20260907, 1, 2, 3, 4]
 ALPHA = 0.05
 MIN_MISREAD, MIN_ITEMS = 20, 10
 OPENING = re.compile(r"^\W*(yes|no)\b", re.IGNORECASE)
+SNAPSHOT = RAW / "analysis_response_snapshot.csv"
+
+
+def snapshot_index() -> dict[str, tuple[str, str]]:
+    """Validated public response texts, keyed exactly as runner does."""
+    if not SNAPSHOT.exists():
+        return {}
+    d = pd.read_csv(SNAPSHOT, keep_default_na=False)
+    required = {"cache_key", "model", "text"}
+    if set(d.columns) != required:
+        raise SystemExit(f"Malformed response snapshot: expected {sorted(required)}")
+    if d.cache_key.duplicated().any():
+        raise SystemExit("Malformed response snapshot: duplicate cache_key")
+    if not d.cache_key.str.fullmatch(r"[0-9a-f]{24}").all():
+        raise SystemExit("Malformed response snapshot: invalid cache_key")
+    if d.model.eq("").any() or d.text.eq("").any():
+        raise SystemExit("Malformed response snapshot: empty model or response text")
+    return {r.cache_key: (r.model, r.text) for r in d.itertuples()}
 
 
 def cells(prefix="b6") -> pd.DataFrame:
@@ -104,17 +122,39 @@ def reading(C: pd.DataFrame, P: pd.DataFrame) -> pd.DataFrame:
 
 
 def lenient(P: pd.DataFrame, context=False) -> pd.DataFrame:
-    """P with every unparsed answer read by its opening yes/no (text from the cache)."""
+    """Read every unparsed answer's opening yes/no from cache or public snapshot."""
     from probe_path import MAX_TOKENS, context_jobs, jobs
-    from runner import read_cached
-    J = pd.DataFrame(context_jobs() if context else jobs())[["item", "lexicon", "cond", "prompt"]]
+    from runner import _key, read_cached
+    J = pd.DataFrame(context_jobs(False) if context else jobs(False))[["item", "lexicon", "cond", "prompt"]]
     U = P[P.parsed == 0].merge(J, on=["item", "lexicon", "cond"])
+    if len(U) != int((P.parsed == 0).sum()):
+        raise SystemExit("Not every unparsed path-probe row has one rebuilt prompt; stopping")
+    snapshot = snapshot_index()
     fix = {}
+    missing = []
     for r in U.itertuples():
-        rec = read_cached(r.model, 0.0, r.prompt, max_tokens=MAX_TOKENS) or {}
-        m = OPENING.search(rec.get("text", "") or "")
+        rec = read_cached(r.model, 0.0, r.prompt, max_tokens=MAX_TOKENS)
+        text = rec.get("text", "") if rec else ""
+        if not text:
+            key = _key(r.model, 0.0, r.prompt, max_tokens=MAX_TOKENS).stem
+            stored = snapshot.get(key)
+            if stored and stored[0] != r.model:
+                raise SystemExit(
+                    f"Malformed response snapshot: key {key} is labelled {stored[0]}, expected {r.model}"
+                )
+            text = stored[1] if stored else ""
+        if not text:
+            missing.append((r.model, r.item, r.lexicon, r.cond))
+            continue
+        m = OPENING.search(text)
         if m:
             fix[(r.model, r.item, r.lexicon, r.cond)] = m.group(1).lower()
+    if missing:
+        example = missing[0]
+        raise SystemExit(
+            f"Missing {len(missing)} path-probe response texts; first is {example}. "
+            "Restore cache/ or rebuild the public response snapshot before analysis."
+        )
     P = P.copy()
     key = list(zip(P.model, P.item, P.lexicon, P.cond))
     new = [fix.get(k) for k in key]
@@ -174,6 +214,10 @@ def run(prefix, probe_file, suffix, context=False) -> None:
         return
     P = pd.read_csv(f)
 
+    # Resolve the cache-backed sensitivity before writing either output. A
+    # clean clone must fail closed rather than leave a partly refreshed result.
+    PL = lenient(P, context)
+
     # descriptive: how well each model reads path existence
     rd = []
     for m, g in P.groupby("model"):
@@ -201,7 +245,6 @@ def run(prefix, probe_file, suffix, context=False) -> None:
     # Not registered: gpt-4.1-nano often skips the ANSWER line when the graph has
     # a direct X -> Y edge and opens with "Yes, there is a directed path ...".
     # Read every unparsed answer by its opening yes/no instead, and redo PP2.
-    PL = lenient(P, context)
     L = reading(C0, PL)
     lp = tests(L, SEEDS[0])[0]["PP2"]
     per_l = [tests(L, s)[0]["PP2"]["p_boot"] for s in SEEDS]

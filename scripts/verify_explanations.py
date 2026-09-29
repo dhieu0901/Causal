@@ -2,7 +2,7 @@
 
     python scripts/verify_explanations.py
 
-The manuscript lists five errors in CLadder v1.5. Errors 1, 2 and 5 each have a
+The manuscript lists five release defects in CLadder v1.5. Defects 1, 2 and 5 each have a
 script; errors 3 and 4 were described only in docs/CLADDER_DATA_ERRORS.md,
 which is not part of the released repository. Review round 10 (finding P1)
 flagged that a reader could not reproduce them. This script does.
@@ -15,8 +15,7 @@ Every `marginal` item carries an explanation of the form
     0.64 > 0                                   <- the conclusion: against 0
 
   error 3  the arithmetic line uses a minus where its own formula has a plus
-  error 4  the conclusion compares with 0, which a probability always exceeds,
-           instead of with 0.5
+  error 4  the conclusion compares with 0 instead of with 0.5
 
 Positive control. If the LABELS are right and only the explanations are wrong,
 then comparing the published value with 0.5, and flipping for questions that
@@ -65,8 +64,15 @@ def main() -> int:
             "arith_sign": ar.group(1) if ar else None,
             "published_value": value,
             "conclusion_threshold": float(co.group(3)) if co else None,
-            "conclusion_reads": ("yes" if co and co.group(2) == ">" else
-                                 "no" if co else None),
+            # A comparison is not itself a yes/no answer until the polarity of
+            # the question is applied. For "less likely", value > threshold
+            # means "no"; the earlier checker ignored this and reported 790
+            # contradictions instead of 748.
+            "conclusion_reads": (
+                "yes" if co and ((co.group(2) == ">") == (polarity == "more"))
+                else "no" if co and polarity in {"more", "less"}
+                else None
+            ),
             "label_from_threshold_0_5": "yes" if pred else "no",
         })
     t = pd.DataFrame(rows)
@@ -76,8 +82,8 @@ def main() -> int:
     opposite = int(((t.conclusion_threshold == 0) & (t.conclusion_reads != t.label)).sum())
     # The explanation prints the value to two decimals, so an item showing
     # exactly 0.50 cannot be decided against a 0.5 threshold from the text.
-    # All 23 control "misses" on the first run were such items; count them
-    # apart instead of calling them mismatches.
+    # Values displayed as exactly 0.50 are undecidable from the rounded text;
+    # count them apart instead of calling them mismatches.
     undecidable = t.published_value == 0.5
     dec = t[~undecidable]
     reproduced = int((dec.label_from_threshold_0_5 == dec.label).sum())

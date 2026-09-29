@@ -51,10 +51,25 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 import pandas as pd
 from pilot import build_jobs, make_items
+from prompts import parse_answer
 
 LEXICONS = ["KEEP", "PERMUTE", "SYMBOL", "PSEUDO"]
 TIER = ["gpt-4.1-nano", "gpt-4.1-mini", "gpt-4.1"]
 CACHE = ROOT / "cache"
+SNAPSHOT = ROOT / "results" / "cladder" / "raw" / "analysis_response_snapshot.csv"
+_SNAPSHOT_TEXT = None
+
+# The raw scoring tables and the surviving cache disagree on exactly these two
+# historical rows. Both cache files predate the 24 September scoring export,
+# and the reconstructed prompts still hash to those files, so there is no
+# recoverable second text that can honestly be substituted. Keep the exception
+# explicit and fail if either side changes, or if any additional mismatch
+# appears. The released snapshot reproduces the text analyses, while the raw
+# CSV remains the source of truth for the reported accuracy analyses.
+KNOWN_SCORING_MISMATCHES = {
+    ("KEEP", "gpt-4.1", 111, "ORACLE"): ("yes", "no"),
+    ("PERMUTE", "gpt-4.1-mini", 111, "ORACLE"): ("yes", "no"),
+}
 
 # Words a model reaches for when it notices the premises fight each other. Kept
 # deliberately narrow: every stem here is an explicit statement about the text
@@ -70,12 +85,91 @@ WORD = re.compile(r"[a-z]{3,}")
 def cache_text(model, prompt, temp=0.0):
     h = hashlib.sha256(f"{model}|{temp}|{prompt}".encode()).hexdigest()[:24]
     f = CACHE / f"{h}.json"
-    if not f.exists():
+    if f.exists():
+        try:
+            return json.loads(f.read_text(encoding="utf-8")).get("text", "")
+        except json.JSONDecodeError:
+            pass
+    global _SNAPSHOT_TEXT
+    if _SNAPSHOT_TEXT is None:
+        if not SNAPSHOT.exists():
+            _SNAPSHOT_TEXT = {}
+        else:
+            snap = pd.read_csv(SNAPSHOT, keep_default_na=False)
+            required = {"cache_key", "model", "text"}
+            if not required.issubset(snap.columns):
+                raise SystemExit(f"Malformed response snapshot: expected {sorted(required)}")
+            if snap.cache_key.duplicated().any():
+                raise SystemExit("Malformed response snapshot: duplicate cache_key")
+            if not snap.cache_key.map(lambda x: bool(re.fullmatch(r"[0-9a-f]{24}", x))).all():
+                raise SystemExit("Malformed response snapshot: invalid cache_key")
+            if snap.model.eq("").any():
+                raise SystemExit("Malformed response snapshot: empty model")
+            if snap.text.eq("").any():
+                raise SystemExit("Malformed response snapshot: empty response text")
+            _SNAPSHOT_TEXT = dict(zip(snap.cache_key, zip(snap.model, snap.text)))
+    record = _SNAPSHOT_TEXT.get(h)
+    if record is None:
         return None
-    try:
-        return json.loads(f.read_text(encoding="utf-8")).get("text", "")
-    except json.JSONDecodeError:
-        return None
+    stored_model, text = record
+    if stored_model != model:
+        raise SystemExit(
+            f"Malformed response snapshot: key {h} is labelled {stored_model}, expected {model}"
+        )
+    return text
+
+
+def verify_snapshot_answers(idx) -> None:
+    """Reparse the released texts and match the predictions stored at collection.
+
+    This links the small public snapshot to the raw scoring records. It catches
+    a snapshot assembled from the wrong prompts even when every required hash
+    happens to be present.
+    """
+    if not SNAPSHOT.exists():
+        return
+    snap = pd.read_csv(SNAPSHOT, keep_default_na=False)
+    text_by_key = dict(zip(snap.cache_key, snap.text))
+    checked, bad, known_seen = 0, [], set()
+    for lex in LEXICONS:
+        raw_path = ROOT / "results" / "cladder" / "raw" / f"pilot_raw_lex{lex}.csv"
+        if not raw_path.exists():
+            raise SystemExit(f"Missing scoring record for snapshot audit: {raw_path}")
+        raw = pd.read_csv(raw_path, keep_default_na=False)
+        conditions = {"RAW", "ORACLE"} | ({"DR_k1"} if lex == "KEEP" else set())
+        for row in raw[raw.cond.isin(conditions)].itertuples():
+            prompt = idx[lex].get((row.item, row.cond))
+            if prompt is None:
+                bad.append((lex, row.model, row.item, row.cond, "prompt missing"))
+                continue
+            key = hashlib.sha256(f"{row.model}|0.0|{prompt}".encode()).hexdigest()[:24]
+            text = text_by_key.get(key)
+            if text is None:
+                bad.append((lex, row.model, row.item, row.cond, "snapshot key missing"))
+                continue
+            got = parse_answer(text) or ""
+            want = str(row.pred).strip().lower()
+            checked += 1
+            if got != want:
+                identity = (lex, row.model, row.item, row.cond)
+                if KNOWN_SCORING_MISMATCHES.get(identity) == (got, want):
+                    known_seen.add(identity)
+                else:
+                    bad.append((*identity, f"{got!r} != {want!r}"))
+    if bad:
+        sample = ", ".join("/".join(map(str, x)) for x in bad[:5])
+        raise SystemExit(f"Snapshot answer audit failed for {len(bad)} rows: {sample}")
+    missing_known = set(KNOWN_SCORING_MISMATCHES) - known_seen
+    if missing_known:
+        raise SystemExit(
+            "Snapshot answer audit changed: registered historical mismatches no longer "
+            f"reproduced: {sorted(missing_known)}"
+        )
+    matched = checked - len(known_seen)
+    print(
+        f"  snapshot answer audit: {matched}/{checked} reparsed answers match raw scoring "
+        f"records; {len(known_seen)} registered historical cache/scoring mismatches"
+    )
 
 
 def main():
@@ -92,6 +186,30 @@ def main():
     idx = {lex: {(j["item"], j["cond"]): j["prompt"] for j in jobs[lex]}
            for lex in LEXICONS}
     keys = sorted(idx["KEEP"])
+    verify_snapshot_answers(idx)
+
+    # Anomaly rates require stored model responses. A public clone reads the
+    # minimal response snapshot; the owner's machine may read cache/. Check
+    # every required response before any output file can be replaced.
+    missing = []
+    for cond in ("RAW", "ORACLE"):
+        for model in TIER:
+            for lex in LEXICONS:
+                for item, key_cond in keys:
+                    if key_cond != cond:
+                        continue
+                    prompt = idx[lex].get((item, key_cond))
+                    if prompt is not None and cache_text(model, prompt) is None:
+                        missing.append((model, lex, item, cond))
+    if missing:
+        sample = ", ".join(
+            f"{m}/{lex}/item={item}/{cond}"
+            for m, lex, item, cond in missing[:5]
+        )
+        raise SystemExit(
+            f"Missing {len(missing)} required cached responses. Refusing to "
+            f"overwrite anomaly CSVs from partial data. First missing: {sample}"
+        )
 
     print("=" * W)
     print("1. ANOMALY DETECTION: does the model SAY OUT LOUD that the item makes no sense?")
@@ -99,7 +217,7 @@ def main():
     print("  If rung 1 only 'removes a correct prior', this rate should be the same")
     print("  across lexicons. If PERMUTE separates cleanly, rung 1 changes more than")
     print("  one thing.\n")
-    rows, miss = [], 0
+    rows = []
     for cond in ["RAW", "ORACLE"]:
         for m in TIER:
             r = {"cond": cond, "model": m}
@@ -112,9 +230,7 @@ def main():
                     if p is None:
                         continue
                     t = cache_text(m, p)
-                    if t is None:
-                        miss += 1
-                        continue
+                    assert t is not None
                     tot += 1
                     ln += len(t)
                     flag += bool(FLAG.search(t))
@@ -129,9 +245,6 @@ def main():
     print("\n  -- do dai phan hoi trung binh (ky tu) --")
     print(an[["cond", "model"] + [f"{l}_len" for l in LEXICONS]].to_string(index=False))
     an.to_csv(ROOT / "results" / "cladder" / "anomaly_flag_rate.csv", index=False)
-    if miss:
-        print(f"\n  ({miss} calls not in the cache, skipped)")
-
     kp = an[[f"{l}_pct" for l in LEXICONS]].astype(float)
     print(f"\n  KEEP {kp.KEEP_pct.min():.1f}-{kp.KEEP_pct.max():.1f}%   "
           f"PERMUTE {kp.PERMUTE_pct.min():.1f}-{kp.PERMUTE_pct.max():.1f}%   "

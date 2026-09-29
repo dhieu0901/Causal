@@ -48,8 +48,7 @@ RAW = RESULTS / "raw"
 SEEDS = [20260907, 1, 2, 3, 4]
 ALPHA = 0.05
 B8 = dict(n_items=340, sample_kmax=1, kmax=3, seed=20260927,
-          exclude_ids=read_ids("prereg/excluded_ids_b8.txt"), query_types=["ate", "ett"],
-          replay_condition="PERTURB_NI")
+          query_types=["ate", "ett"], replay_condition="PERTURB_NI")
 TESTS = [("T1", "deleted edge, path cut: ED_NI minus ORACLE_NI", "negative"),
          ("T2", "spurious edge, all draws: FE_NI minus ORACLE_NI, within +-5", "within +-5"),
          ("T3", "reversal under doubt, path cut: DR_U minus ORACLE_U", "negative"),
@@ -115,7 +114,13 @@ def b8_draws(unparsed_wrong=False, files=None, kw=None, tag="b8") -> pd.DataFram
     f = files or {lex: RAW / f"pilot_raw_b8{lex}.csv" for lex in ("KEEP", "PSEUDO")}
     if not all(p.exists() for p in f.values()):
         return None
-    G = draws_for(tag, Matcher(), kw=kw or B8, arms=("DR", "ED", "FE"))
+    config = kw
+    if config is None:
+        # B8 has not been approved or run. Its preregistration and exclusion
+        # list stay private until then, so a public clone must not read either
+        # file merely to discover that no B8 response records exist.
+        config = B8 | {"exclude_ids": read_ids("prereg/excluded_ids_b8.txt")}
+    G = draws_for(tag, Matcher(), kw=config, arms=("DR", "ED", "FE"))
     rows = []
     for lex, p in f.items():
         d = pd.read_csv(p)

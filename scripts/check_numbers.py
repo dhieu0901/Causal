@@ -1,4 +1,4 @@
-"""Cross-check every effect size quoted in prose against the results CSVs.
+"""Cross-check effect sizes quoted in prose and LaTeX against the results CSVs.
 
 Why this file exists. Numbers in this project have gone stale more than once: a
 headline of +14.35 survived in the prose after the pooled reanalysis moved it to
@@ -7,14 +7,15 @@ lines below a table that contradicted it. Prose and CSV drift apart silently,
 because nothing reads both.
 
 What this does. It builds a pool of every numeric cell in results/*.csv, then
-scans the documents and scripts for quantities written as percentage points and
-asks whether each one exists in that pool. A number that matches nothing is not
+scans documents and scripts for percentage-point quantities, and scans the
+paper and slides for signed effects and confidence intervals. A number that matches nothing is not
 necessarily wrong - it may be a sample size, a count, or a figure computed inline
 and never written to disk - but it is a number no file can vouch for, and it has
 to be checked by hand.
 
-Deliberately narrow. Only quantities attached to "pp" are scanned. Widening the
-pattern to every decimal in the repository produces hundreds of false positives
+Deliberately narrow. Prose quantities must be attached to "pp". In LaTeX, a
+leading sign marks an effect estimate. Widening the pattern to every decimal
+in the repository produces hundreds of false positives
 (version numbers, seeds, section numbers, years, p values) and the report becomes
 unreadable, which is the same as having no report.
 
@@ -44,9 +45,11 @@ RESULTS = ROOT / "results"
 TOL = 0.005          # CSVs are rounded to 2 dp, so this is an exact-match window
 
 TARGETS = (sorted((ROOT / "docs").glob("*.md"))
-           + [ROOT / "README.md"]
+           + [ROOT / "docs" / "paper" / "paper.tex", ROOT / "slides.tex",
+              ROOT / "README.md"]
            + sorted((ROOT / "scripts").glob("*.py"))
            + sorted((ROOT / "src").glob("*.py")))
+TARGETS = [p for p in TARGETS if p.exists()]
 
 # A number followed by "pp" within a short window, sign optional, comma or dot.
 QUANTITY = re.compile(r"([+-]?\d{1,3}[.,]\d{1,2})\s*(?:pp\b|percentage points)")
@@ -57,7 +60,12 @@ QUANTITY = re.compile(r"([+-]?\d{1,3}[.,]\d{1,2})\s*(?:pp\b|percentage points)")
 # had moved to [-11,41 ; -3,81], and nothing in this file could see it. A CI is
 # the part a reviewer checks first, so it gets its own pattern.
 INTERVAL = re.compile(
-    r"\[\s*([+-]?\d{1,3}[.,]\d{1,2})\s*[;,]\s*([+-]?\d{1,3}[.,]\d{1,2})\s*\]")
+    r"\[\s*\$?\s*([+-]?\d{1,3}[.,]\d{1,2})\s*\$?\s*[;,]\s*"
+    r"\$?\s*([+-]?\d{1,3}[.,]\d{1,2})\s*\$?\s*\]")
+LATEX_CI = re.compile(
+    r"\\ci\{\s*([+-]?\d{1,3}[.,]\d{1,2})\s*\}"
+    r"\{\s*([+-]?\d{1,3}[.,]\d{1,2})\s*\}")
+INTERVAL_PATTERNS = (INTERVAL, LATEX_CI)
 
 SELF = Path(__file__).name
 
@@ -259,11 +267,12 @@ def scan(path: Path) -> list[tuple[int, str, float, str]]:
             raw = m.group(1)
             k = kind if kind != "LIVE" else (column_kind(lines, i, m.start(1)) or kind)
             out.append((i, raw, float(raw.replace(",", ".")), k))
-        for m in INTERVAL.finditer(line):
-            for gi in (1, 2):
-                raw = m.group(gi)
-                k = kind if kind != "LIVE" else (column_kind(lines, i, m.start(gi)) or kind)
-                out.append((i, f"CI {raw}", float(raw.replace(",", ".")), k))
+        for pattern in INTERVAL_PATTERNS:
+            for m in pattern.finditer(line):
+                for gi in (1, 2):
+                    raw = m.group(gi)
+                    k = kind if kind != "LIVE" else (column_kind(lines, i, m.start(gi)) or kind)
+                    out.append((i, f"CI {raw}", float(raw.replace(",", ".")), k))
     return out
 
 
@@ -279,7 +288,11 @@ def scan(path: Path) -> list[tuple[int, str, float, str]]:
 # written just before it - must sit in ONE ROW of ONE CSV. Three numbers landing
 # in the same row by chance is negligible, so a claim that passes this test was
 # produced by the computation it claims to come from.
-TAIL = re.compile(r"([+-]?\d{1,3}[.,]\d{1,2})\s*(?:pp)?\s*\**\s*(?:,?\s*CI\s*)?$")
+TAIL = re.compile(
+    r"(?:\$|\{|\\key\{|\\up\{|\\down\{)*"
+    r"([+-]?\d{1,3}[.,]\d{1,2})\s*\$?\s*\}*\s*(?:pp)?\s*\**\s*"
+    r"(?:,?\s*CI\s*)?$"
+)
 
 
 def row_index() -> tuple[dict[float, set[int]], dict[int, str]]:
@@ -326,20 +339,21 @@ def intervals_without_a_row(idx: dict[float, set[int]]) -> list[tuple[Path, int,
             kind = classify(lines, i)
             if kind == "LIVE" and path.suffix == ".py":
                 kind = paragraph_kind(lines, i) or kind
-            for m in INTERVAL.finditer(line):
-                k = kind if kind != "LIVE" else (column_kind(lines, i, m.start(1)) or kind)
-                if k != "LIVE":
-                    continue
-                lo, hi = f2(m.group(1)), f2(m.group(2))
-                if (lo, hi) == (2.5, 97.5):     # np.percentile(..., [2.5, 97.5])
-                    continue
-                head = line[:m.start()]
-                t = TAIL.search(head) or TAIL.search(head.rstrip(" |*"))
-                common = _rows(idx, lo) & _rows(idx, hi)
-                if t:
-                    common &= _rows(idx, f2(t.group(1)))
-                if not common:
-                    bad.append((path, i, (t.group(1) + " " if t else "") + m.group(0)))
+            for pattern in INTERVAL_PATTERNS:
+                for m in pattern.finditer(line):
+                    k = kind if kind != "LIVE" else (column_kind(lines, i, m.start(1)) or kind)
+                    if k != "LIVE":
+                        continue
+                    lo, hi = f2(m.group(1)), f2(m.group(2))
+                    if (lo, hi) == (2.5, 97.5):  # np.percentile(..., [2.5, 97.5])
+                        continue
+                    head = line[:m.start()]
+                    t = TAIL.search(head) or TAIL.search(head.rstrip(" |*"))
+                    common = _rows(idx, lo) & _rows(idx, hi)
+                    if t:
+                        common &= _rows(idx, f2(t.group(1)))
+                    if not common:
+                        bad.append((path, i, (t.group(1) + " " if t else "") + m.group(0)))
     return bad
 
 
@@ -353,6 +367,21 @@ def intervals_without_a_row(idx: dict[float, set[int]]) -> list[tuple[Path, int,
 # This is only as strong as the single-value test - the pool is dense - but it
 # is the difference between checking those cells weakly and not at all.
 SIGNED_CELL = re.compile(r"(?<![\w.,/])([+-]\d{1,3}[.,]\d{1,2})(?![\d%])")
+
+
+def signed_latex_unmatched(pool: set[float]) -> tuple[int, list[tuple[Path, int, str]]]:
+    """Signed effects in paper.tex and slides.tex that match no result value."""
+    total = 0
+    bad = []
+    for path in (ROOT / "docs" / "paper" / "paper.tex", ROOT / "slides.tex"):
+        if not path.exists():
+            continue
+        for i, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            for m in SIGNED_CELL.finditer(line):
+                total += 1
+                if not matches(float(m.group(1).replace(",", ".")), pool):
+                    bad.append((path, i, m.group(1)))
+    return total, bad
 
 
 def signed_table_cells_unmatched(pool: set[float]) -> list[tuple[Path, int, str]]:
@@ -496,6 +525,18 @@ def main() -> int:
     else:
         print("\n  Khong co. Moi o bang co dau deu khop mot gia tri trong results/.")
 
+    latex_total, latex_bad = signed_latex_unmatched(pool)
+    print("\n" + "=" * 78)
+    print("SIGNED EFFECTS IN PAPER AND SLIDES WITH NOTHING BEHIND THEM")
+    print("=" * 78)
+    print(f"\n  {latex_total} signed values scanned in paper.tex and slides.tex.")
+    if latex_bad:
+        for path, ln, txt in latex_bad:
+            print(f"  {path.relative_to(ROOT).as_posix()}:{ln}  {txt}")
+        print("\n  These signed LaTeX values match no numeric cell in results/.")
+    else:
+        print("  Khong co. Moi gia tri co dau deu khop mot gia tri trong results/.")
+
     bad_p = out_of_range_probabilities()
     print("\n" + "=" * 78)
     print("PROBABILITIES OUTSIDE [0, 1]")
@@ -508,10 +549,10 @@ def main() -> int:
     else:
         print("\n  Khong co. Moi cot p deu nam trong [0, 1].")
 
-    if unmatched or bad_p or rowless or cells:
+    if unmatched or bad_p or rowless or cells or latex_bad:
         return 1
 
-    print("\n  Every quantity in pp traces to a value in results/.")
+    print("\n  Every checked prose quantity, signed LaTeX effect and interval traces to results/.")
     return 0
 
 

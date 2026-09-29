@@ -73,15 +73,22 @@ def read_cached(model, temperature, prompt, cache=None, max_tokens=700):
     """The cached record, or None when there is none or it does not parse.
 
     call() pays again for a file that does not parse, so an estimate that
-    counted such a file as cached would come in low.
+    counted such a file as cached would come in low. OpenAI cache keys omit the
+    token cap intentionally for compatibility with existing paid calls. Newer
+    records store the cap, so reject a known mismatch without invalidating
+    legacy records that predate that field.
     """
     f = _key(model, temperature, prompt, cache, max_tokens)
     if not f.exists():
         return None
     try:
-        return json.loads(f.read_text(encoding="utf-8"))
+        record = json.loads(f.read_text(encoding="utf-8"))
     except json.JSONDecodeError:
         return None
+    stored_cap = record.get("max_tokens")
+    if stored_cap is not None and int(stored_cap) != int(max_tokens):
+        return None
+    return record
 
 
 # CLadder prompts run 4.0-4.2 characters per GPT-4.1 token (measured on cached
@@ -187,6 +194,7 @@ def call(client, model, prompt, temperature=0.0, max_tokens=700, retries=4,
     `cache` is another directory to cache in. scripts/check_drift.py uses one so
     that it can ask a question the main cache has already answered.
     """
+    requested_temperature = temperature
     f = _key(model, temperature, prompt, cache, max_tokens)
     hit = read_cached(model, temperature, prompt, cache, max_tokens)
     if hit is not None:
@@ -216,7 +224,14 @@ def call(client, model, prompt, temperature=0.0, max_tokens=700, retries=4,
             rec = {"text": r.choices[0].message.content or "",
                    "in_tok": r.usage.prompt_tokens,
                    "out_tok": r.usage.completion_tokens,
-                   "model": model, "cached": False, "ok": True}
+                   # Keep `model` for backwards compatibility with the raw-file
+                   # builders, and add the parameters needed to audit the call.
+                   "model": model,
+                   "returned_model": getattr(r, "model", "") or "",
+                   "requested_temperature": requested_temperature,
+                   "temperature": temperature,
+                   "max_tokens": max_tokens,
+                   "cached": False, "ok": True}
             if model in OPENROUTER:
                 rec |= _openrouter_fields(r) | {"max_tokens": max_tokens}
             # First writer wins, and every caller returns what the cache holds.
@@ -232,7 +247,7 @@ def call(client, model, prompt, temperature=0.0, max_tokens=700, retries=4,
                     with open(f, "x", encoding="utf-8") as fh:
                         fh.write(json.dumps(rec))
                 except FileExistsError:
-                    hit = read_cached(model, temperature, prompt, cache)
+                    hit = read_cached(model, temperature, prompt, cache, max_tokens)
                     if hit is not None:
                         return hit | {"cached": True}
             return rec
@@ -256,6 +271,11 @@ def call(client, model, prompt, temperature=0.0, max_tokens=700, retries=4,
 
 def make_client(model):
     """The API client for `model`: OpenRouter for a pinned model, else OpenAI."""
+    if os.environ.get("NO_API") == "1":
+        raise SystemExit(
+            "API access is disabled by NO_API=1. The offline analysis pipeline "
+            "must consume stored raw responses only."
+        )
     from openai import OpenAI
     load_env()
     if model in OPENROUTER:

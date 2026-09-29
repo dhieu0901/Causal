@@ -56,7 +56,9 @@ from pilot import make_items
 from prompts import build, parse_answer, strip_structure, parse_prose_graph
 
 CACHE = ROOT / "cache"
+SNAPSHOT = ROOT / "results" / "cladder" / "raw" / "analysis_response_snapshot.csv"
 TIER = ["gpt-4.1-nano", "gpt-4.1-mini", "gpt-4.1"]
+_SNAPSHOT_TEXT = None
 
 # Vocabulary that only appears when a chain is talking about structure rather
 # than only about arithmetic. Deliberately narrow: "effect" alone is excluded
@@ -76,12 +78,38 @@ LINK = (r"(?:\s*(?:-+>|=+>|→)\s*|\s+(?:has a direct effect on|directly affects
 def cache_text(model, prompt, temp=0.0):
     h = hashlib.sha256(f"{model}|{temp}|{prompt}".encode()).hexdigest()[:24]
     f = CACHE / f"{h}.json"
-    if not f.exists():
+    if f.exists():
+        try:
+            return json.loads(f.read_text(encoding="utf-8")).get("text", "")
+        except json.JSONDecodeError:
+            pass
+    global _SNAPSHOT_TEXT
+    if _SNAPSHOT_TEXT is None:
+        if not SNAPSHOT.exists():
+            _SNAPSHOT_TEXT = {}
+        else:
+            snap = pd.read_csv(SNAPSHOT, keep_default_na=False)
+            required = {"cache_key", "model", "text"}
+            if not required.issubset(snap.columns):
+                raise SystemExit(f"Malformed response snapshot: expected {sorted(required)}")
+            if snap.cache_key.duplicated().any():
+                raise SystemExit("Malformed response snapshot: duplicate cache_key")
+            if not snap.cache_key.map(lambda x: bool(re.fullmatch(r"[0-9a-f]{24}", x))).all():
+                raise SystemExit("Malformed response snapshot: invalid cache_key")
+            if snap.model.eq("").any():
+                raise SystemExit("Malformed response snapshot: empty model")
+            if snap.text.eq("").any():
+                raise SystemExit("Malformed response snapshot: empty response text")
+            _SNAPSHOT_TEXT = dict(zip(snap.cache_key, zip(snap.model, snap.text)))
+    record = _SNAPSHOT_TEXT.get(h)
+    if record is None:
         return None
-    try:
-        return json.loads(f.read_text(encoding="utf-8")).get("text", "")
-    except json.JSONDecodeError:
-        return None
+    stored_model, text = record
+    if stored_model != model:
+        raise SystemExit(
+            f"Malformed response snapshot: key {h} is labelled {stored_model}, expected {model}"
+        )
+    return text
 
 
 def asserts(text, a, b):
@@ -143,6 +171,23 @@ def main():
                       "oracle": build(prompt, "ORACLE", edges),
                       "dr": build(prompt, "PERTURB", bad)})
 
+    # This is an offline analysis of responses already paid for. A public clone
+    # reads the minimal response snapshot; the owner's machine may read cache/.
+    # Continuing with zero or partial responses would silently overwrite the
+    # shipped CSVs, so validate the complete input before producing any output.
+    missing = []
+    for model in TIER:
+        for case in cases:
+            for cond in ("raw", "oracle", "dr"):
+                if cache_text(model, case[cond]) is None:
+                    missing.append((model, case["item"], cond))
+    if missing:
+        sample = ", ".join(f"{m}/item={i}/{c}" for m, i, c in missing[:5])
+        raise SystemExit(
+            f"Missing {len(missing)} required cached responses. Refusing to "
+            f"overwrite chain CSVs from partial data. First missing: {sample}"
+        )
+
     print("=" * W)
     print("1. DO THE REASONING CHAINS USE THE SUPPLIED GRAPH")
     print("=" * W)
@@ -150,7 +195,7 @@ def main():
     print("  The true graph says u -> v; DR_k1 supplies v -> u. See which direction\n"
           "  the chain states.\n")
 
-    rows, miss, dump = [], 0, []
+    rows, dump = [], []
     for m in TIER:
         rec = {"model": m}
         for cond in ("oracle", "dr"):
@@ -158,9 +203,7 @@ def main():
                  "both": 0, "struct": 0, "n": 0}
             for k in cases:
                 t = cache_text(m, k[cond])
-                if t is None:
-                    miss += 1
-                    continue
+                assert t is not None
                 c["n"] += 1
                 c["struct"] += bool(STRUCT.search(t))
                 c[code_direction(t, k["u"], k["v"])] += 1
@@ -199,9 +242,6 @@ def main():
 
     out = ROOT / "results" / "cladder" / "chain_graph_use.csv"
     d.to_csv(out, index=False)
-    if miss:
-        print(f"\n  ({miss} calls not in the cache, skipped)")
-
     fol = d.DR_k1_theo_do_thi.mean()
     kep = d.DR_k1_giu_chieu_that.mean()
     sil = d.DR_k1_khong_noi.mean()

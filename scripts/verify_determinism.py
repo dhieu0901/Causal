@@ -48,7 +48,7 @@ FAST = [
     "analyze_prior_strength", "compare_price_lexicon", "verify_labels",
     "verify_counterfactual", "classify_perturbations", "analyze_dose",
     "analyze_chains", "analyze_errortypes_lexical",
-    "induction",                 # writes induction_raw.csv
+    "analyze_induction",         # reads the stored induction_raw.csv; never calls an API
     "analyze_lexical", "analyze_types",   # both read it
 ]
 # pilot.py is excluded on purpose: it spends API credit and is not an analysis.
@@ -92,6 +92,7 @@ def main() -> int:
         before = snapshot(tmpd)
         print(f"  snapshot: {len(before)} CSV files\n")
 
+        failed = []
         for s in scripts:
             path = ROOT / "scripts" / f"{s}.py"
             if not path.exists():
@@ -102,6 +103,7 @@ def main() -> int:
             status = "ran" if r.returncode == 0 else f"EXIT {r.returncode}"
             print(f"  {s:28s} {status}")
             if r.returncode != 0:
+                failed.append((s, r.returncode))
                 print("      " + (r.stderr.strip().splitlines() or ["(no stderr)"])[-1][:100])
 
         after = sorted(p.relative_to(RESULTS).as_posix() for p in RESULTS.rglob("*.csv"))
@@ -127,6 +129,12 @@ def main() -> int:
     - an analysis script was edited and results/ was never regenerated,
     - a script uses randomness that is not seeded,
     - an input file changed under the analysis.""")
+        return 1
+
+    if failed:
+        print("\n  NOT REPRODUCIBLE: analysis scripts exited unsuccessfully:")
+        for script, code in failed:
+            print(f"    {script:28s} EXIT {code}")
         return 1
 
     print("\n  Every CSV came back identical. The analysis is reproducible.")

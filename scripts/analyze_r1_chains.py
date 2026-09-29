@@ -68,8 +68,11 @@ from lexical import relabel_item, residue
 from pilot import build_jobs, make_items
 from prompts import parse_prose_graph, strip_structure
 from runner import read_cached
+from runner import _key
 
 RESULTS = ROOT / "results" / "cladder"
+SNAPSHOT = RESULTS / "raw" / "analysis_response_snapshot.csv"
+_SNAPSHOT_CHAINS = None
 SEED = 20260907
 TEMP, CAP, RECAP = 0.6, 8000, 16000          # scripts/run_r1.sh
 LEX = dict(n_items=200, sample_kmax=1, kmax=1, seed=SEED, exclude_ids=None)
@@ -85,7 +88,33 @@ NOEFFECT = re.compile(r"(no (?:directed |causal |direct )?(?:path|effect|causal 
 def chain(prompt):
     rec = read_cached(R1, TEMP, prompt, max_tokens=CAP)
     if rec is None:
-        return None
+        global _SNAPSHOT_CHAINS
+        if _SNAPSHOT_CHAINS is None:
+            if not SNAPSHOT.exists():
+                _SNAPSHOT_CHAINS = {}
+            else:
+                snap = pd.read_csv(SNAPSHOT, keep_default_na=False)
+                required = {"cache_key", "model", "text"}
+                if set(snap.columns) != required:
+                    raise SystemExit(f"Malformed response snapshot: expected {sorted(required)}")
+                if snap.cache_key.duplicated().any():
+                    raise SystemExit("Malformed response snapshot: duplicate cache_key")
+                if not snap.cache_key.str.fullmatch(r"[0-9a-f]{24}").all():
+                    raise SystemExit("Malformed response snapshot: invalid cache_key")
+                if snap.model.eq("").any() or snap.text.eq("").any():
+                    raise SystemExit("Malformed response snapshot: empty model or response text")
+                _SNAPSHOT_CHAINS = {
+                    r.cache_key: (r.model, r.text) for r in snap.itertuples()
+                }
+        key = _key(R1, TEMP, prompt, max_tokens=CAP).stem
+        stored = _SNAPSHOT_CHAINS.get(key)
+        if stored is None:
+            return None
+        if stored[0] != R1:
+            raise SystemExit(
+                f"Malformed response snapshot: key {key} is labelled {stored[0]}, expected {R1}"
+            )
+        return stored[1]
     if rec.get("finish") == "length":
         re_ask = read_cached(R1, TEMP, prompt, max_tokens=RECAP)
         rec = re_ask or rec
@@ -139,7 +168,7 @@ def main() -> int:
             row[f"{tag}_correct"] = int(a.correct) if a is not None and a.parsed == 1 else None
         rows.append(row)
     if missing:
-        raise SystemExit(f"{missing} items have a chain missing from cache/")
+        raise SystemExit(f"{missing} items have a chain missing from cache/ and the response snapshot")
     T = pd.DataFrame(rows)
 
     # the groups of analyze_answer_change.py, for the ate/ett items

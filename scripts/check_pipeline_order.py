@@ -47,7 +47,7 @@ ORDER = [
     "verify_counterfactual", "audit_cladder_arithmetic", "verify_explanations",
     "ci_active_gold",
     "pool_samples",
-    "induction", "induction_baselines",
+    "analyze_induction", "induction_baselines",
     "analyze_lexical", "analyze_types",
     "analyze_vs_raw", "classify_perturbations", "analyze_structure_arms",
     "analyze_by_family", "analyze_querygroup", "analyze_dose", "analyze_ladder5",
@@ -152,8 +152,8 @@ def main() -> int:
     # produce the pilot_raw_* inputs), and the cache audit, which needs the API
     # cache that is not in the repository and writes nothing.
     missing = [s for s in flows if s not in pos
-               and s not in ("pilot", "calm_run", "probe_direction", "check_drift",
-                             "audit_cache_agreement")]
+                and s not in ("pilot", "induction", "calm_run", "probe_direction", "check_drift",
+                              "audit_cache_agreement")]
 
     print("=" * 78)
     print("PIPELINE ORDER - doc truoc khi ghi?")

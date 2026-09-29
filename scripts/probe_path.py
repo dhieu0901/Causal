@@ -86,7 +86,7 @@ TEMPLATE = (
     "ANSWER: yes\nor\nANSWER: no")
 
 
-def jobs():
+def jobs(verify_replay=True):
     items = make_items(B6["n"], B6["seed"], B6["sample_kmax"], "full_v1.5_default.csv", None,
                        True, read_ids(B6["exclude"]), B6["query_types"])
     canon, maps = canonical_structures(), meta_mappings()
@@ -127,7 +127,7 @@ def jobs():
                     bad = random.Random(f"{B6['seed']}:{i}:DR:{k}").choice(opts)
                     graphs.append((f"DR_k{k}", bad, build(prompt, "PERTURB", bad)))
             for cond, g, b6_prompt in graphs:
-                if not _key("gpt-4.1-nano", 0.0, b6_prompt).exists():
+                if verify_replay and not _key("gpt-4.1-nano", 0.0, b6_prompt).exists():
                     missing += 1
                 out.append(dict(item=i, id=int(r.id), query_type=r.query_type,
                                 family=r.graph_id, lexicon=lex, cond=cond, x=x, y=y,
@@ -136,8 +136,9 @@ def jobs():
                                 b6_prompt=b6_prompt))
     if missing:
         raise SystemExit(f"{missing} replayed graphs are not the prompts B6 sent; stopping")
-    print(f"  replay check: all {len(out)} graphs rebuild a B6 prompt found in the API cache;"
-          f" {skipped} (item, lexicon) pairs left out")
+    if verify_replay:
+        print(f"  replay check: all {len(out)} graphs rebuild a B6 prompt found in the API cache;"
+              f" {skipped} (item, lexicon) pairs left out")
     return out
 
 
@@ -156,7 +157,7 @@ def context_prompt(b6_prompt: str, x: str, y: str) -> str:
     return kept + GRAPH_HEAD + block + CONTEXT_TAIL.format(x=x, y=y)
 
 
-def context_jobs():
+def context_jobs(verify_replay=True):
     """The rows of jobs() that PP2 uses, with the prompt put back into its question."""
     from analyze_answer_change import Matcher, draws_for
     from analyze_b6 import B6 as B6_ANALYSIS
@@ -165,7 +166,7 @@ def context_jobs():
     cut = set(zip(G.item, G.cond))
     items = {i for i, _ in cut}
     out = []
-    for j in jobs():
+    for j in jobs(verify_replay=verify_replay):
         if (j["cond"] == "ORACLE" and j["item"] in items) or (j["item"], j["cond"]) in cut:
             out.append(j | dict(prompt=context_prompt(j["b6_prompt"], j["x"], j["y"])))
     print(f"  context: {len(out)} rows, {len(cut)} path-cut draws on {len(items)} items, "
