@@ -1,7 +1,7 @@
 [project]
-name = "break-even-structure-guidance"
+name = "words-or-structure"
 version = "0.1.0"
-description = "Locating the break-even point of causal structure guidance in LLM reasoning"
+description = "Words or Structure? What language models take from variable names and from a supplied causal graph"
 license = {file = "LICENSE"}
 requires-python = ">=3.11"
 dependencies = [
