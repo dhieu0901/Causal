@@ -1,0 +1,5 @@
+family,quantity,estimate_pp,ci_lo,ci_hi,p_boot,p_min_seeds,p_max_seeds,n_items,n_stories
+llama,"KEEP - PSEUDO under RAW, C1's items",-6.79,-11.14,-2.75,0.001,0.001,0.002,486,92
+llama,"KEEP - PSEUDO under ORACLE, C1's items",-2.88,-5.25,-0.75,0.0115,0.0115,0.0195,486,92
+gpt,"KEEP - PSEUDO under RAW, C1's items",-7.53,-9.91,-5.26,0.0005,0.0005,0.0005,512,92
+gpt,"KEEP - PSEUDO under ORACLE, C1's items",-0.64,-1.83,0.62,0.339,0.3155,0.3425,512,92

@@ -296,6 +296,12 @@ def main():
                          "is still built first, so no draw changes. Use it to add "
                          "conditions to a sample already run without writing its "
                          "old rows into a second file")
+    ap.add_argument("--only", default="", dest="only",
+                    help="CSV with columns lexicon, item, cond: keep only those jobs of "
+                         "this run's lexicon. B8 (prereg/B8.md) sends only the draws its "
+                         "tests use; the list is scripts/b8_select.py's. Every condition "
+                         "is still built first, so no draw changes, and a listed job "
+                         "that was not built stops the run")
     ap.add_argument("--dry-run", action="store_true", dest="dry_run",
                     help="send nothing; print how many calls are already cached and "
                          "what the rest would cost")
@@ -360,6 +366,20 @@ def main():
     if a.causal_only:
         jobs = [j for j in jobs
                 if j["query_type"] not in {"marginal", "correlation", "backadj"}]
+    if a.only:
+        sel = pd.read_csv(a.only)
+        sel = sel[sel.lexicon == a.lexicon]
+        want = {(int(i), c) for i, c in zip(sel["item"], sel["cond"])}
+        built = {(j["item"], j["cond"]) for j in jobs}
+        if not want or want - built:
+            raise SystemExit(f"--only {a.only}: {len(want - built)} of {len(want)} listed jobs "
+                             f"for lexicon {a.lexicon} were not built; stopping")
+        # `item` indexes this draw of the sample; CLadder's own id must agree,
+        # or the list belongs to another sample.
+        ids = {j["item"]: int(j["id"]) for j in jobs}
+        if any(ids[int(i)] != int(d) for i, d in zip(sel["item"], sel["id"])):
+            raise SystemExit(f"--only {a.only}: item and CLadder id disagree; another sample")
+        jobs = [j for j in jobs if (j["item"], j["cond"]) in want]
     print(f"items={len(items)}  jobs/model={len(jobs)}  lexicon={a.lexicon}  "
           f"paired_to={a.pair_to}  families={sorted(items.graph_id.unique())}")
 

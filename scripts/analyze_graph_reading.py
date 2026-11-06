@@ -221,14 +221,17 @@ def answers(files, models) -> pd.DataFrame:
 def per_draw_rates(A: pd.DataFrame, D: pd.DataFrame, by_model=False) -> pd.DataFrame:
     """Accuracy under ORACLE and DR and the share of DR answers equal to the
     implied answer, per draw: mean over models within a lexicon, then over
-    lexicons (the averaging of analyze_b6.b6_draws)."""
-    o = A[A.cond == "ORACLE"][["lexicon", "model", "item", "correct"]].rename(
-        columns={"correct": "acc_oracle"})
+    lexicons (the averaging of analyze_b6.b6_draws). follows_oracle is the
+    baseline (exploratory, added after the results): the share of ORACLE
+    answers to the same question that already equal the DR's implied answer."""
+    o = A[A.cond == "ORACLE"][["lexicon", "model", "item", "pred", "correct"]].rename(
+        columns={"correct": "acc_oracle", "pred": "pred_oracle"})
     x = A[A.cond.str.fullmatch(r"DR_k\d")].merge(o, on=["lexicon", "model", "item"])
     x = x.merge(D[["item", "cond", "implied_answer"]], on=["item", "cond"])
     x["follows"] = (x.pred.astype(str).str.lower() == x.implied_answer).astype(float)
+    x["follows_oracle"] = (x.pred_oracle.astype(str).str.lower() == x.implied_answer).astype(float)
     keys = ["item", "cond"] + (["model"] if by_model else [])
-    lex = x.groupby(keys + ["lexicon"])[["correct", "acc_oracle", "follows"]].mean()
+    lex = x.groupby(keys + ["lexicon"])[["correct", "acc_oracle", "follows", "follows_oracle"]].mean()
     return lex.groupby(level=keys).mean().rename(columns={"correct": "acc_dr"}).reset_index()
 
 
@@ -256,6 +259,13 @@ def model_rows(sample, D, A):
                 e, d = boot_items(x, "follows")
                 r |= dict(follows_ci_lo=round(np.percentile(d, 2.5), 2),
                           follows_ci_hi=round(np.percentile(d, 97.5), 2))
+            # exploratory: the follow share with the correct graph, and the excess
+            r |= dict(follows_oracle_pct=round(100 * x.follows_oracle.mean(), 2),
+                      follows_excess_pp=round(100 * (x.follows - x.follows_oracle).mean(), 2))
+            if g == "answer changed, path cut":
+                e, d = boot_items(x.assign(excess=x.follows - x.follows_oracle), "excess")
+                r |= dict(follows_excess_ci_lo=round(np.percentile(d, 2.5), 2),
+                          follows_excess_ci_hi=round(np.percentile(d, 97.5), 2))
             out.append(r)
     return out, Xm
 
@@ -309,7 +319,10 @@ def row(sample, what, x, harm=True):
              contradicted_pct=round(100 * x.contradicted.mean(), 2),
              acc_oracle_pct=round(100 * x.acc_oracle.mean(), 2),
              acc_dr_pct=round(100 * x.acc_dr.mean(), 2),
-             follows_graph_pct=round(100 * x.follows.mean(), 2))
+             follows_graph_pct=round(100 * x.follows.mean(), 2),
+             # exploratory: the follow share with the correct graph, and the excess
+             follows_oracle_pct=round(100 * x.follows_oracle.mean(), 2),
+             follows_excess_pp=round(100 * (x.follows - x.follows_oracle).mean(), 2))
     if harm and x.h.notna().sum() >= 10:
         e, d = boot_mean(x.dropna(subset=["h"]).assign(sample=sample), "h", SEED)
         s = summary(e, d)

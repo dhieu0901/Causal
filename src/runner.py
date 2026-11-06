@@ -5,7 +5,9 @@ an interrupted run resumes where it stopped. Every raw completion is kept, which
 is what lets the error typology be coded later without paying for the calls twice.
 
 A model pinned in OPENROUTER below ("meta-llama/llama-3.3-70b-instruct") goes
-to OpenRouter with OPENROUTER_API_KEY; every other name goes to OpenAI as before.
+to OpenRouter with the key in the .env variable named by OPENROUTER_KEY_VAR (default
+OPENROUTER_API_KEY), on the provider given by provider(); every other name goes to
+OpenAI as before.
 """
 from __future__ import annotations
 import hashlib, json, os, threading, time
@@ -39,6 +41,17 @@ OPENROUTER = {"meta-llama/llama-3.3-70b-instruct": "Novita",   # bf16
 OPENROUTER_SEED = 20260907
 
 
+def provider(model):
+    """The provider `model` is pinned to. OPENROUTER_PIN ("model=Provider,...")
+    re-pins a model for one run when its provider stops serving it: Novita no
+    longer listed Llama 3.3 70B on 2026-11-06, so B8 pins CoreWeave (fp16;
+    prereg/B8.md). The pin enters the cache key, so an answer from the earlier
+    provider is never returned for the new one, and a process that does not set
+    it, such as the offline pipeline, builds the same keys as before."""
+    pins = dict(p.split("=", 1) for p in os.environ.get("OPENROUTER_PIN", "").split(",") if "=" in p)
+    return pins.get(model, OPENROUTER[model])
+
+
 def _key(model, temp, prompt, cache=None, max_tokens=700):
     # An OpenRouter key also carries the provider and the token cap: re-pinning
     # or raising the cap must not return answers produced under the old one (a
@@ -47,7 +60,7 @@ def _key(model, temp, prompt, cache=None, max_tokens=700):
     # induction.py's at 1,400 tokens, would be paid for again.
     name = f"{model}|{temp}"
     if model in OPENROUTER:
-        name = f"{model}@{OPENROUTER[model]}|{temp}|max{max_tokens}"
+        name = f"{model}@{provider(model)}|{temp}|max{max_tokens}"
     h = hashlib.sha256(f"{name}|{prompt}".encode()).hexdigest()[:24]
     return (cache or CACHE) / f"{h}.json"
 
@@ -215,7 +228,7 @@ def call(client, model, prompt, temperature=0.0, max_tokens=700, retries=4,
                 kw = {"model": model,
                       "messages": [{"role": "user", "content": prompt}],
                       "max_tokens": max_tokens, "seed": OPENROUTER_SEED,
-                      "extra_body": {"provider": {"order": [OPENROUTER[model]],
+                      "extra_body": {"provider": {"order": [provider(model)],
                                                   "allow_fallbacks": False},
                                      "usage": {"include": True}}}
             if temperature != 1.0:
@@ -279,9 +292,12 @@ def make_client(model):
     from openai import OpenAI
     load_env()
     if model in OPENROUTER:
-        key = os.environ.get("OPENROUTER_API_KEY", "")
+        # OPENROUTER_KEY_VAR names the .env variable that holds the key, as
+        # OPENAI_KEY_VAR does below (B8's Llama run uses backup_openrouter).
+        var = os.environ.get("OPENROUTER_KEY_VAR", "OPENROUTER_API_KEY")
+        key = os.environ.get(var, "")
         if not key:
-            raise SystemExit("OPENROUTER_API_KEY is not set. Add it to .env from your own "
+            raise SystemExit(f"{var} is not set. Add it to .env from your own "
                              "terminal; never paste a key into a chat.")
         return OpenAI(base_url=OPENROUTER_BASE, api_key=key)
     if "/" in model:

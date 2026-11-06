@@ -190,6 +190,26 @@ def tests(C, seed):
     return out, len(wrong), wrong.item.nunique()
 
 
+def within(C, model) -> dict:
+    """PP3's contrast inside one model, not registered. The registered PP3/PC3
+    pools the three GPT-4.1 models, but its misread cells can come from one model
+    only, so it also compares models; this row holds the model fixed."""
+    cut = C[(C.group == "answer changed") & (C.route == "no path")]
+    ok = cut[cut.read_oracle == "yes"]
+    misread_all = ok[ok.read_shown == "yes"].dropna(subset=["h"])
+    ok = ok[ok.model == model]
+    right = ok[ok.read_shown == "no"].dropna(subset=["h"])
+    wrong = ok[ok.read_shown == "yes"].dropna(subset=["h"])
+    res = [summary(*boot_diff(wrong, right, "h", s)) for s in SEEDS]
+    r, ps = res[0], [float(x["p_boot"]) for x in res]
+    return dict(test=f"PP3 within {model} (not registered)", predicted="descriptive",
+                estimate_pp=round(r["estimate_pp"], 2), ci_lo=round(r["ci_lo"], 2),
+                ci_hi=round(r["ci_hi"], 2), p_boot=round(r["p_boot"], 4), p_holm=None,
+                p_min_seeds=round(min(ps), 4), p_max_seeds=round(max(ps), 4),
+                n_cells=len(wrong) + len(right), n_items=pd.concat([wrong, right]).item.nunique(),
+                verdict="no verdict", n_misread=len(wrong), n_misread_all_models=len(misread_all))
+
+
 def main() -> int:
     run("b6", "probe_path_raw.csv", "")
     if (RAW / "pilot_raw_b6llamaKEEP.csv").exists():
@@ -281,6 +301,8 @@ def run(prefix, probe_file, suffix, context=False) -> None:
                      p_boot=round(lp["p_boot"], 4), p_holm=None,
                      p_min_seeds=round(min(ps), 4), p_max_seeds=round(max(ps), 4),
                      n_cells=lp["n_cells"], n_items=lp["n_items"], verdict="no verdict"))
+    if prefix == "b6":
+        rows.append(within(C, "gpt-4.1-nano"))
     for m, g in PL[PL.model == "gpt-4.1-nano"].groupby(PL.cond.eq("ORACLE")):
         x = g[g.parsed == 1]
         rd.append(dict(model="gpt-4.1-nano", graphs=("correct graph" if m else "reversals")

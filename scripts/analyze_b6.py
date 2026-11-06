@@ -19,7 +19,10 @@ and pushed before the first B6 call. Three parts, all run every time.
      bootstrap seeds; a verdict that changes with the seed is borderline. Then
      the registered sensitivity analysis (unparsed answers scored as wrong)
      and the registered descriptive quantities. Writes results/cladder/b6.csv
-     and b6_descriptive.csv.
+     and b6_descriptive.csv. Exploratory, added after the results: every M1
+     draw is a gold-Yes question, while M3's comparison group mixes gold Yes
+     and gold No, so M3 is also computed on gold-Yes questions alone, for both
+     families (results/cladder/b6_gold_yes.csv).
   3. PROBE, once results/cladder/raw/probe_direction_raw.csv exists
      (scripts/probe_direction.py): descriptive. For the B5 items, the share of
      name pairs whose real-world direction, asked directly, agrees with the
@@ -293,6 +296,35 @@ def descriptive(X) -> list[dict]:
     return rows
 
 
+def gold_yes(X, family) -> list[dict]:
+    """Exploratory, not in prereg/B6.md. A cut path implies No, and M1 keeps the
+    draws whose implied answer differs from the label, so every M1 draw is a
+    gold-Yes question; the path-kept group M3 compares it with is not. Its loss
+    by label, and M3 with both groups restricted to gold-Yes questions."""
+    rows = []
+    c, kept = cut(X), X[(X.group == "answer changed") & (X.route == "backdoor")]
+
+    def add(what, fn, n_yes, n_no):
+        res = [summary(*fn(s)) for s in SEEDS]
+        r, ps = res[0], [float(x["p_boot"]) for x in res]
+        rows.append(dict(family=family, quantity=what, estimate_pp=round(r["estimate_pp"], 2),
+                         ci_lo=round(r["ci_lo"], 2), ci_hi=round(r["ci_hi"], 2),
+                         p_boot=round(r["p_boot"], 4), p_min_seeds=round(min(ps), 4),
+                         p_max_seeds=round(max(ps), 4), n_gold_yes=n_yes, n_gold_no=n_no))
+
+    add("path cut (M1): DR minus ORACLE", lambda s: boot_mean(c, "h", s),
+        int((c.gold == "yes").sum()), int((c.gold == "no").sum()))
+    for lab in ("yes", "no"):
+        k = kept[kept.gold == lab]
+        add(f"answer changed, path kept, gold {lab}: DR minus ORACLE",
+            lambda s, k=k: boot_mean(k, "h", s), len(k) if lab == "yes" else 0,
+            len(k) if lab == "no" else 0)
+    a, b = c[c.gold == "yes"], kept[kept.gold == "yes"]
+    add("M3 on gold-Yes questions: path cut minus answer changed with the path kept",
+        lambda s: boot_diff(a, b, "h", s), len(a) + len(b), 0)
+    return rows
+
+
 def per_item(d, a, b):
     """cond a minus cond b per item, averaged over models (parsed pairs)."""
     x, y = correct_by(d, a), correct_by(d, b)
@@ -342,12 +374,13 @@ def probe() -> None:
     print("  wrote results/cladder/probe_direction.csv")
 
 
-def llama() -> None:
-    """prereg/B6_LLAMA.md: the five tests, unchanged, on Llama 3.3 70B."""
+def llama() -> list[dict]:
+    """prereg/B6_LLAMA.md: the five tests, unchanged, on Llama 3.3 70B. Returns
+    the exploratory gold-Yes rows."""
     X = b6_draws(prefix="b6llama")
     if X is None:
         print("\n  B6 on Llama: no records yet (results/cladder/raw/pilot_raw_b6llama*.csv)")
-        return
+        return []
     print("\n" + "=" * 78)
     print("4. REPLICATION - the five tests on Llama 3.3 70B (prereg/B6_LLAMA.md)")
     print("=" * 78)
@@ -362,10 +395,12 @@ def llama() -> None:
     desc.to_csv(RESULTS / "b6_llama_descriptive.csv", index=False)
     print(desc.to_string(index=False))
     print("\n  wrote results/cladder/b6_llama.csv, b6_llama_descriptive.csv")
+    return gold_yes(X, "llama")
 
 
 def main() -> int:
     check()
+    gold = []
     X = b6_draws()
     if X is None:
         print("\n  B6: no records yet (results/cladder/raw/pilot_raw_b6*.csv)")
@@ -384,8 +419,15 @@ def main() -> int:
         print("\n  descriptive:")
         print(desc.to_string(index=False))
         print("\n  wrote results/cladder/b6.csv, b6_descriptive.csv")
+        gold = gold_yes(X, "gpt")
     probe()
-    llama()
+    gold += llama()
+    if gold:
+        G = pd.DataFrame(gold)
+        G.to_csv(RESULTS / "b6_gold_yes.csv", index=False)
+        print("\n  gold-Yes questions only (exploratory):")
+        print(G.to_string(index=False))
+        print("\n  wrote results/cladder/b6_gold_yes.csv")
     return 0
 
 

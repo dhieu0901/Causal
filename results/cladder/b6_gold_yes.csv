@@ -1,0 +1,9 @@
+family,quantity,estimate_pp,ci_lo,ci_hi,p_boot,p_min_seeds,p_max_seeds,n_gold_yes,n_gold_no
+gpt,path cut (M1): DR minus ORACLE,-27.42,-32.14,-22.48,0.0005,0.0005,0.0005,307,0
+gpt,"answer changed, path kept, gold yes: DR minus ORACLE",-2.34,-9.77,4.29,0.4745,0.4745,0.5055,32,0
+gpt,"answer changed, path kept, gold no: DR minus ORACLE",8.1,3.33,13.66,0.0005,0.0005,0.0005,0,36
+gpt,M3 on gold-Yes questions: path cut minus answer changed with the path kept,-25.07,-33.05,-16.97,0.0005,0.0005,0.0005,339,0
+llama,path cut (M1): DR minus ORACLE,-18.27,-23.49,-12.89,0.0005,0.0005,0.0005,303,0
+llama,"answer changed, path kept, gold yes: DR minus ORACLE",-3.12,-8.33,0.0,0.2445,0.229,0.262,32,0
+llama,"answer changed, path kept, gold no: DR minus ORACLE",4.29,-4.17,14.52,0.4405,0.432,0.4455,0,36
+llama,M3 on gold-Yes questions: path cut minus answer changed with the path kept,-15.15,-21.54,-8.01,0.0005,0.0005,0.0005,335,0

@@ -1,31 +1,36 @@
-"""B8: deleted and spurious edges, and a graph offered as possibly wrong.
+"""B8: a graph offered as possibly wrong, and deleted and spurious edges.
 
     python scripts/analyze_b8.py
 
-Registered in prereg/B8.md (draft until committed). Four tests on fresh ate and
-ett questions, three GPT-4.1 models, both lexicons, every graph without the
-instruction line:
+Registered in prereg/B8.md. Fresh ate and ett questions, real names (KEEP),
+every graph without the instruction line, three families with separate verdicts:
+the GPT-4.1 pair (gpt-4.1-mini and gpt-4.1, their mean; gpt-4.1-nano is no longer
+served), gpt-5.6-luna and Llama 3.3 70B (pinned to CoreWeave, fp16).
+Five tests per family:
 
-  T1  deleted edges (ED_k_NI minus ORACLE_NI) over draws that cut every X -> Y
-      path and change the implied answer: negative
+  T0  reversals (DR_k_NI minus ORACLE_NI) over draws that cut every X -> Y path
+      and change the implied answer: negative (Study 3's R1 on fresh questions)
+  T1  deleted edges (ED_k_NI minus ORACLE_NI) over the same group: negative
   T2  spurious edges (FE_k_NI minus ORACLE_NI) over all draws: equivalent to 0
       within 5 points
-  T3  reversals under the doubt framing (DR_k_U minus ORACLE_U) over draws that
-      cut the path: negative, the model still follows a graph it is told may be
-      wrong
-  T4  the same path-cutting draws, harm under the doubt framing minus harm
-      without it (h_U minus h_NI): positive, the doubt reduces the harm
+  T3  reversals under the doubt framing (DR_k_U minus ORACLE_U) over the T0
+      draws: negative, the model still follows a graph it is told may be wrong
+  T4  the T0 draws, harm under the doubt framing minus harm without it
+      (h_U minus h_NI): positive, the doubt reduces the harm
 
-A draw is one (item, lexicon, corruption type, dose k): spurious edges differ
-between the lexicons, so the two are not averaged into one draw, as in
-analyze_edge_types.py. Its harm is the mean over the three models, parsed answers
-only. The bootstrap resamples items with every draw of an item.
+The design is targeted: only the draws the tests use were sent, as listed in
+prereg/b8_selection.csv by scripts/b8_select.py before the first call. A draw
+is one (item, corruption type, dose k); its harm is the mean over the family's
+models, parsed answers only. The bootstrap resamples items with every draw of
+an item.
 
 Before it reads a B8 record the script runs the T1 and T2 constructions on the
 exploratory price400 draws and stops unless they return the published rows of
 results/cladder/edge_types_harm.csv.
 
-Writes results/cladder/b8.csv
+Writes results/cladder/b8.csv (the tests), b8_descriptive.csv (shares of
+answers per condition) and b8_per_model.csv (each test per GPT-4.1 model, no
+verdict).
 """
 from __future__ import annotations
 
@@ -36,6 +41,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
+import numpy as np
 import pandas as pd
 
 import analyze_edge_types as ET
@@ -45,11 +51,20 @@ from pilot import read_ids
 
 RESULTS = ROOT / "results" / "cladder"
 RAW = RESULTS / "raw"
+SELECTION = ROOT / "prereg" / "b8_selection.csv"
 SEEDS = [20260907, 1, 2, 3, 4]
 ALPHA = 0.05
+LEXICON = "KEEP"
 B8 = dict(n_items=340, sample_kmax=1, kmax=3, seed=20260927,
           query_types=["ate", "ett"], replay_condition="PERTURB_NI")
-TESTS = [("T1", "deleted edge, path cut: ED_NI minus ORACLE_NI", "negative"),
+FAMILIES = {
+    "gpt": ("GPT-4.1 pair", ["gpt-4.1-mini", "gpt-4.1"], "pilot_raw_b8KEEP.csv"),
+    "luna": ("gpt-5.6-luna", ["gpt-5.6-luna"], "pilot_raw_b8lunaKEEP.csv"),
+    "llama": ("Llama 3.3 70B", ["meta-llama/llama-3.3-70b-instruct"],
+              "pilot_raw_b8llamaKEEP.csv"),
+}
+TESTS = [("T0", "reversal, path cut: DR_NI minus ORACLE_NI", "negative"),
+         ("T1", "deleted edge, path cut: ED_NI minus ORACLE_NI", "negative"),
          ("T2", "spurious edge, all draws: FE_NI minus ORACLE_NI, within +-5", "within +-5"),
          ("T3", "reversal under doubt, path cut: DR_U minus ORACLE_U", "negative"),
          ("T4", "path cut: harm under doubt minus harm without it", "positive")]
@@ -61,18 +76,16 @@ def cut(x):
 
 def run(X, seed):
     out = {}
-    ed = cut(X[X.arm.eq("ED")]).dropna(subset=["h_ni"])
-    e, d = boot_mean(ed, "h_ni", seed)
-    out["T1"] = summary(e, d) | dict(n_draws=len(ed))
-    fe = X[X.arm.eq("FE") & X.group.notna()].dropna(subset=["h_ni"])
-    e, d = boot_mean(fe, "h_ni", seed)
-    out["T2"] = summary(e, d, tost=True) | dict(n_draws=len(fe))
-    dr = cut(X[X.arm.eq("DR")]).dropna(subset=["h_u"])
-    e, d = boot_mean(dr, "h_u", seed)
-    out["T3"] = summary(e, d) | dict(n_draws=len(dr))
-    dd = dr.dropna(subset=["h_ni"]).assign(delta=lambda t: t.h_u - t.h_ni)
-    e, d = boot_mean(dd, "delta", seed)
-    out["T4"] = summary(e, d) | dict(n_draws=len(dd))
+    dr = cut(X[X.arm.eq("DR")])
+    for t, x, col, tost in (
+            ("T0", dr, "h_ni", False),
+            ("T1", cut(X[X.arm.eq("ED")]), "h_ni", False),
+            ("T2", X[X.arm.eq("FE") & X.group.notna()], "h_ni", True),
+            ("T3", dr, "h_u", False),
+            ("T4", dr.assign(delta=dr.h_u - dr.h_ni), "delta", False)):
+        x = x.dropna(subset=[col])
+        e, d = boot_mean(x, col, seed)
+        out[t] = summary(e, d, tost=tost) | dict(n_draws=len(x))
     return out
 
 
@@ -109,40 +122,51 @@ def check() -> None:
             raise SystemExit("  the B8 constructions do not reproduce edge_types_harm.csv; stopping")
 
 
-def b8_draws(unparsed_wrong=False, files=None, kw=None, tag="b8") -> pd.DataFrame | None:
-    """`files` and `kw` default to B8's; a test passes other records through them."""
-    f = files or {lex: RAW / f"pilot_raw_b8{lex}.csv" for lex in ("KEEP", "PSEUDO")}
-    if not all(p.exists() for p in f.values()):
-        return None
-    config = kw
-    if config is None:
-        # B8 has not been approved or run. Its preregistration and exclusion
-        # list stay private until then, so a public clone must not read either
-        # file merely to discover that no B8 response records exist.
-        config = B8 | {"exclude_ids": read_ids("prereg/excluded_ids_b8.txt")}
-    G = draws_for(tag, Matcher(), kw=config, arms=("DR", "ED", "FE"))
+def selection() -> pd.DataFrame:
+    S = pd.read_csv(SELECTION)
+    return S[S.lexicon == LEXICON].reset_index(drop=True)
+
+
+def classified(S: pd.DataFrame) -> pd.DataFrame:
+    """Every B8 draw with its group; the replay check covers exactly the draws sent."""
+    sent = {(int(i), LEXICON, c.rsplit("_", 1)[0])
+            for i, c in zip(S.item, S.cond) if c[:2] in ("DR", "ED", "FE")}
+    kw = B8 | {"exclude_ids": read_ids("prereg/excluded_ids_b8.txt")}
+    G = draws_for("b8", Matcher(), kw=kw, lexicons=(LEXICON,), arms=("DR", "ED", "FE"),
+                  replay_sent=sent)
+    return G[G.lexicon == LEXICON]
+
+
+def missing_jobs(d: pd.DataFrame, models, S: pd.DataFrame) -> int:
+    """Listed jobs with no row for some model: a run stopped before it sent them."""
+    have = set(zip(d.model, d.item, d.cond))
+    return sum((m, int(i), c) not in have for m in models for i, c in zip(S.item, S.cond))
+
+
+def harms(d: pd.DataFrame, G: pd.DataFrame, unparsed_wrong=False) -> pd.DataFrame:
+    """One row per sent draw: h_ni and h_u, each the mean over the models of
+    (corrupted graph correct) minus (correct graph correct) under that framing."""
+    d = d[d.query_type.isin(TYPES)]
+    if unparsed_wrong:
+        d = d.assign(correct=d.correct.where(d.parsed == 1, 0), parsed=1)
+    d = d[d.parsed == 1]
+    by = {c: g.drop_duplicates(["model", "item"]).set_index(["model", "item"]).correct
+          for c, g in d.groupby("cond")}
     rows = []
-    for lex, p in f.items():
-        d = pd.read_csv(p)
-        d = d[d.query_type.isin(TYPES)]
-        if unparsed_wrong:
-            d = d.assign(correct=d.correct.where(d.parsed == 1, 0), parsed=1)
-        d = d[d.parsed == 1]
-        by = {c: g.drop_duplicates(["model", "item"]).set_index(["model", "item"]).correct
-              for c, g in d.groupby("cond")}
-        for cond in sorted({c.rsplit("_", 1)[0] for c in by if c[:2] in ("DR", "ED", "FE")}):
-            for col, suf, orc in (("h_ni", "_NI", "ORACLE_NI"), ("h_u", "_U", "ORACLE_U")):
-                if cond + suf not in by:
-                    continue
-                a, b = by[cond + suf], by[orc]
-                i = a.index.intersection(b.index)
-                s = (a[i] - b[i]).groupby(level="item").mean()
-                rows.append(pd.DataFrame({"item": s.index, "lexicon": lex, "cond": cond,
-                                          "col": col, "v": s.values}))
-    V = (pd.concat(rows).pivot_table(index=["item", "lexicon", "cond"], columns="col", values="v")
+    for cond in sorted({c.rsplit("_", 1)[0] for c in by if c[:2] in ("DR", "ED", "FE")}):
+        for col, suf, orc in (("h_ni", "_NI", "ORACLE_NI"), ("h_u", "_U", "ORACLE_U")):
+            if cond + suf not in by or orc not in by:
+                continue
+            a, b = by[cond + suf], by[orc]
+            i = a.index.intersection(b.index)
+            s = (a[i] - b[i]).groupby(level="item").mean()
+            rows.append(pd.DataFrame({"item": s.index, "cond": cond, "col": col, "v": s.values}))
+    V = (pd.concat(rows).pivot_table(index=["item", "cond"], columns="col", values="v")
          .reset_index())
-    X = V.merge(G[["item", "lexicon", "cond", "group", "route", "gold"]],
-                on=["item", "lexicon", "cond"], how="inner")
+    for c in ("h_ni", "h_u"):
+        if c not in V:
+            V[c] = np.nan
+    X = V.merge(G[["item", "cond", "group", "route", "gold"]], on=["item", "cond"], how="inner")
     return X.assign(arm=X.cond.str[:2], sample="b8")
 
 
@@ -168,17 +192,87 @@ def confirm(X, label):
     return rows
 
 
+def describe(d: pd.DataFrame, G: pd.DataFrame, fam: str, models) -> list[dict]:
+    """Descriptive, no verdict: on the items and draws of T0 and T3, how each
+    framing is answered, and how the answers compare with no graph at all."""
+    d = d[d.query_type.isin(TYPES) & (d.parsed == 1)]
+    tg = cut(G[G.cond.str.startswith("DR")])
+    items = set(tg.item)
+    out = []
+    for m in list(models) + (["all"] if len(models) > 1 else []):
+        x = d if m == "all" else d[d.model == m]
+        raw = x[x.cond == "RAW"].set_index(["model", "item"]).pred
+
+        def on_items(cond):
+            return x[(x.cond == cond) & x.item.isin(items)]
+
+        def on_draws(suf):
+            y = x.merge(tg[["item", "cond"]].assign(cond=lambda t: t.cond + suf),
+                        on=["item", "cond"], how="inner")
+            same = [p == raw.get((mm, i)) for mm, i, p in zip(y.model, y.item, y.pred)]
+            return y, np.mean(same) if len(y) else np.nan
+
+        ni, same_ni = on_draws("_NI")
+        u, same_u = on_draws("_U")
+        r = on_items("RAW")
+        o_ni, o_u = on_items("ORACLE_NI"), on_items("ORACLE_U")
+        out.append(dict(family=fam, model=m, items=len(items), draws=len(tg),
+                        acc_raw=100 * r.correct.mean(), says_yes_raw=100 * (r.pred == "yes").mean(),
+                        acc_oracle_ni=100 * o_ni.correct.mean(),
+                        acc_oracle_u=100 * o_u.correct.mean(),
+                        follow_ni=100 * (ni.pred == "no").mean(),
+                        follow_u=100 * (u.pred == "no").mean(),
+                        acc_dr_ni=100 * ni.correct.mean(), acc_dr_u=100 * u.correct.mean(),
+                        same_as_raw_ni=100 * same_ni, same_as_raw_u=100 * same_u))
+    return [{k: (round(v, 2) if isinstance(v, float) else v) for k, v in r.items()} for r in out]
+
+
+def per_model(d: pd.DataFrame, G: pd.DataFrame, fam: str, models) -> list[dict]:
+    rows = []
+    for m in models:
+        res = run(harms(d[d.model == m], G), SEEDS[0])
+        for t, what, _ in TESTS:
+            r = res[t]
+            rows.append(dict(family=fam, model=m, test=t, quantity=what,
+                             estimate_pp=round(r["estimate_pp"], 2), ci_lo=round(r["ci_lo"], 2),
+                             ci_hi=round(r["ci_hi"], 2), n_draws=r["n_draws"]))
+    return rows
+
+
 def main() -> int:
     check()
-    X = b8_draws()
-    if X is None:
+    present = {f: v for f, v in FAMILIES.items() if (RAW / v[2]).exists()}
+    if not present:
         print("  no B8 records yet (results/cladder/raw/pilot_raw_b8*.csv)")
         return 0
-    rows = confirm(X, "primary")
-    print("\n  sensitivity: unparsed answers scored as wrong")
-    rows += confirm(b8_draws(unparsed_wrong=True), "unparsed scored as wrong")
-    pd.DataFrame(rows).to_csv(RESULTS / "b8.csv", index=False)
-    print("\n  wrote results/cladder/b8.csv")
+    S = selection()
+    G = classified(S)
+    rows, desc, pm = [], [], []
+    for fam, (label, models, fname) in present.items():
+        d = pd.read_csv(RAW / fname)
+        miss = missing_jobs(d, models, S)
+        print(f"\n=== {label}: {len(d)} rows; {miss} listed jobs without a row")
+        if miss:
+            # prereg/B8.md: a test is computed only if all its data exist.
+            rows.append(dict(family=fam, analysis="incomplete run, no verdict",
+                             quantity=f"{miss} listed jobs without a row",
+                             verdict="incomplete run, no verdict"))
+            continue
+        rows += [r | {"family": fam} for r in confirm(harms(d, G), "primary")]
+        print("  sensitivity: unparsed answers scored as wrong")
+        rows += [r | {"family": fam}
+                 for r in confirm(harms(d, G, unparsed_wrong=True), "unparsed scored as wrong")]
+        desc += describe(d, G, fam, models)
+        if len(models) > 1:
+            pm += per_model(d, G, fam, models)
+    out = pd.DataFrame(rows)
+    out[["family"] + [c for c in out.columns if c != "family"]].to_csv(RESULTS / "b8.csv",
+                                                                      index=False)
+    pd.DataFrame(desc).to_csv(RESULTS / "b8_descriptive.csv", index=False)
+    if pm:
+        pd.DataFrame(pm).to_csv(RESULTS / "b8_per_model.csv", index=False)
+    print("\n  wrote results/cladder/b8.csv, b8_descriptive.csv"
+          + (", b8_per_model.csv" if pm else ""))
     return 0
 
 

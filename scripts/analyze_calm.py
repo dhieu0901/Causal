@@ -23,6 +23,12 @@
    (items resampled instead of stories; unparsed answers scored as wrong; for
    Llama, cut-off answers re-asked) and an exploratory accuracy table.
    Writes results/calm/calm.csv and results/calm/calm_accuracy.csv.
+
+3. HALVES, exploratory (added after the CaLM results; not in prereg/CALM.md).
+   The two halves of C1 on C1's own items, KEEP - PSEUDO under RAW and under
+   ORACLE, stories resampled as in the primary analysis. C1 is their
+   difference, so the halves say whether a negative C1 means the correct graph
+   removes the names' effect. Writes results/calm/calm_c1_halves.csv.
 """
 from __future__ import annotations
 
@@ -165,6 +171,31 @@ def run_tests(K, P, models, story_of, label, family, by="story"):
     return rows
 
 
+def halves(K, P, models, story_of, family):
+    """Exploratory: KEEP - PSEUDO under RAW and under ORACLE on C1's own cells,
+    so that the two rows subtract to C1."""
+    cols = {"RAW": [], "ORACLE": []}
+    for m in models:
+        kr, pr, ko, po = cell(K, m, "RAW"), cell(P, m, "RAW"), cell(K, m, "ORACLE"), cell(P, m, "ORACLE")
+        i = kr.index.intersection(pr.index).intersection(ko.index).intersection(po.index)
+        cols["RAW"].append(pd.Series((kr[i] - pr[i]).values, index=i, name=m))
+        cols["ORACLE"].append(pd.Series((ko[i] - po[i]).values, index=i, name=m))
+    rows = []
+    for cond, c in cols.items():
+        W = pd.concat(c, axis=1).groupby(level=0).mean()
+        res = [boot_stories(W, story_of, s) for s in SEEDS]
+        e, lo, hi, p = res[0]
+        ps = [r[3] for r in res]
+        rows.append(dict(family=family, quantity=f"KEEP - PSEUDO under {cond}, C1's items",
+                         estimate_pp=round(e, 2), ci_lo=round(lo, 2), ci_hi=round(hi, 2),
+                         p_boot=round(p, 4), p_min_seeds=round(min(ps), 4),
+                         p_max_seeds=round(max(ps), 4), n_items=len(W),
+                         n_stories=W.index.map(story_of).nunique()))
+        print(f"  KEEP - PSEUDO under {cond:6s} {e:+7.2f} [{lo:+6.2f} ; {hi:+6.2f}]  "
+              f"p {min(ps):.4f}-{max(ps):.4f}  n={len(W)} items  (exploratory)")
+    return rows
+
+
 def with_recap(d, path):
     r = pd.read_csv(path)
     key = ["model", "item", "cond"]
@@ -177,7 +208,7 @@ def with_recap(d, path):
 def main() -> int:
     T = check()
     story_of = T.set_index("item").story
-    rows, acc = [], []
+    rows, acc, half = [], [], []
     for family, (models, prefix, recap) in FAMILIES.items():
         f = {lex: RAW / f"calm_raw_{prefix}{lex}.csv" for lex in ("KEEP", "PSEUDO")}
         if not all(p.exists() for p in f.values()):
@@ -191,6 +222,8 @@ def main() -> int:
             print(f"  parse rate {lex:7s} {100 * d.parsed.mean():6.2f}%  ({len(d)} rows)")
         print("\n  primary: stories resampled")
         rows += run_tests(K, P, models, story_of, "primary", family)
+        print("\n  the two halves of C1 (exploratory)")
+        half += halves(K, P, models, story_of, family)
         print("\n  sensitivity: items resampled")
         rows += run_tests(K, P, models, story_of, "items resampled", family, by="item")
         w = lambda d: d.assign(correct=np.where(d.parsed == 1, d.correct, 0), parsed=1)
@@ -217,7 +250,8 @@ def main() -> int:
     if rows:
         pd.DataFrame(rows).to_csv(ROOT / "results" / "calm" / "calm.csv", index=False)
         pd.DataFrame(acc).to_csv(ROOT / "results" / "calm" / "calm_accuracy.csv", index=False)
-        print("\n  wrote results/calm/calm.csv, results/calm/calm_accuracy.csv")
+        pd.DataFrame(half).to_csv(ROOT / "results" / "calm" / "calm_c1_halves.csv", index=False)
+        print("\n  wrote results/calm/calm.csv, calm_accuracy.csv, calm_c1_halves.csv")
     return 0
 
 

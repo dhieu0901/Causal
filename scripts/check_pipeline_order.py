@@ -63,6 +63,7 @@ ORDER = [
     "analyze_calm_direction",
     "analyze_graph_reading", "analyze_accuracy_cells", "analyze_story_clusters",
     "verify_sample_labels", "analyze_names_premise", "analyze_new_stories",
+    "analyze_label_drop",
     "check_consistency",
     "check_numbers", "check_pipeline_order", "verify_determinism",
 ]
@@ -149,11 +150,12 @@ def main() -> int:
 
     pos = {s: i for i, s in enumerate(ORDER)}
     # Outside the analysis order: the scripts that spend API credit (they
-    # produce the pilot_raw_* inputs), and the cache audit, which needs the API
-    # cache that is not in the repository and writes nothing.
+    # produce the pilot_raw_* inputs), the cache audit, which needs the API
+    # cache that is not in the repository and writes nothing, and b8_select,
+    # which wrote B8's list of calls once, before any was sent (prereg/B8.md).
     missing = [s for s in flows if s not in pos
                 and s not in ("pilot", "induction", "calm_run", "probe_direction", "check_drift",
-                              "audit_cache_agreement")]
+                              "audit_cache_agreement", "b8_select")]
 
     print("=" * 78)
     print("PIPELINE ORDER - doc truoc khi ghi?")
