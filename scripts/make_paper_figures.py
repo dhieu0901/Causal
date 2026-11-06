@@ -10,6 +10,9 @@
                       ate and ett items of B5 (b7_descriptive.csv, part 3)
   fig_edge_types.pdf  reversed, deleted and spurious edges by group, price400,
                       exploratory (edge_types_harm.csv, all doses)
+  fig_b8_follow.pdf   B8: share of answers that follow a path-cutting graph, as
+                      fact and flagged as possibly wrong, against the correct
+                      graph, per family (b8_descriptive.csv)
 
 Colours: the first three slots of the dataviz reference categorical palette
 (#2a78d6, #eb6834, #1baf7a; validated light mode, CVD separation passes), each
@@ -36,7 +39,10 @@ SERIES = [("#2a78d6", "o"), ("#eb6834", "s"), ("#1baf7a", "^")]
 INK, MUTED, GRID = "#1f1f1e", "#6b6a64", "#d9d8d2"
 
 plt.rcParams.update({
-    "font.family": "serif", "font.serif": ["Palatino Linotype", "Palatino", "DejaVu Serif"],
+    # Computer Modern, which ships with matplotlib, to match the Latin Modern text of the
+    # TMLR template; mathtext tick labels give it a proper minus sign.
+    "font.family": "serif", "font.serif": ["cmr10"], "mathtext.fontset": "cm",
+    "axes.formatter.use_mathtext": True, "axes.unicode_minus": True,
     "font.size": 8, "axes.linewidth": 0.6, "axes.edgecolor": MUTED, "xtick.color": MUTED,
     "ytick.color": INK, "xtick.major.width": 0.6, "ytick.major.width": 0, "pdf.fonttype": 42,
     "axes.spines.top": False, "axes.spines.right": False, "axes.spines.left": False,
@@ -142,10 +148,33 @@ def fig_edge_types():
     save(fig, "fig_edge_types.pdf")
 
 
+def fig_b8_follow():
+    """B8, descriptive: on the T0 draws (all Yes questions), the share of answers
+    No, which the path-cutting graph implies, under the correct graph, the
+    path-cutting graph stated as fact and the same graph flagged as possibly
+    wrong (b8_descriptive.csv; the GPT-4.1 pair is the mean of its two models)."""
+    d = pd.read_csv(RES / "b8_descriptive.csv")
+    fams = [("gpt", "all", "GPT-4.1 pair"), ("luna", "gpt-5.6-luna", "gpt-5.6-luna"),
+            ("llama", "meta-llama/llama-3.3-70b-instruct", "Llama 3.3 70B")]
+    conds = [("says_no_oracle_ni", "correct graph"),
+             ("follow_ni", "path cut, stated as fact"),
+             ("follow_u", "path cut, flagged as possibly wrong")]
+    rows = []
+    for f, m, _ in fams:
+        r = d[d.family.eq(f) & d.model.eq(m)].iloc[0]
+        rows.append([(float(r[c]),) * 3 for c, _ in conds])
+    fig, ax = plt.subplots(figsize=(5.2, 1.75))
+    dotplot(ax, rows, [n for _, n in conds], [n for _, _, n in fams],
+            "share of answers No, the answer a path-cutting graph implies (%)")
+    ax.set_xlim(0, 100)
+    save(fig, "fig_b8_follow.pdf")
+
+
 def main() -> int:
     fig_prereg()
     fig_harm_groups()
     fig_edge_types()
+    fig_b8_follow()
     return 0
 
 

@@ -226,6 +226,8 @@ def describe(d: pd.DataFrame, G: pd.DataFrame, fam: str, models) -> list[dict]:
                         acc_raw=100 * r.correct.mean(), says_yes_raw=100 * (r.pred == "yes").mean(),
                         acc_oracle_ni=100 * o_ni.correct.mean(),
                         acc_oracle_u=100 * o_u.correct.mean(),
+                        says_no_oracle_ni=100 * (o_ni.pred == "no").mean(),
+                        says_no_oracle_u=100 * (o_u.pred == "no").mean(),
                         follow_ni=100 * (ni.pred == "no").mean(),
                         follow_u=100 * (u.pred == "no").mean(),
                         acc_dr_ni=100 * ni.correct.mean(), acc_dr_u=100 * u.correct.mean(),
