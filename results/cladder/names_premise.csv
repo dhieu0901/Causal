@@ -76,5 +76,38 @@ luna,descriptive,PSEUDO_THIRD - PSEUDO under RAW,says yes,,8.88,3.64,14.04,0.000
 gpt,"incomplete run, no verdict",P1,"share of Yes answers under PSEUDO, RAW_OPEN minus RAW",positive,5.03,3.28,6.69,0.0005,,,,483,37,no verdict (run incomplete: N2's cell is missing)
 gpt,"incomplete run, no verdict",P2,"(KEEP - PSEUDO | RAW) - (KEEP - PSEUDO | RAW_OPEN), accuracy",positive,2.45,-0.62,5.65,0.1235,,,,479,37,no verdict (run incomplete: N2's cell is missing)
 gpt,"incomplete run, no verdict",N1,"KEEP - PSEUDO_XY under RAW, accuracy",positive,12.86,8.67,17.17,0.0005,,,,480,37,no verdict (run incomplete: N2's cell is missing)
+gpt,primary (completion),P1,"share of Yes answers under PSEUDO, RAW_OPEN minus RAW",positive,5.03,3.28,6.69,0.0005,0.002,0.0005,0.0005,483,37,confirmed
+gpt,primary (completion),P2,"(KEEP - PSEUDO | RAW) - (KEEP - PSEUDO | RAW_OPEN), accuracy",positive,2.45,-0.62,5.65,0.1235,0.247,0.1235,0.1425,479,37,not confirmed
+gpt,primary (completion),N1,"KEEP - PSEUDO_XY under RAW, accuracy",positive,12.86,8.67,17.17,0.0005,0.002,0.0005,0.0005,480,37,confirmed
+gpt,primary (completion),N2,"KEEP - PSEUDO_THIRD under RAW, accuracy, questions naming another variable",positive,-0.32,-3.94,2.47,0.8475,0.8475,0.83,0.877,330,34,not confirmed
+gpt,questions resampled (completion),P1,"share of Yes answers under PSEUDO, RAW_OPEN minus RAW",positive,5.03,3.22,6.93,0.0005,0.002,0.0005,0.0005,483,37,confirmed
+gpt,questions resampled (completion),P2,"(KEEP - PSEUDO | RAW) - (KEEP - PSEUDO | RAW_OPEN), accuracy",positive,2.45,-0.3,5.27,0.079,0.158,0.07,0.0885,479,37,not confirmed
+gpt,questions resampled (completion),N1,"KEEP - PSEUDO_XY under RAW, accuracy",positive,12.86,9.63,16.08,0.0005,0.002,0.0005,0.0005,480,37,confirmed
+gpt,questions resampled (completion),N2,"KEEP - PSEUDO_THIRD under RAW, accuracy, questions naming another variable",positive,-0.32,-3.1,2.62,0.834,0.834,0.834,0.871,330,34,not confirmed
+gpt,unparsed as wrong (completion),P1,"share of Yes answers under PSEUDO, RAW_OPEN minus RAW",positive,4.82,3.14,6.43,0.0005,0.002,0.0005,0.0005,484,37,confirmed
+gpt,unparsed as wrong (completion),P2,"(KEEP - PSEUDO | RAW) - (KEEP - PSEUDO | RAW_OPEN), accuracy",positive,1.45,-1.64,4.75,0.3785,0.3785,0.3785,0.407,484,37,not confirmed
+gpt,unparsed as wrong (completion),N1,"KEEP - PSEUDO_XY under RAW, accuracy",positive,11.85,7.63,16.11,0.0005,0.002,0.0005,0.0005,484,37,confirmed
+gpt,unparsed as wrong (completion),N2,"KEEP - PSEUDO_THIRD under RAW, accuracy, questions naming another variable",positive,-2.1,-5.3,0.3,0.102,0.204,0.0985,0.13,334,34,not confirmed
+gpt,descriptive,P2,gold yes,,6.47,1.54,11.04,0.009,,,,244,36,
+gpt,descriptive,P2,gold no,,-1.84,-5.41,2.28,0.4115,,,,235,36,
+gpt,descriptive,P2,says yes,,4.23,1.02,7.14,0.0115,,,,479,37,
+gpt,descriptive,N1,gold yes,,26.23,17.52,33.86,0.0005,,,,244,36,
+gpt,descriptive,N1,gold no,,-1.18,-5.02,3.1,0.639,,,,236,36,
+gpt,descriptive,N1,says yes,,14.01,8.38,19.11,0.0005,,,,480,37,
+gpt,descriptive,N2,gold yes,,-2.29,-6.53,1.59,0.2615,,,,166,32,
+gpt,descriptive,N2,gold no,,1.71,-2.99,5.45,0.485,,,,164,32,
+gpt,descriptive,N2,says yes,,-2.0,-4.48,0.78,0.1365,,,,330,34,
+gpt,descriptive,N2,every question,,-0.21,-2.5,1.83,0.8435,,,,480,37,
+gpt,descriptive,N2,"every question, says yes",,-1.36,-3.12,0.4,0.1295,,,,480,37,
 gpt,descriptive,KEEP - PSEUDO under RAW,accuracy,,14.36,10.81,18.01,0.0005,,,,482,37,
 gpt,descriptive,KEEP - PSEUDO under RAW,says yes,,14.21,9.34,19.27,0.0005,,,,482,37,
+gpt,descriptive,KEEP - PSEUDO under RAW_OPEN,accuracy,,11.92,8.11,15.56,0.0005,,,,482,37,
+gpt,descriptive,KEEP - PSEUDO under RAW_OPEN,says yes,,10.19,6.74,13.73,0.0005,,,,482,37,
+gpt,descriptive,KEEP: RAW_OPEN minus RAW,accuracy,,-0.79,-2.79,1.08,0.4295,,,,481,37,
+gpt,descriptive,KEEP: RAW_OPEN minus RAW,says yes,,1.08,-0.97,3.4,0.304,,,,481,37,
+gpt,descriptive,PSEUDO: RAW_OPEN minus RAW,accuracy,,1.73,-0.75,4.17,0.179,,,,483,37,
+gpt,descriptive,PSEUDO: RAW_OPEN minus RAW,says yes,,5.03,3.28,6.69,0.0005,,,,483,37,
+gpt,descriptive,PSEUDO_XY - PSEUDO under RAW,accuracy,,1.44,-0.63,3.55,0.186,,,,482,37,
+gpt,descriptive,PSEUDO_XY - PSEUDO under RAW,says yes,,0.29,-1.89,2.63,0.8245,,,,482,37,
+gpt,descriptive,PSEUDO_THIRD - PSEUDO under RAW,accuracy,,14.4,10.88,18.37,0.0005,,,,483,37,
+gpt,descriptive,PSEUDO_THIRD - PSEUDO under RAW,says yes,,15.68,11.47,19.52,0.0005,,,,483,37,

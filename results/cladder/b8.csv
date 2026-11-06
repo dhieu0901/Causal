@@ -1,0 +1,31 @@
+family,analysis,test,quantity,predicted,estimate_pp,ci_lo,ci_hi,ci90_lo,ci90_hi,p_boot,p_holm,p_min_seeds,p_max_seeds,n_draws,verdict
+gpt,primary,T0,"reversal, path cut: DR_NI minus ORACLE_NI",negative,-32.48,-40.16,-24.82,,,0.0005,0.0025,0.0005,0.0005,274,confirmed
+gpt,primary,T1,"deleted edge, path cut: ED_NI minus ORACLE_NI",negative,-10.64,-16.17,-5.19,,,0.0005,0.0025,0.0005,0.001,249,confirmed
+gpt,primary,T2,"spurious edge, all draws: FE_NI minus ORACLE_NI, within +-5",within +-5,-0.82,-3.93,2.31,-3.38,1.83,0.0055,0.0055,0.003,0.0055,306,confirmed
+gpt,primary,T3,"reversal under doubt, path cut: DR_U minus ORACLE_U",negative,-19.05,-24.34,-13.64,,,0.0005,0.0025,0.0005,0.0005,273,confirmed
+gpt,primary,T4,path cut: harm under doubt minus harm without it,positive,13.92,7.76,19.92,,,0.0005,0.0025,0.0005,0.0005,273,confirmed
+gpt,unparsed scored as wrong,T0,"reversal, path cut: DR_NI minus ORACLE_NI",negative,-31.39,-39.3,-23.42,,,0.0005,0.0025,0.0005,0.0005,274,confirmed
+gpt,unparsed scored as wrong,T1,"deleted edge, path cut: ED_NI minus ORACLE_NI",negative,-10.04,-15.59,-4.72,,,0.0005,0.0025,0.0005,0.0015,249,confirmed
+gpt,unparsed scored as wrong,T2,"spurious edge, all draws: FE_NI minus ORACLE_NI, within +-5",within +-5,-0.82,-3.6,2.11,-3.18,1.62,0.0035,0.0035,0.001,0.0035,306,confirmed
+gpt,unparsed scored as wrong,T3,"reversal under doubt, path cut: DR_U minus ORACLE_U",negative,-19.34,-24.64,-14.05,,,0.0005,0.0025,0.0005,0.0005,274,confirmed
+gpt,unparsed scored as wrong,T4,path cut: harm under doubt minus harm without it,positive,12.04,5.29,18.68,,,0.0005,0.0025,0.0005,0.0015,274,confirmed
+luna,primary,T0,"reversal, path cut: DR_NI minus ORACLE_NI",negative,-81.39,-87.23,-75.18,,,0.0005,0.0025,0.0005,0.0005,274,confirmed
+luna,primary,T1,"deleted edge, path cut: ED_NI minus ORACLE_NI",negative,-27.31,-33.73,-20.8,,,0.0005,0.0025,0.0005,0.0005,249,confirmed
+luna,primary,T2,"spurious edge, all draws: FE_NI minus ORACLE_NI, within +-5",within +-5,-8.5,-12.83,-4.47,-12.1,-5.08,0.9533,0.9532,0.9505,0.9533,306,not confirmed
+luna,primary,T3,"reversal under doubt, path cut: DR_U minus ORACLE_U",negative,-60.95,-68.75,-52.42,,,0.0005,0.0025,0.0005,0.0005,274,confirmed
+luna,primary,T4,path cut: harm under doubt minus harm without it,positive,20.44,13.59,27.84,,,0.0005,0.0025,0.0005,0.0005,274,confirmed
+luna,unparsed scored as wrong,T0,"reversal, path cut: DR_NI minus ORACLE_NI",negative,-81.39,-87.23,-75.18,,,0.0005,0.0025,0.0005,0.0005,274,confirmed
+luna,unparsed scored as wrong,T1,"deleted edge, path cut: ED_NI minus ORACLE_NI",negative,-27.31,-33.73,-20.8,,,0.0005,0.0025,0.0005,0.0005,249,confirmed
+luna,unparsed scored as wrong,T2,"spurious edge, all draws: FE_NI minus ORACLE_NI, within +-5",within +-5,-8.5,-12.83,-4.47,-12.1,-5.08,0.9533,0.9532,0.9505,0.9533,306,not confirmed
+luna,unparsed scored as wrong,T3,"reversal under doubt, path cut: DR_U minus ORACLE_U",negative,-60.95,-68.75,-52.42,,,0.0005,0.0025,0.0005,0.0005,274,confirmed
+luna,unparsed scored as wrong,T4,path cut: harm under doubt minus harm without it,positive,20.44,13.59,27.84,,,0.0005,0.0025,0.0005,0.0005,274,confirmed
+llama,primary,T0,"reversal, path cut: DR_NI minus ORACLE_NI",negative,-7.35,-13.16,-1.5,,,0.013,0.052,0.013,0.016,272,not confirmed
+llama,primary,T1,"deleted edge, path cut: ED_NI minus ORACLE_NI",negative,0.0,-4.72,4.86,,,1.0,1.0,1.0,1.0,245,not confirmed
+llama,primary,T2,"spurious edge, all draws: FE_NI minus ORACLE_NI, within +-5",within +-5,-1.97,-5.02,0.99,-4.53,0.35,0.0255,0.0765,0.0243,0.03,304,not confirmed
+llama,primary,T3,"reversal under doubt, path cut: DR_U minus ORACLE_U",negative,1.82,-3.85,7.83,,,0.574,1.0,0.5665,0.611,274,not confirmed
+llama,primary,T4,path cut: harm under doubt minus harm without it,positive,9.19,2.87,15.9,,,0.006,0.03,0.005,0.0075,272,confirmed
+llama,unparsed scored as wrong,T0,"reversal, path cut: DR_NI minus ORACLE_NI",negative,-6.57,-12.55,-1.05,,,0.034,0.102,0.0315,0.038,274,not confirmed
+llama,unparsed scored as wrong,T1,"deleted edge, path cut: ED_NI minus ORACLE_NI",negative,0.8,-4.18,5.93,,,0.846,1.0,0.821,0.857,249,not confirmed
+llama,unparsed scored as wrong,T2,"spurious edge, all draws: FE_NI minus ORACLE_NI, within +-5",within +-5,-1.63,-4.67,1.39,-4.25,0.98,0.0135,0.0675,0.0135,0.0192,306,not confirmed
+llama,unparsed scored as wrong,T3,"reversal under doubt, path cut: DR_U minus ORACLE_U",negative,1.82,-3.85,7.83,,,0.574,1.0,0.5665,0.611,274,not confirmed
+llama,unparsed scored as wrong,T4,path cut: harm under doubt minus harm without it,positive,8.39,1.82,15.41,,,0.015,0.0675,0.008,0.0175,274,borderline (changes with the bootstrap seed)

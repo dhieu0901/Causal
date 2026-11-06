@@ -218,11 +218,15 @@ def correct_by(d, cond):
     return s.set_index(["model", "item"]).correct
 
 
-def b6_draws(unparsed_wrong=False, prefix="b6", recap=None) -> pd.DataFrame | None:
+def b6_draws(unparsed_wrong=False, prefix="b6", recap=None, models=None,
+             lexicons=("KEEP", "PSEUDO")) -> pd.DataFrame | None:
     """One row per reversal draw. `prefix` picks the records: "b6" is the
     GPT-4.1 family, "b6llama" Llama 3.3 70B (prereg/B6_LLAMA.md); `recap`
-    replaces every answer cut off at the token cap by its re-ask."""
-    f = {lex: RAW / f"pilot_raw_{prefix}{lex}.csv" for lex in ("KEEP", "PSEUDO")}
+    replaces every answer cut off at the token cap by its re-ask. `models` and
+    `lexicons` restrict the records, for B8's descriptive comparison over the
+    same models and real names only (analyze_b8.py); by default every model and
+    both lexicons, as registered."""
+    f = {lex: RAW / f"pilot_raw_{prefix}{lex}.csv" for lex in lexicons}
     if not all(p.exists() for p in f.values()):
         return None
     G = draws_for("b6", Matcher(), kw=B6)
@@ -235,6 +239,8 @@ def b6_draws(unparsed_wrong=False, prefix="b6", recap=None) -> pd.DataFrame | No
             d = with_recap(d, p.with_name(f"{p.stem}_recap{recap}.csv"))
             if d is None:
                 raise SystemExit(f"{p.name}: no re-ask file for --recap {recap}")
+        if models is not None:
+            d = d[d.model.isin(models)]
         if unparsed_wrong:
             d = d.assign(correct=np.where(d.parsed == 1, d.correct, 0), parsed=1)
         for k in (1, 2, 3):

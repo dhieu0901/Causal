@@ -1,0 +1,11 @@
+family,model,test,quantity,estimate_pp,ci_lo,ci_hi,n_draws
+gpt,gpt-4.1-mini,T0,"reversal, path cut: DR_NI minus ORACLE_NI",-32.2,-40.93,-23.19,264
+gpt,gpt-4.1-mini,T1,"deleted edge, path cut: ED_NI minus ORACLE_NI",-7.11,-13.49,-0.85,239
+gpt,gpt-4.1-mini,T2,"spurious edge, all draws: FE_NI minus ORACLE_NI, within +-5",-1.33,-4.59,1.99,301
+gpt,gpt-4.1-mini,T3,"reversal under doubt, path cut: DR_U minus ORACLE_U",-21.43,-29.21,-13.64,266
+gpt,gpt-4.1-mini,T4,path cut: harm under doubt minus harm without it,11.07,3.85,18.25,262
+gpt,gpt-4.1,T0,"reversal, path cut: DR_NI minus ORACLE_NI",-33.7,-42.39,-24.54,273
+gpt,gpt-4.1,T1,"deleted edge, path cut: ED_NI minus ORACLE_NI",-14.52,-22.22,-6.72,248
+gpt,gpt-4.1,T2,"spurious edge, all draws: FE_NI minus ORACLE_NI, within +-5",0.33,-4.13,4.95,303
+gpt,gpt-4.1,T3,"reversal under doubt, path cut: DR_U minus ORACLE_U",-16.67,-22.43,-11.19,270
+gpt,gpt-4.1,T4,path cut: harm under doubt minus harm without it,17.1,7.35,26.49,269

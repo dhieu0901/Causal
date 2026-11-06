@@ -151,6 +151,10 @@ def check_study1(family, cells):
 
 
 SHOWN: set = set()
+# A family whose last cell was finished under a later registration
+# (prereg/FOLLOWUPS_GPT_COMPLETION.md, 06/11): its tests are labelled
+# "(completion)", and its original "incomplete run, no verdict" rows are kept.
+COMPLETED = {"gpt"}
 
 
 def vectors(cells, col, every=False):
@@ -321,6 +325,12 @@ def main() -> int:
             cells_out += c
             continue
         check_study1(family, cells)
+        if family in COMPLETED:
+            # The result as first reported, before the last cell was finished
+            # under prereg/FOLLOWUPS_GPT_COMPLETION.md, stays beside the tests.
+            r, _ = incomplete(family, [path_of(family, TH).name])
+            rows += [x for x in r if x["analysis"] != "descriptive"]
+        tag = (lambda a: f"{a} (completion)") if family in COMPLETED else (lambda a: a)
         if not SHOWN:
             SHOWN.update(third_shown())
         first = pd.concat(cells.values())
@@ -328,9 +338,9 @@ def main() -> int:
         gold_of = first.groupby(item_of(first.index)).gold.first()
         print(f"  {family}: {len(SHOWN)} of {len(story_of)} questions name another variable "
               f"in their RAW prompt")
-        rows += rows_of(family, "primary", run_tests(cells, story_of))
-        rows += rows_of(family, "questions resampled", run_tests(cells, story_of, stories=False))
-        rows += rows_of(family, "unparsed as wrong", run_tests(load(family, "unparsed as wrong"), story_of))
+        rows += rows_of(family, tag("primary"), run_tests(cells, story_of))
+        rows += rows_of(family, tag("questions resampled"), run_tests(cells, story_of, stories=False))
+        rows += rows_of(family, tag("unparsed as wrong"), run_tests(load(family, "unparsed as wrong"), story_of))
         if recap:
             rows += rows_of(family, "re-asked at 1500", run_tests(load(family, "re-asked at 1500"), story_of))
         rows += descriptive(family, cells, story_of, gold_of)

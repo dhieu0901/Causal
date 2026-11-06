@@ -276,7 +276,8 @@ def draws_for(tag, M, kw=None, lexicons=("KEEP", "PSEUDO"), arms=("DR",), per_dr
     C = classify(kw["n_items"], kw["sample_kmax"], kw["kmax"], arms=arms, seed=kw["seed"],
                  exclude_ids=kw["exclude_ids"], lexicons=lexicons, keep_shown=True,
                  query_types=kw.get("query_types"),
-                 replay_condition=kw.get("replay_condition", "PERTURB"))
+                 replay_condition=kw.get("replay_condition", "PERTURB"),
+                 **({"replay_model": kw["replay_model"]} if "replay_model" in kw else {}))
     C = C[C.query_type.isin(TYPES)].reset_index(drop=True)
     if replay_sent is not None:
         sent = [(x.item, x.lexicon, x.cond) in replay_sent for x in C.itertuples()]

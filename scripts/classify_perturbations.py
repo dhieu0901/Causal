@@ -252,7 +252,7 @@ def prose_graph(prompt: str) -> list[tuple[str, str]]:
 def classify(n_items=N_ITEMS, sample_kmax=KMAX, kmax=KMAX, arms=("DR", "ED", "FE"),
              lexicons=("KEEP", "PSEUDO"), scramble=False, seed=SEED,
              exclude_ids=None, keep_shown=False, query_types=None,
-             replay_condition="PERTURB") -> pd.DataFrame:
+             replay_condition="PERTURB", replay_model=REPLAY_MODEL) -> pd.DataFrame:
     """Classify the perturbation each item was SHOWN, per lexicon.
 
     Until 2026-09-24 this replayed the draw over the canonical SYMBOL graph,
@@ -347,8 +347,9 @@ def classify(n_items=N_ITEMS, sample_kmax=KMAX, kmax=KMAX, arms=("DR", "ED", "FE
                 (unch, touch), = verdicts
                 # The replay is proved by a prompt the phase really sent: the
                 # instructed one by default; B8 sent no instructed perturbation,
-                # so it proves the draw through its instruction-free twin.
-                key = _key(REPLAY_MODEL, 0.0, build(prompt, replay_condition, shown))
+                # so it proves the draw through its instruction-free twin, and
+                # through gpt-4.1-mini, since gpt-4.1-nano was retired before it.
+                key = _key(replay_model, 0.0, build(prompt, replay_condition, shown))
                 rows.append(dict(item=i, lexicon=lex, family=r["graph_id"],
                                  query_type=r["query_type"], cond=cond, arm=t, k=k,
                                  estimand_unchanged=unch, touches_causal_path=touch,

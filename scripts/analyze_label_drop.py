@@ -12,13 +12,15 @@ registered samples removed, each registered test that a CLadder label enters:
   Study 1, H1 to H4, three families      analyze_confirmatory.confirm
   Study 3, M1 to M3, R1, R2, two families analyze_b6.confirm
   S1 to S3, three families                analyze_new_stories.run_tests
-  P1, P2, N1, N2, Llama and gpt-5.6-luna  analyze_names_premise.run_tests
+  P1, P2, N1, N2, three families          analyze_names_premise.run_tests
+                                          (the GPT-4.1 family's as completed
+                                          under prereg/FOLLOWUPS_GPT_COMPLETION.md)
+  B8, T0 to T4, three families            analyze_b8.confirm
 
 The test functions are imported unchanged. The only change is that every read
 of a record file (results/cladder/raw/pilot_raw_*.csv) drops the rows of those
-questions, so ladder cells, new-story cells and Study 3's draws lose the same
-questions as the main cells. The GPT-4.1 family's P1 to N2 have no verdict (its
-run stopped before N2's cell) and are not rerun. CaLM's answers were recomputed
+questions, so ladder cells, new-story cells and the draws of Study 3 and B8
+lose the same questions as the main cells. CaLM's answers were recomputed
 from each question's graph (analyze_calm), and the path probes are scored
 against the graph, not a CLadder label, so neither enters here. Each row carries
 the published primary estimate and verdict beside the new ones. Exploratory, not
@@ -46,9 +48,9 @@ RESULTS = ROOT / "results" / "cladder"
 RAW = RESULTS / "raw"
 LABEL = "flagged labels dropped"
 # the record files of the registered samples: Study 1 (conf...), its follow-ups
-# (premise...), Study 3 (b6...)
-REGISTERED = re.compile(r"^(conf|llamaconf|lunaconf|premise|llamapremise|lunapremise|b6|b6llama)"
-                        r"(KEEP|PSEUDO|ladder|NEWSTORY)")
+# (premise...), Study 3 (b6...), B8 (b8...)
+REGISTERED = re.compile(r"^(conf|llamaconf|lunaconf|premise|llamapremise|lunapremise|b6|b6llama"
+                        r"|b8|b8luna|b8llama)(KEEP|PSEUDO|ladder|NEWSTORY)")
 ID_COLUMNS = ("ids_decided", "ids_not_decidable", "ids_label_wrong_otherwise")
 
 
@@ -88,8 +90,10 @@ def published() -> pd.DataFrame:
         pd.read_csv(RESULTS / "b6_llama.csv").assign(study="Study 3", family="llama"),
         pd.read_csv(RESULTS / "new_stories.csv").assign(study="New stories"),
         pd.read_csv(RESULTS / "names_premise.csv").assign(study="Premise and name roles"),
+        pd.read_csv(RESULTS / "b8.csv").assign(study="B8"),
     ], ignore_index=True)
-    P = P[P.analysis == "primary"]
+    # the GPT-4.1 family's name-role tests are those of its registered completion
+    P = P[P.analysis.isin(["primary", "primary (completion)"])]
     if P.duplicated(["study", "family", "test"]).any():
         raise SystemExit("a published primary test appears twice")
     return P.set_index(["study", "family", "test"])
@@ -137,13 +141,23 @@ def main() -> int:
 
     print("\n  premise and name roles: P1, P2, N1, N2")
     NP.SHOWN.update(NP.third_shown())
-    for family in ("llama", "luna"):
+    for family in ("llama", "luna", "gpt"):
         cells = NP.load(family, "primary")
         if cells is not None:
             first = pd.concat(cells.values())
             story_of = first.groupby(NP.item_of(first.index)).story_id.first()
             rows += [dict(study="Premise and name roles", **r)
                      for r in NP.rows_of(family, LABEL, NP.run_tests(cells, story_of))]
+
+    print("\n  B8: T0 to T4")
+    import analyze_b8 as B8m
+    G8 = B8m.classified(B8m.selection())
+    for family, (label, models, fname) in B8m.FAMILIES.items():
+        if (RAW / fname).exists():
+            d8 = pd.read_csv(RAW / fname)
+            print(f"  {label}")
+            rows += [dict(study="B8", family=family, **r)
+                     for r in B8m.confirm(B8m.harms(d8, G8), LABEL)]
 
     R = pd.DataFrame(rows)
     key = list(zip(R.study, R.family, R.test))

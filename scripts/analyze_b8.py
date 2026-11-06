@@ -29,8 +29,9 @@ exploratory price400 draws and stops unless they return the published rows of
 results/cladder/edge_types_harm.csv.
 
 Writes results/cladder/b8.csv (the tests), b8_descriptive.csv (shares of
-answers per condition) and b8_per_model.csv (each test per GPT-4.1 model, no
-verdict).
+answers per condition), b8_per_model.csv (each test per GPT-4.1 model, no
+verdict) and b8_study3_reference.csv (Study 3's R1 construction over the same
+models and real names only, descriptive).
 """
 from __future__ import annotations
 
@@ -55,8 +56,13 @@ SELECTION = ROOT / "prereg" / "b8_selection.csv"
 SEEDS = [20260907, 1, 2, 3, 4]
 ALPHA = 0.05
 LEXICON = "KEEP"
+# replay_model: the replay check proves each listed draw by its key in the API
+# cache, by default under gpt-4.1-nano; B8 never called it (retired before the
+# run, prereg/B8.md), so the check uses gpt-4.1-mini, which answered every
+# listed call. A deviation from the registered code, reported with the results.
 B8 = dict(n_items=340, sample_kmax=1, kmax=3, seed=20260927,
-          query_types=["ate", "ett"], replay_condition="PERTURB_NI")
+          query_types=["ate", "ett"], replay_condition="PERTURB_NI",
+          replay_model="gpt-4.1-mini")
 FAMILIES = {
     "gpt": ("GPT-4.1 pair", ["gpt-4.1-mini", "gpt-4.1"], "pilot_raw_b8KEEP.csv"),
     "luna": ("gpt-5.6-luna", ["gpt-5.6-luna"], "pilot_raw_b8lunaKEEP.csv"),
@@ -227,6 +233,29 @@ def describe(d: pd.DataFrame, G: pd.DataFrame, fam: str, models) -> list[dict]:
     return [{k: (round(v, 2) if isinstance(v, float) else v) for k, v in r.items()} for r in out]
 
 
+def study3_reference() -> list[dict]:
+    """Descriptive (prereg/B8.md, section 3): Study 3's R1, the construction of
+    T0 (path-cutting reversals without the instruction line), over the models
+    B8 runs and real names only, to set beside T0. Study 3's registered R1
+    averages both lexicons and, for the GPT-4.1 family, three models; these
+    rows do not. Llama's Study 3 answers came from another provider (Novita)."""
+    import analyze_b6 as B6
+    rows = []
+    for fam, prefix, models in (("gpt", "b6", ["gpt-4.1-mini", "gpt-4.1"]),
+                                ("llama", "b6llama", None)):
+        X = B6.b6_draws(prefix=prefix, models=models, lexicons=(LEXICON,))
+        if X is None:
+            continue
+        c = B6.cut(X).dropna(subset=["h_ni"])
+        r = summary(*boot_mean(c, "h_ni", SEEDS[0]))
+        rows.append(dict(family=fam, models=", ".join(models) if models else "Llama 3.3 70B (Novita)",
+                         lexicon=LEXICON,
+                         quantity="Study 3, R1 construction: DR_NI minus ORACLE_NI, path cut",
+                         estimate_pp=round(r["estimate_pp"], 2), ci_lo=round(r["ci_lo"], 2),
+                         ci_hi=round(r["ci_hi"], 2), n_draws=len(c)))
+    return rows
+
+
 def per_model(d: pd.DataFrame, G: pd.DataFrame, fam: str, models) -> list[dict]:
     rows = []
     for m in models:
@@ -271,7 +300,11 @@ def main() -> int:
     pd.DataFrame(desc).to_csv(RESULTS / "b8_descriptive.csv", index=False)
     if pm:
         pd.DataFrame(pm).to_csv(RESULTS / "b8_per_model.csv", index=False)
-    print("\n  wrote results/cladder/b8.csv, b8_descriptive.csv"
+    ref = pd.DataFrame(study3_reference())
+    ref.to_csv(RESULTS / "b8_study3_reference.csv", index=False)
+    print("\n  Study 3 over the same models, real names only (descriptive):")
+    print(ref.to_string(index=False))
+    print("\n  wrote results/cladder/b8.csv, b8_descriptive.csv, b8_study3_reference.csv"
           + (", b8_per_model.csv" if pm else ""))
     return 0
 
